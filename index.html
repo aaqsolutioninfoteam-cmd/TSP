@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>NGO Management - Login</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--p:#1a6b3c;--pd:#0d4a25;--d:#dc3545;--w:#ff9800;--su:#28a745;--l:#f5f7fa;--dk:#1a1a2e;--g:#6c757d;--gl:#e9ecef;--w2:#fff}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#0d4a25 0%,#1a6b3c 50%,#28a745 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-page{width:100%;max-width:420px}
+.login-container{width:100%}
+.login-card{background:var(--w2);border-radius:14px;padding:40px 30px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:slideUp 0.6s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+.login-header{text-align:center;margin-bottom:30px}
+.login-logo{width:80px;height:80px;background:linear-gradient(135deg,var(--p),var(--su));border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(26,107,60,0.4)}50%{box-shadow:0 0 0 15px rgba(26,107,60,0)}}
+.login-logo svg{width:40px;height:40px;fill:var(--w2)}
+.login-header h1{font-size:22px;color:var(--dk);font-weight:700;margin-bottom:4px}
+.login-header p{color:var(--g);font-size:14px}
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--dk);margin-bottom:6px}
+.form-group input{width:100%;padding:12px 14px;border:2px solid var(--gl);border-radius:10px;font-size:15px;transition:all 0.3s;background:#fafafa;color:var(--dk);outline:none}
+.form-group input:focus{border-color:var(--p);background:var(--w2);box-shadow:0 0 0 3px rgba(26,107,60,0.1)}
+.form-group input::placeholder{color:#adb5bd}
+.btn{padding:12px 24px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-p{background:linear-gradient(135deg,var(--p),var(--su));color:var(--w2)}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(26,107,60,0.3)}
+.btn-p:active{transform:translateY(0)}
+.btn-blk{width:100%}
+.btn-sm{padding:8px 16px;font-size:13px;border-radius:8px}
+.btn-s{background:var(--gl);color:var(--dk)}
+.btn-d{background:var(--d);color:var(--w2)}
+.btn-su{background:var(--su);color:var(--w2)}
+.btn-w{background:var(--w);color:var(--w2)}
+.error-msg{background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;color:var(--d);font-size:13px;margin-bottom:16px;display:none;animation:fadeIn 0.3s}
+.error-msg.show{display:flex;align-items:center;gap:8px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.demo-info{margin-top:24px;padding:16px;background:var(--l);border-radius:10px;border:1px solid var(--gl)}
+.demo-info h3{font-size:13px;color:var(--g);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
+.demo-info p{font-size:12px;color:var(--g);margin-bottom:4px;line-height:1.5}
+.demo-info strong{color:var(--dk)}
+.loader{display:none;text-align:center;padding:12px}
+.loader.show{display:block}
+.spinner{width:24px;height:24px;border:3px solid rgba(255,255,255,0.3);border-top-color:var(--w2);border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(min-width:768px){.login-card{padding:50px 40px}}
+</style>
+</head>
+<body>
+<div class="login-page">
+<div class="login-container">
+<div class="login-card">
+<div class="login-header">
+<div class="login-logo">
+<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+</div>
+<h1>NGO Management System</h1>
+<p>Login with your phone number</p>
+</div>
+<div class="error-msg" id="errorMsg">
+<span>&#9888;</span>
+<span id="errorText"></span>
+</div>
+<div class="form-group">
+<label>Phone Number</label>
+<input type="tel" id="phone" placeholder="03XXXXXXXXX" maxlength="11" autocomplete="tel">
+</div>
+<div class="form-group">
+<label>Password</label>
+<input type="password" id="password" placeholder="Enter your password" autocomplete="current-password">
+</div>
+<button class="btn btn-p btn-blk" id="loginBtn" onclick="handleLogin()">
+<span id="loginText">Login</span>
+<div class="loader" id="loginLoader"><div class="spinner"></div></div>
+</button>
+<div class="demo-info">
+<h3>Demo Accounts</h3>
+<p><strong>Division Head:</strong> 03001234567 / admin123</p>
+<p><strong>District Head:</strong> 03001234568 / admin123</p>
+<p><strong>Area Head:</strong> 03001234569 / admin123</p>
+</div>
+</div>
+</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.firebasestorage.app",messagingSenderId:"438479516590",appId:"1:438479516590:web:fc0a9aaa4a0285f0dc0e3f",measurementId:"G-TJWXZSQXGH"};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+
+function showError(msg){const e=document.getElementById('errorMsg');document.getElementById('errorText').textContent=msg;e.classList.add('show')}
+function hideError(){document.getElementById('errorMsg').classList.remove('show')}
+function setLoading(l){document.getElementById('loginText').style.display=l?'none':'inline';document.getElementById('loginLoader').className=l?'loader show':'loader';document.getElementById('loginBtn').disabled=l}
+
+async function loginUserByPhone(phone,password){
+const snap=await db.collection('users').where('phone','==',phone).get();
+if(snap.empty)throw new Error('Phone number not found');
+const userData=snap.docs[0].data();
+const userId=snap.docs[0].id;
+if(userData.status==='inactive')throw new Error('Account is deactivated');
+await auth.signInWithEmailAndPassword(userData.email,password);
+const user={id:userId,...userData};
+localStorage.setItem('ngoUser',JSON.stringify(user));
+return user;
+}
+
+async function handleLogin(){
+hideError();
+const phone=document.getElementById('phone').value.trim();
+const password=document.getElementById('password').value;
+if(!phone||!password){showError('Please enter phone number and password');return}
+if(phone.length!==11){showError('Phone number must be 11 digits');return}
+setLoading(true);
+try{
+await loginUserByPhone(phone,password);
+window.location.href='pages/dashboard.html';
+}catch(e){
+let msg='Login failed. Please try again.';
+if(e.message.includes('not found'))msg='Phone number not found in system.';
+else if(e.message.includes('wrong password')||e.message.includes('invalid-credential'))msg='Incorrect password.';
+else if(e.message.includes('deactivated'))msg='Account is deactivated.';
+else if(e.message.includes('network'))msg='Network error. Check your connection.';
+showError(msg);
+setLoading(false);
+}
+}
+
+document.getElementById('password').addEventListener('keypress',function(e){if(e.key==='Enter')handleLogin()});
+document.getElementById('phone').addEventListener('keypress',function(e){if(e.key==='Enter')document.getElementById('password').focus()});
+
+auth.onAuthStateChanged(function(user){
+if(user){
+const stored=localStorage.getItem('ngoUser');
+if(stored){window.location.href='pages/dashboard.html'}
+}
+});
+
+document.getElementById('phone').focus();
+</script>
+</body>
+</html>
