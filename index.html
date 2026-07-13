@@ -28,14 +28,9 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:linear-gradient(135deg,
 .btn-p:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(26,107,60,0.3)}
 .btn-p:active{transform:scale(0.98)}
 .btn-p:disabled{opacity:0.7;cursor:not-allowed;transform:none}
-.btn-s{background:var(--gl);color:var(--dk);margin-top:8px;font-size:14px;padding:10px}
 .loader{display:none;width:22px;height:22px;border:3px solid rgba(255,255,255,0.3);border-top-color:var(--w2);border-radius:50%;animation:spin 0.8s linear infinite}
 .loader.show{display:block}
 @keyframes spin{to{transform:rotate(360deg)}}
-.demo-box{margin-top:20px;padding-top:16px;border-top:1px solid var(--gl);text-align:center}
-.demo-box h3{font-size:14px;color:var(--dk);margin-bottom:8px}
-.demo-box p{font-size:12px;color:var(--g);margin:3px 0}
-.demo-box strong{color:var(--dk)}
 .init-box{text-align:center;padding:20px}
 .init-box p{font-size:13px;color:var(--g);margin-bottom:12px}
 .init-box .spinner{width:36px;height:36px;border:3px solid var(--gl);border-top-color:var(--p);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px}
@@ -52,23 +47,18 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:linear-gradient(135deg,
 <p>Phone number se login karein</p>
 </div>
 
-<!-- INIT BOX (setup ke liye) -->
 <div class="init-box" id="initBox" style="display:none">
 <div class="spinner"></div>
 <p id="initMsg">System setup ho raha hai...</p>
-<button class="btn btn-s" onclick="forceSetup()" id="setupBtn" style="display:none">Setup Karo</button>
 </div>
 
-<!-- ERROR -->
 <div class="error-msg" id="errorMsg">
 <span>&#9888;</span>
 <span id="errorText"></span>
 </div>
 
-<!-- SUCCESS -->
 <div class="success-msg" id="successMsg"></div>
 
-<!-- LOGIN FORM -->
 <div id="loginForm">
 <div class="form-group">
 <label>Phone Number</label>
@@ -86,8 +76,6 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:linear-gradient(135deg,
 
 </div>
 </div>
-</div>
-</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -97,6 +85,9 @@ const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomai
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
+const AUTO_PHONE='7600263704';
+const AUTO_PASS='252600';
+const AUTO_EMAIL=AUTO_PHONE+'@ngo-app.local';
 
 function showError(msg){
     document.getElementById('errorText').textContent=msg;
@@ -104,6 +95,7 @@ function showError(msg){
     document.getElementById('successMsg').classList.remove('show');
 }
 function hideError(){document.getElementById('errorMsg').classList.remove('show')}
+function hideSuccess(){document.getElementById('successMsg').classList.remove('show')}
 function showSuccess(msg){
     document.getElementById('successMsg').textContent=msg;
     document.getElementById('successMsg').classList.add('show');
@@ -115,23 +107,21 @@ function setLoading(l){
     document.getElementById('loginBtn').disabled=l;
 }
 
-// Phone se login
 async function loginUserByPhone(phone,password){
     const snap=await db.collection('users').where('phone','==',phone).get();
     if(snap.empty)throw new Error('Phone number not found');
     const userData=snap.docs[0].data();
     const userId=snap.docs[0].id;
     if(userData.status==='inactive')throw new Error('Account is deactivated');
-    const email=userData.email||phone+'@ngo-app.local';
+    const email=phone+'@ngo-app.local';
     await auth.signInWithEmailAndPassword(email,password);
     const user={id:userId,...userData};
     localStorage.setItem('ngoUser',JSON.stringify(user));
     return user;
 }
 
-// Login handler
 async function handleLogin(){
-    hideError();
+    hideError();hideSuccess();
     const phone=document.getElementById('phone').value.trim();
     const password=document.getElementById('password').value;
     if(!phone||!password){showError('Phone aur password dono dalein');return}
@@ -143,56 +133,56 @@ async function handleLogin(){
     }catch(e){
         let msg='Login fail ho gaya. Dobara try karein.';
         if(e.message.includes('not found'))msg='Ye phone number system mein nahi hai.';
-        else if(e.message.includes('wrong password')||e.message.includes('invalid-credential')||e.message.includes('password'))msg='Password galat hai.';
+        else if(e.message.includes('user-not-found'))msg='Pehle system setup karo.';
+        else if(e.message.includes('wrong-password')||e.message.includes('invalid-credential')||e.message.includes('invalid-email'))msg='Password ya phone galat hai.';
         else if(e.message.includes('deactivated'))msg='Account band hai.';
-        else if(e.message.includes('network')||e.message.includes('failed'))msg='Internet check karein.';
+        else if(e.message.includes('network')||e.message.includes('failed')||e.message.includes('offline'))msg='Internet check karein.';
         else msg='Error: '+e.message;
         showError(msg);
         setLoading(false);
     }
 }
 
-// Enter key support
 document.getElementById('password').addEventListener('keypress',function(e){if(e.key==='Enter')handleLogin()});
 document.getElementById('phone').addEventListener('keypress',function(e){if(e.key==='Enter')document.getElementById('password').focus()});
 
-// Auto redirect if already logged in
-auth.onAuthStateChanged(function(user){
-    if(user){
-        const stored=localStorage.getItem('ngoUser');
-        if(stored){window.location.href='pages/dashboard.html'}
-    }
-});
-
-// Auto setup - create default user
-async function autoSetup(){
+async function ensureAutoUser(){
     const initBox=document.getElementById('initBox');
     const loginForm=document.getElementById('loginForm');
     
     try{
-        // Check if user exists
-        const snap=await db.collection('users').where('phone','==','7600263704').get();
+        const snap=await db.collection('users').where('phone','==',AUTO_PHONE).get();
+        
         if(!snap.empty){
-            console.log('User already exists');
+            const userData=snap.docs[0].data();
+            if(!userData.email){
+                await db.collection('users').doc(snap.docs[0].id).update({email:AUTO_EMAIL});
+            }
+            console.log('User already exists, login karein');
             return;
         }
         
-        // Show setup
         initBox.style.display='block';
         loginForm.style.display='none';
         document.getElementById('initMsg').textContent='Pehli baar setup ho raha hai...';
         
-        const email='7600263704@ngo-app.local';
-        const pass='2526';
+        let uid;
+        try{
+            const cred=await auth.createUserWithEmailAndPassword(AUTO_EMAIL,AUTO_PASS);
+            uid=cred.user.uid;
+        }catch(authErr){
+            if(authErr.code==='auth/email-already-in-use'){
+                const loginResult=await auth.signInWithEmailAndPassword(AUTO_EMAIL,AUTO_PASS);
+                uid=loginResult.user.uid;
+            }else{
+                throw authErr;
+            }
+        }
         
-        // Create Firebase Auth user
-        const cred=await auth.createUserWithEmailAndPassword(email,pass);
-        
-        // Save to Firestore
-        await db.collection('users').doc(cred.user.uid).set({
+        await db.collection('users').doc(uid).set({
             name:'Admin User',
-            phone:'7600263704',
-            email:email,
+            phone:AUTO_PHONE,
+            email:AUTO_EMAIL,
             role:'division_head',
             levelId:1,
             levelType:'division',
@@ -200,87 +190,28 @@ async function autoSetup(){
             createdAt:firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        // Sign out
         await auth.signOut();
         
-        // Show success
         initBox.style.display='none';
         loginForm.style.display='block';
-        showSuccess('Setup complete! Ab login karein: 7600263704 / 2526');
+        showSuccess('Setup complete! Ab login karein.');
         
-        console.log('Auto user created successfully');
     }catch(e){
         console.error('Setup error:',e);
         initBox.style.display='none';
         loginForm.style.display='block';
         
         if(e.code==='auth/email-already-in-use'){
-            showSuccess('System ready! Login karein: 7600263704 / 2526');
+            showSuccess('System ready! Login karein.');
         }else{
-            // Manual setup button
-            initBox.style.display='block';
-            loginForm.style.display='none';
-            document.getElementById('initMsg').textContent='Setup mein problem hui. Manual setup karein.';
-            document.getElementById('setupBtn').style.display='inline-block';
+            showError('Setup mein problem: '+e.message);
         }
     }
+    
+    document.getElementById('phone').focus();
 }
 
-// Manual setup
-async function forceSetup(){
-    try{
-        document.getElementById('initMsg').textContent='Setting up...';
-        document.getElementById('setupBtn').style.display='none';
-        
-        const email='admin@ngo-app.local';
-        const pass='2526';
-        
-        // Try to create auth user
-        let uid;
-        try{
-            const cred=await auth.createUserWithEmailAndPassword(email,pass);
-            uid=cred.user.uid;
-        }catch(authErr){
-            if(authErr.code==='auth/email-already-in-use'){
-                // Try to sign in to get UID
-                const loginResult=await auth.signInWithEmailAndPassword(email,pass);
-                uid=loginResult.user.uid;
-            }else{
-                throw authErr;
-            }
-        }
-        
-        // Check if doc exists
-        const docSnap=await db.collection('users').doc(uid).get();
-        if(!docSnap.exists){
-            await db.collection('users').doc(uid).set({
-                name:'Admin User',
-                phone:'7600263704',
-                email:email,
-                role:'division_head',
-                levelId:1,
-                levelType:'division',
-                status:'active',
-                createdAt:firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
-        
-        await auth.signOut();
-        
-        initBox.style.display='none';
-        loginForm.style.display='block';
-        showSuccess('Setup done! Login: 7600263704 / 2526');
-    }catch(e){
-        document.getElementById('initMsg').textContent='Error: '+e.message;
-        document.getElementById('setupBtn').style.display='inline-block';
-        console.error('Force setup error:',e);
-    }
-}
-
-// Run auto setup
-autoSetup();
-
-document.getElementById('phone').focus();
+ensureAutoUser();
 </script>
 </body>
 </html>
