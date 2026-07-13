@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>NGO Management - Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--p:#1a6b3c;--pd:#0d4a25;--d:#dc3545;--w:#ff9800;--su:#28a745;--l:#f5f7fa;--dk:#1a1a2e;--g:#6c757d;--gl:#e9ecef;--w2:#fff}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--l);color:var(--dk);max-width:500px;margin:0 auto;min-height:100vh;position:relative}
+.btn{padding:12px 24px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-p{background:linear-gradient(135deg,var(--p),var(--su));color:var(--w2)}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(26,107,60,0.3)}
+.btn-blk{width:100%}.btn-sm{padding:8px 16px;font-size:13px;border-radius:8px}
+.btn-s{background:var(--gl);color:var(--dk)}.btn-d{background:var(--d);color:var(--w2)}.btn-su{background:var(--su);color:var(--w2)}.btn-w{background:var(--w);color:var(--w2)}
+.header{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,var(--p),var(--pd));padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.header-top{display:flex;align-items:center;gap:12px;flex:1}
+.menu-btn{background:none;border:none;color:var(--w2);font-size:22px;cursor:pointer;padding:4px}
+.header-t{color:var(--w2);font-size:17px;font-weight:600}
+.header-r{display:flex;align-items:center;gap:8px}
+.avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;color:var(--w2);font-weight:700;font-size:14px;border:2px solid rgba(255,255,255,0.4)}
+.sb-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;display:none;opacity:0;transition:opacity 0.3s}
+.sb-overlay.show{display:block;opacity:1}
+.sidebar{position:fixed;top:0;left:-280px;width:270px;height:100%;background:var(--w2);z-index:300;transition:left 0.3s ease;box-shadow:4px 0 20px rgba(0,0,0,0.1);display:flex;flex-direction:column}
+.sidebar.open{left:0}
+.sb-head{background:linear-gradient(135deg,var(--p),var(--pd));padding:24px 20px;color:var(--w2)}
+.sb-close{background:none;border:none;color:var(--w2);font-size:20px;cursor:pointer;position:absolute;top:14px;right:14px}
+.sb-user{text-align:center;margin-top:8px}
+.sb-user h3{font-size:16px;font-weight:600;margin-bottom:2px}
+.sb-user p{font-size:12px;opacity:0.8}
+.sb-user .avatar-lg{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 10px;border:3px solid rgba(255,255,255,0.4)}
+.sb-menu{list-style:none;padding:8px 0;flex:1;overflow-y:auto}
+.sb-menu li a{display:flex;align-items:center;gap:12px;padding:13px 20px;color:var(--dk);text-decoration:none;font-size:14px;font-weight:500;transition:all 0.2s}
+.sb-menu li a:hover{background:var(--l);color:var(--p)}
+.sb-menu li a.active{background:rgba(26,107,60,0.1);color:var(--p);font-weight:600;border-right:3px solid var(--p)}
+.sb-menu li a svg{width:20px;height:20px;flex-shrink:0}
+.sb-div{height:1px;background:var(--gl);margin:8px 0}
+.main{padding:16px;padding-bottom:90px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.stat{background:var(--w2);border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);transition:transform 0.2s}
+.stat:hover{transform:translateY(-2px)}
+.stat .stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px}
+.stat .stat-num{font-size:24px;font-weight:700;color:var(--dk)}
+.stat .stat-label{font-size:12px;color:var(--g);margin-top:2px}
+.card{background:var(--w2);border-radius:14px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden}
+.card-h{padding:14px 16px;border-bottom:1px solid var(--gl);display:flex;align-items:center;justify-content:space-between}
+.card-h h3{font-size:15px;font-weight:600;color:var(--dk)}
+.card-b{padding:14px 16px}
+.lst{list-style:none}
+.lst-i{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--gl);transition:background 0.2s}
+.lst-i:last-child{border-bottom:none}
+.lst-i:hover{background:var(--l)}
+.lst-a{font-size:14px;color:var(--dk)}
+.lst-a h4{font-size:14px;font-weight:600;margin-bottom:2px}
+.lst-a p{font-size:12px;color:var(--g)}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.b-su{background:#e8f5e9;color:var(--su)}.b-w{background:#fff3e0;color:var(--w)}.b-d{background:#ffebee;color:var(--d)}.b-i{background:#e3f2fd;color:#1976d2}
+.alert{padding:12px 16px;border-radius:10px;margin-bottom:14px;font-size:13px;display:flex;align-items:center;gap:8px;animation:slideIn 0.4s}
+.a-su{background:#e8f5e9;color:var(--su);border:1px solid #c8e6c9}
+.a-d{background:#ffebee;color:var(--d);border:1px solid #ffcdd2}
+.a-w{background:#fff3e0;color:var(--w);border:1px solid #ffe0b2}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+.ap-pend{background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:1px solid #ffcc80;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform 0.2s}
+.ap-pend:hover{transform:translateY(-1px)}
+.ap-pend .ap-ic{width:40px;height:40px;border-radius:50%;background:var(--w);display:flex;align-items:center;justify-content:center;color:var(--w2);font-size:18px;flex-shrink:0}
+.ap-pend .ap-tx h4{font-size:14px;font-weight:600;color:var(--dk)}
+.ap-pend .ap-tx p{font-size:12px;color:var(--g)}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:var(--w2);border-top:1px solid var(--gl);display:flex;z-index:100;padding:6px 0 env(safe-area-inset-bottom,6px)}
+.bnav a{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px;text-decoration:none;color:var(--g);font-size:10px;font-weight:500;transition:color 0.2s;gap:4px}
+.bnav a.active{color:var(--p)}
+.bnav a svg{width:22px;height:22px}
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:400;display:none;align-items:flex-end;justify-content:center}
+.modal.show{display:flex}
+.modal-c{background:var(--w2);width:100%;max-width:500px;max-height:85vh;border-radius:14px 14px 0 0;transform:translateY(100%);transition:transform 0.3s ease;overflow:hidden;display:flex;flex-direction:column}
+.modal.show .modal-c{transform:translateY(0)}
+.modal-h{padding:16px 20px;border-bottom:1px solid var(--gl);display:flex;align-items:center;justify-content:space-between}
+.modal-h h3{font-size:16px;font-weight:600}
+.modal-x{background:none;border:none;font-size:22px;cursor:pointer;color:var(--g);padding:4px}
+.modal-b{padding:20px;overflow-y:auto;flex:1}
+.modal-f{padding:14px 20px;border-top:1px solid var(--gl);display:flex;gap:10px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--dk);margin-bottom:6px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 14px;border:2px solid var(--gl);border-radius:10px;font-size:14px;background:#fafafa;color:var(--dk);outline:none;transition:all 0.3s;font-family:inherit}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--p);background:var(--w2);box-shadow:0 0 0 3px rgba(26,107,60,0.1)}
+.srch{position:relative;margin-bottom:14px}
+.srch input{width:100%;padding:11px 14px 11px 40px;border:2px solid var(--gl);border-radius:10px;font-size:14px;background:var(--w2);outline:none;transition:all 0.3s}
+.srch input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(26,107,60,0.1)}
+.sr-ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--g)}
+.empty{text-align:center;padding:40px 20px;color:var(--g)}
+.empty svg{width:48px;height:48px;margin-bottom:12px;opacity:0.4}
+.empty p{font-size:14px}
+.hier{display:flex;align-items:center;gap:8px;padding:10px 0;font-size:13px;color:var(--dk)}
+.hier .hier-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.hier .hier-line{width:2px;height:20px;background:var(--gl);margin-left:4px}
+.loader{display:flex;justify-content:center;padding:40px}
+.spinner{width:30px;height:30px;border:3px solid var(--gl);border-top-color:var(--p);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(min-width:768px){.stats{grid-template-columns:repeat(4,1fr)}.modal{align-items:center}.modal-c{border-radius:14px;max-height:80vh}.bnav{display:none}}
+</style>
+</head>
+<body>
+
+<header class="header">
+<div class="header-top">
+<button class="menu-btn" onclick="toggleSidebar()">&#9776;</button>
+<span class="header-t">Dashboard</span>
+</div>
+<div class="header-r">
+<div class="avatar" id="avatarEl">?</div>
+</div>
+</header>
+
+<div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
+<nav class="sidebar" id="sidebar">
+<div class="sb-head" style="position:relative">
+<button class="sb-close" onclick="closeSidebar()">&times;</button>
+<div class="sb-user">
+<div class="avatar-lg" id="sbAvatar">?</div>
+<h3 id="sbName">Loading...</h3>
+<p id="sbRole">...</p>
+</div>
+</div>
+<ul class="sb-menu" id="sbMenu"></ul>
+</nav>
+
+<div class="main" id="mainContent">
+<div class="loader" id="pageLoader"><div class="spinner"></div></div>
+</div>
+
+<nav class="bnav" id="bnav"></nav>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.firebasestorage.app",messagingSenderId:"438479516590",appId:"1:438479516590:web:fc0a9aaa4a0285f0dc0e3f",measurementId:"G-TJWXZSQXGH"};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+
+function toggleSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sbOverlay').classList.add('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sbOverlay').classList.remove('show')}
+function openModal(id){document.getElementById(id).classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+function showAlert(msg,type){const d=document.createElement('div');d.className='alert a-'+type;d.innerHTML='<span>'+msg+'</span>';const m=document.querySelector('.main');if(m){m.insertBefore(d,m.firstChild);setTimeout(()=>d.remove(),4000)}}
+function confirmDel(msg){return confirm(msg||'Are you sure you want to delete?')}
+function searchItems(inputId,cssClass){const v=document.getElementById(inputId).value.toLowerCase();document.querySelectorAll('.'+cssClass).forEach(i=>{i.style.display=i.textContent.toLowerCase().includes(v)?'flex':'none'})}
+function getCurrentUser(){const s=localStorage.getItem('ngoUser');return s?JSON.parse(s):null}
+function saveUser(user){localStorage.setItem('ngoUser',JSON.stringify(user))}
+function logoutUser(){auth.signOut();localStorage.removeItem('ngoUser');window.location.href='index.html'}
+function requireAuth(allowedRoles){const u=getCurrentUser();if(!u||!allowedRoles.includes(u.role)){window.location.href='index.html';return null}return u}
+
+async function addDoc(col,data){return await db.collection(col).add({...data,createdAt:firebase.firestore.FieldValue.serverTimestamp()})}
+async function updateDoc(col,id,data){return await db.collection(col).doc(id).update({...data,updatedAt:firebase.firestore.FieldValue.serverTimestamp()})}
+async function deleteDoc(col,id){return await db.collection(col).doc(id).delete()}
+async function getDocs(col,filters){let q=db.collection(col);if(filters){filters.forEach(f=>{q=q.where(f.field,f.op,f.value)})}return await q.get()}
+async function getDocById(col,id){const d=await db.collection(col).doc(id).get();return d.exists?{id:d.id,...d.data()}:null}
+
+function getSidebarHTML(role){
+const menus={
+division_head:[
+{label:'Dashboard',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',href:'dashboard.html',active:true},
+{label:'Districts',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21V11h6v10"/></svg>',href:'districts.html'},
+{label:'Areas',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 00-8 8c0 6 8 12 8 12s8-6 8-12a8 8 0 00-8-8z"/></svg>',href:'areas.html'},
+{label:'Zeli Halqas',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',href:'zeli-halqas.html'},
+{label:'Departments',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>',href:'departments.html'},
+{label:'Approvals',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>',href:'approvals.html'}
+],
+district_head:[
+{label:'Dashboard',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',href:'dashboard.html',active:true},
+{label:'Areas',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 00-8 8c0 6 8 12 8 12s8-6 8-12a8 8 0 00-8-8z"/></svg>',href:'areas.html'},
+{label:'Zeli Halqas',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',href:'zeli-halqas.html'},
+{label:'Approvals',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>',href:'approvals.html'}
+],
+area_head:[
+{label:'Dashboard',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',href:'dashboard.html',active:true},
+{label:'Zeli Halqas',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',href:'zeli-halqas.html'},
+{label:'Approvals',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>',href:'approvals.html'}
+]
+};
+return(menus[role]||menus.area_head).map(m=>'<li><a href="'+m.href+'" class="'+(m.active?'active':'')+'">'+m.icon+'<span>'+m.label+'</span></a></li>').join('');
+}
+
+function getBottomNavHTML(role){
+const navs={
+division_head:[
+{label:'Home',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',href:'dashboard.html',active:true},
+{label:'Districts',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21V11h6v10"/></svg>',href:'districts.html'},
+{label:'Approvals',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>',href:'approvals.html'},
+{label:'More',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>',href:'#',onclick:'toggleSidebar()'}
+],
+district_head:[
+{label:'Home',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',href:'dashboard.html',active:true},
+{label:'Areas',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 00-8 8c0 6 8 12 8 12s8-6 8-12a8 8 0 00-8-8z"/></svg>',href:'areas.html'},
+{label:'Approvals',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>',href:'approvals.html'},
+{label:'More',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>',href:'#',onclick:'toggleSidebar()'}
+],
+area_head:[
+{label:'Home',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>',href:'dashboard.html',active:true},
+{label:'Halqas',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>',href:'zeli-halqas.html'},
+{label:'Approvals',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>',href:'approvals.html'},
+{label:'More',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>',href:'#',onclick:'toggleSidebar()'}
+]
+};
+return(navs[role]||navs.area_head).map(n=>'<a href="'+n.href+'" class="'+(n.active?'active':'')+'" '+(n.onclick?'onclick="'+n.onclick+';return false"':'')+'>'+n.icon+'<span>'+n.label+'</span></a>').join('');
+}
+
+async function initDashboard(user){
+document.getElementById('sbName').textContent=user.name||'User';
+document.getElementById('sbRole').textContent=(user.role||'').replace('_',' ').replace(/\b\w/g,l=>l.toUpperCase());
+document.getElementById('sbAvatar').textContent=(user.name||'?')[0].toUpperCase();
+document.getElementById('avatarEl').textContent=(user.name||'?')[0].toUpperCase();
+document.getElementById('sbMenu').innerHTML=getSidebarHTML(user.role);
+document.getElementById('bnav').innerHTML=getBottomNavHTML(user.role);
+
+try{
+let districtCount=0,areaCount=0,zeliCount=0,departmentCount=0,pendingCount=0;
+const role=user.role;
+
+if(role==='division_head'){
+const [da,ar,zh,dp,ap]=await Promise.all([
+db.collection('districts').where('divisionId','==',user.levelId).get(),
+db.collection('areas').where('divisionId','==',user.levelId).get(),
+db.collection('zeli_halqas').where('divisionId','==',user.levelId).get(),
+db.collection('departments').where('divisionId','==',user.levelId).get(),
+db.collection('approvals').where('levelId','==',user.levelId).where('status','==','pending').get()
+]);
+districtCount=da.size;areaCount=ar.size;zeliCount=zh.size;departmentCount=dp.size;pendingCount=ap.size;
+
+let pendingHTML='';
+if(pendingCount>0){
+pendingHTML='<div class="ap-pend" onclick="window.location.href=\'approvals.html\'"><div class="ap-ic">&#128276;</div><div class="ap-tx"><h4>'+pendingCount+' Pending Approval(s)</h4><p>Click to review pending requests</p></div></div>';
+}
+
+const areasSnap=await db.collection('areas').where('divisionId','==',user.levelId).get();
+const areaDocs=[];
+areasSnap.forEach(d=>areaDocs.push({id:d.id,...d.data()}));
+
+let hierarchyHTML='';
+for(let i=0;i<Math.min(areaDocs.length,5);i++){
+const a=areaDocs[i];
+const districtsSnap=await db.collection('districts').where('divisionId','==',user.levelId).get();
+const distName=districtsSnap.docs.find(dd=>dd.id===a.districtId);
+hierarchyHTML+='<div class="hier"><div class="hier-dot" style="background:var(--p)"></div><span><strong>'+a.name+'</strong> '+(distName?'in '+distName.data().name:'')+'</span></div>';
+}
+
+document.getElementById('mainContent').innerHTML=pendingHTML+
+'<div class="stats">'+
+'<div class="stat"><div class="stat-icon" style="background:#e8f5e9;color:var(--su)">&#127970;</div><div class="stat-num">'+districtCount+'</div><div class="stat-label">Districts</div></div>'+
+'<div class="stat"><div class="stat-icon" style="background:#e3f2fd;color:#1976d2">&#128205;</div><div class="stat-num">'+areaCount+'</div><div class="stat-label">Areas</div></div>'+
+'<div class="stat"><div class="stat-icon" style="background:#fff3e0;color:var(--w)">&#127969;</div><div class="stat-num">'+zeliCount+'</div><div class="stat-label">Zeli Halqas</div></div>'+
+'<div class="stat"><div class="stat-icon" style="background:#f3e5f5;color:#9c27b0">&#128196;</div><div class="stat-num">'+departmentCount+'</div><div class="stat-label">Departments</div></div>'+
+'</div>'+
+'<div class="card"><div class="card-h"><h3>Organization Hierarchy</h3></div><div class="card-b">'+(hierarchyHTML||'<div class="empty"><p>No areas added yet</p></div>')+'</div></div>';
+}
+
+else if(role==='district_head'){
+const [ar,zh,ap]=await Promise.all([
+db.collection('areas').where('districtId','==',user.levelId).get(),
+db.collection('zeli_halqas').where('districtId','==',user.levelId).get(),
+db.collection('approvals').where('levelId','==',user.levelId).where('status','==','pending').get()
+]);
+areaCount=ar.size;zeliCount=zh.size;pendingCount=ap.size;
+
+let imamCount=0;
+zh.forEach(d=>{const dd=d.data();if(dd.imamPhone)imamCount++});
+
+let pendingHTML='';
+if(pendingCount>0){
+pendingHTML='<div class="ap-pend" onclick="window.location.href=\'approvals.html\'"><div class="ap-ic">&#128276;</div><div class="ap-tx"><h4>'+pendingCount+' Pending Approval(s)</h4><p>Click to review pending requests</p></div></div>';
+}
+
+const recentAreas=[];
+ar.forEach(d=>recentAreas.push({id:d.id,...d.data()}));
+let recentHTML='';
+recentAreas.slice(0,5).forEach(a=>{
+recentHTML+='<div class="lst-i"><div class="lst-a"><h4>'+a.name+'</h4><p>Area</p></div><span class="badge b-i">Active</span></div>';
+});
+
+document.getElementById('mainContent').innerHTML=pendingHTML+
+'<div class="stats">'+
+'<div class="stat"><div class="stat-icon" style="background:#e3f2fd;color:#1976d2">&#128205;</div><div class="stat-num">'+areaCount+'</div><div class="stat-label">Areas</div></div>'+
+'<div class="stat"><div class="stat-icon" style="background:#fff3e0;color:var(--w)">&#127969;</div><div class="stat-num">'+zeliCount+'</div><div class="stat-label">Zeli Halqas</div></div>'+
+'<div class="stat"><div class="stat-icon" style="background:#e8f5e9;color:var(--su)">&#128100;</div><div class="stat-num">'+imamCount+'</div><div class="stat-label">Imams</div></div>'+
+'<div class="stat"><div class="stat-icon" style="background:#ffebee;color:var(--d)">&#128276;</div><div class="stat-num">'+pendingCount+'</div><div class="stat-label">Pending</div></div>'+
+'</div>'+
+'<div class="card"><div class="card-h"><h3>Recent Areas</h3></div><div class="card-b">'+(recentHTML||'<div class="empty"><p>No areas yet</p></div>')+'</div></div>';
+}
+
+else if(role==='area_head'){
+const [zh]=await Promise.all([
+db.collection('zeli_halqas').where('areaId','==',user.levelId).get()
+]);
+zeliCount=zh.size;
+
+let imamCount=0,withPhone=0;
+zh.forEach(d=>{const dd=d.data();if(dd.imamName)imamCount++;if(dd.imamPhone)withPhone++});
+
+let recentHTML='';
+const recent=[];
+zh.forEach(d=>recent.push({id:d.id,...d.data()}));
+recent.slice(0,5).forEach(z=>{
+recentHTML+='<div class="lst-i"><div class="lst-a"><h4>'+z.masjidName+'</h4><p>'+z.imamName+'</p></div><span class="badge b-su">Active</span></div>';
+});
+
+document.getElementById('mainContent').innerHTML=
+'<div class="stats">'+
+'<div class="stat"><div class="stat-icon" style="background:#fff3e0;color:var(--w)">&#127969;</div><div class="stat-num">'+zeliCount+'</div><div class="stat-label">Zeli Halqas</div></div>'+
+'<div class="stat"><div class="stat-icon" style="background:#e8f5e9;color:var(--su)">&#128100;</div><div class="stat-num">'+imamCount+'</div><div class="stat-label">Imams</div></div>'+
+'<div class="stat"><div class="stat-icon" style="background:#e3f2fd;color:#1976d2">&#128222;</div><div class="stat-num">'+withPhone+'</div><div class="stat-label">With Phone</div></div>'+
+'<div class="stat"><div class="stat-icon" style="background:#f3e5f5;color:#9c27b0">&#128196;</div><div class="stat-num">'+zeliCount+'</div><div class="stat-label">Total</div></div>'+
+'</div>'+
+'<div class="card"><div class="card-h"><h3>Recent Zeli Halqas</h3></div><div class="card-b">'+(recentHTML||'<div class="empty"><p>No zeli halqas yet</p></div>')+'</div></div>';
+}
+}catch(e){
+console.error(e);
+document.getElementById('mainContent').innerHTML='<div class="alert a-d">Error loading dashboard data</div>';
+}
+}
+
+const user=requireAuth(['division_head','district_head','area_head']);
+if(user){initDashboard(user)}
+</script>
+</body>
+</html>

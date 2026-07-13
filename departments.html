@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>NGO Management - Departments</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--p:#1a6b3c;--pd:#0d4a25;--d:#dc3545;--w:#ff9800;--su:#28a745;--l:#f5f7fa;--dk:#1a1a2e;--g:#6c757d;--gl:#e9ecef;--w2:#fff}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--l);color:var(--dk);max-width:500px;margin:0 auto;min-height:100vh}
+.btn{padding:12px 24px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-p{background:linear-gradient(135deg,var(--p),var(--su));color:var(--w2)}.btn-p:hover{transform:translateY(-2px)}.btn-blk{width:100%}.btn-sm{padding:8px 16px;font-size:13px;border-radius:8px}
+.btn-s{background:var(--gl);color:var(--dk)}.btn-d{background:var(--d);color:var(--w2)}.btn-su{background:var(--su);color:var(--w2)}.btn-w{background:var(--w);color:var(--w2)}
+.header{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,var(--p),var(--pd));padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.header-top{display:flex;align-items:center;gap:12px;flex:1}
+.menu-btn{background:none;border:none;color:var(--w2);font-size:22px;cursor:pointer;padding:4px}
+.header-t{color:var(--w2);font-size:17px;font-weight:600}
+.avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;color:var(--w2);font-weight:700;font-size:14px;border:2px solid rgba(255,255,255,0.4)}
+.sb-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;display:none;opacity:0;transition:opacity 0.3s}.sb-overlay.show{display:block;opacity:1}
+.sidebar{position:fixed;top:0;left:-280px;width:270px;height:100%;background:var(--w2);z-index:300;transition:left 0.3s ease;box-shadow:4px 0 20px rgba(0,0,0,0.1);display:flex;flex-direction:column}.sidebar.open{left:0}
+.sb-head{background:linear-gradient(135deg,var(--p),var(--pd));padding:24px 20px;color:var(--w2);position:relative}
+.sb-close{background:none;border:none;color:var(--w2);font-size:20px;cursor:pointer;position:absolute;top:14px;right:14px}
+.sb-user{text-align:center;margin-top:8px}.sb-user h3{font-size:16px;font-weight:600;margin-bottom:2px}.sb-user p{font-size:12px;opacity:0.8}
+.sb-user .avatar-lg{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 10px;border:3px solid rgba(255,255,255,0.4)}
+.sb-menu{list-style:none;padding:8px 0;flex:1;overflow-y:auto}
+.sb-menu li a{display:flex;align-items:center;gap:12px;padding:13px 20px;color:var(--dk);text-decoration:none;font-size:14px;font-weight:500;transition:all 0.2s}.sb-menu li a:hover{background:var(--l);color:var(--p)}.sb-menu li a.active{background:rgba(26,107,60,0.1);color:var(--p);font-weight:600;border-right:3px solid var(--p)}
+.sb-menu li a svg{width:20px;height:20px;flex-shrink:0}
+.main{padding:16px;padding-bottom:90px}
+.card{background:var(--w2);border-radius:14px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden}
+.card-h{padding:14px 16px;border-bottom:1px solid var(--gl);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}.card-h h3{font-size:15px;font-weight:600}
+.card-b{padding:14px 16px}
+.lst{list:none}.lst-i{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--gl);transition:background 0.2s}.lst-i:last-child{border-bottom:none}.lst-i:hover{background:var(--l)}
+.lst-a{font-size:14px;flex:1}.lst-a h4{font-size:14px;font-weight:600;margin-bottom:2px}.lst-a p{font-size:12px;color:var(--g)}
+.lst-btn{display:flex;gap:6px}
+.alert{padding:12px 16px;border-radius:10px;margin-bottom:14px;font-size:13px;display:flex;align-items:center;gap:8px;animation:slideIn 0.4s}.a-su{background:#e8f5e9;color:var(--su);border:1px solid #c8e6c9}.a-d{background:#ffebee;color:var(--d);border:1px solid #ffcdd2}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+.srch{position:relative;margin-bottom:14px}.srch input{width:100%;padding:11px 14px 11px 40px;border:2px solid var(--gl);border-radius:10px;font-size:14px;background:var(--w2);outline:none;transition:all 0.3s}.srch input:focus{border-color:var(--p)}.sr-ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--g)}
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:400;display:none;align-items:flex-end;justify-content:center}.modal.show{display:flex}
+.modal-c{background:var(--w2);width:100%;max-width:500px;max-height:85vh;border-radius:14px 14px 0 0;transform:translateY(100%);transition:transform 0.3s ease;overflow:hidden;display:flex;flex-direction:column}.modal.show .modal-c{transform:translateY(0)}
+.modal-h{padding:16px 20px;border-bottom:1px solid var(--gl);display:flex;align-items:center;justify-content:space-between}.modal-h h3{font-size:16px;font-weight:600}
+.modal-x{background:none;border:none;font-size:22px;cursor:pointer;color:var(--g)}
+.modal-b{padding:20px;overflow-y:auto;flex:1}
+.modal-f{padding:14px 20px;border-top:1px solid var(--gl);display:flex;gap:10px}
+.form-group{margin-bottom:16px}.form-group label{display:block;font-size:13px;font-weight:600;color:var(--dk);margin-bottom:6px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 14px;border:2px solid var(--gl);border-radius:10px;font-size:14px;background:#fafafa;color:var(--dk);outline:none;transition:all 0.3s;font-family:inherit}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--p);background:var(--w2);box-shadow:0 0 0 3px rgba(26,107,60,0.1)}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:var(--w2);border-top:1px solid var(--gl);display:flex;z-index:100;padding:6px 0 env(safe-area-inset-bottom,6px)}
+.bnav a{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px;text-decoration:none;color:var(--g);font-size:10px;font-weight:500;transition:color 0.2s;gap:4px}.bnav a.active{color:var(--p)}.bnav a svg{width:22px;height:22px}
+.empty{text-align:center;padding:40px 20px;color:var(--g)}.empty p{font-size:14px}
+.spinner{width:30px;height:30px;border:3px solid var(--gl);border-top-color:var(--p);border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fab{position:fixed;bottom:80px;right:20px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--su));color:var(--w2);border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 15px rgba(26,107,60,0.4);z-index:90;display:flex;align-items:center;justify-content:center}.fab:hover{transform:scale(1.1)}
+@media(min-width:768px){.bnav{display:none}}
+</style>
+</head>
+<body>
+
+<header class="header">
+<div class="header-top">
+<button class="menu-btn" onclick="toggleSidebar()">&#9776;</button>
+<span class="header-t">Departments</span>
+</div>
+<div class="avatar" id="avatarEl">?</div>
+</header>
+
+<div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
+<nav class="sidebar" id="sidebar">
+<div class="sb-head">
+<button class="sb-close" onclick="closeSidebar()">&times;</button>
+<div class="sb-user">
+<div class="avatar-lg" id="sbAvatar">?</div>
+<h3 id="sbName">...</h3>
+<p id="sbRole">...</p>
+</div>
+</div>
+<ul class="sb-menu" id="sbMenu"></ul>
+</nav>
+
+<div class="main" id="mainContent">
+<div class="srch"><span class="sr-ic">&#128269;</span><input type="text" placeholder="Search departments..." id="searchInput" oninput="searchItems('searchInput','dept-item')"></div>
+<div class="card">
+<div class="card-h"><h3>Departments List</h3><button class="btn btn-p btn-sm" onclick="openAddModal()">+ Naya Department</button></div>
+<div class="card-b" id="listContainer"><div style="text-align:center;padding:20px"><div class="spinner"></div></div></div>
+</div>
+</div>
+
+<button class="fab" onclick="openAddModal()">+</button>
+
+<div class="modal" id="addModal">
+<div class="modal-c">
+<div class="modal-h"><h3 id="modalTitle">Naya Department</h3><button class="modal-x" onclick="closeModal('addModal')">&times;</button></div>
+<div class="modal-b">
+<div class="form-group"><label>Department Name</label><input type="text" id="deptName" placeholder="Enter department name"></div>
+<div class="form-group"><label>Description</label><textarea id="deptDesc" rows="3" placeholder="Enter description" style="resize:vertical"></textarea></div>
+</div>
+<div class="modal-f">
+<button class="btn btn-s" onclick="closeModal('addModal')" style="flex:1">Cancel</button>
+<button class="btn btn-p" id="saveBtn" onclick="saveDepartment()" style="flex:2">Save</button>
+</div>
+</div>
+</div>
+
+<nav class="bnav" id="bnav"></nav>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.firebasestorage.app",messagingSenderId:"438479516590",appId:"1:438479516590:web:fc0a9aaa4a0285f0dc0e3f",measurementId:"G-TJWXZSQXGH"};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+
+let editingId=null;
+let currentUser=null;
+
+function toggleSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sbOverlay').classList.add('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sbOverlay').classList.remove('show')}
+function openModal(id){document.getElementById(id).classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+function showAlert(msg,type){const d=document.createElement('div');d.className='alert a-'+type;d.innerHTML='<span>'+msg+'</span>';const m=document.querySelector('.main');if(m){m.insertBefore(d,m.firstChild);setTimeout(()=>d.remove(),4000)}}
+function confirmDel(msg){return confirm(msg||'Are you sure?')}
+function searchItems(inputId,cssClass){const v=document.getElementById(inputId).value.toLowerCase();document.querySelectorAll('.'+cssClass).forEach(i=>{i.style.display=i.textContent.toLowerCase().includes(v)?'flex':'none'})}
+function getCurrentUser(){const s=localStorage.getItem('ngoUser');return s?JSON.parse(s):null}
+function saveUser(u){localStorage.setItem('ngoUser',JSON.stringify(u))}
+function logoutUser(){auth.signOut();localStorage.removeItem('ngoUser');window.location.href='index.html'}
+function requireAuth(roles){const u=getCurrentUser();if(!u||!roles.includes(u.role)){window.location.href='index.html';return null}return u}
+
+function getSidebarHTML(role){
+const m={division_head:[{l:'Dashboard',h:'dashboard.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>'},{l:'Districts',h:'districts.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21V11h6v10"/></svg>'},{l:'Areas',h:'areas.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 00-8 8c0 6 8 12 8 12s8-6 8-12a8 8 0 00-8-8z"/></svg>'},{l:'Zeli Halqas',h:'zeli-halqas.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>'},{l:'Departments',h:'departments.html',a:true,i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>'},{l:'Approvals',h:'approvals.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>'}]};
+return(m[role]||[]).map(x=>'<li><a href="'+x.h+'" class="'+(x.a?'active':'')+'">'+x.i+'<span>'+x.l+'</span></a></li>').join('');
+}
+function getBottomNavHTML(role){
+const n={division_head:[{l:'Home',h:'dashboard.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>'},{l:'Districts',h:'districts.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21V11h6v10"/></svg>'},{l:'Approvals',h:'approvals.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>'},{l:'More',h:'#',oc:'toggleSidebar()',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>'}]};
+return(n[role]||[]).map(x=>'<a href="'+x.h+'" class="'+(x.a?'active':'')+'" '+(x.oc?'onclick="'+x.oc+';return false"':'')+'>'+x.i+'<span>'+x.l+'</span></a>').join('');
+}
+
+function openAddModal(){
+editingId=null;
+document.getElementById('modalTitle').textContent='Naya Department';
+document.getElementById('deptName').value='';
+document.getElementById('deptDesc').value='';
+document.getElementById('saveBtn').textContent='Save';
+openModal('addModal');
+}
+function openEditModal(id,name,desc){
+editingId=id;
+document.getElementById('modalTitle').textContent='Edit Department';
+document.getElementById('deptName').value=name;
+document.getElementById('deptDesc').value=desc||'';
+document.getElementById('saveBtn').textContent='Update';
+openModal('addModal');
+}
+
+async function saveDepartment(){
+const name=document.getElementById('deptName').value.trim();
+const description=document.getElementById('deptDesc').value.trim();
+if(!name){showAlert('Please enter department name','d');return}
+try{
+if(editingId){
+await db.collection('departments').doc(editingId).update({name,description,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+showAlert('Department updated','su');
+}else{
+await db.collection('departments').add({name,description,divisionId:currentUser.levelId,status:'active',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+showAlert('Department added','su');
+}
+closeModal('addModal');
+loadDepartments();
+}catch(e){showAlert('Error: '+e.message,'d')}
+}
+
+async function deleteDept(id){
+if(!confirmDel('Delete this department?'))return;
+try{
+await db.collection('departments').doc(id).delete();
+showAlert('Deleted','su');
+loadDepartments();
+}catch(e){showAlert('Error','d')}
+}
+
+async function loadDepartments(){
+const container=document.getElementById('listContainer');
+container.innerHTML='<div style="text-align:center;padding:20px"><div class="spinner"></div></div>';
+try{
+const snap=await db.collection('departments').where('divisionId','==',currentUser.levelId).get();
+if(snap.empty){container.innerHTML='<div class="empty"><p>No departments found.</p></div>';return}
+let html='';
+snap.forEach(doc=>{
+const d=doc.data();
+html+='<div class="lst-i dept-item"><div class="lst-a"><h4>'+d.name+'</h4><p>'+(d.description||'No description')+'</p></div><div class="lst-btn"><button class="btn btn-s btn-sm" onclick="openEditModal(\''+doc.id+'\',\''+d.name.replace(/'/g,"\\'")+'\',\''+(d.description||'').replace(/'/g,"\\'")+'\')">Edit</button><button class="btn btn-d btn-sm" onclick="deleteDept(\''+doc.id+'\')">Del</button></div></div>';
+});
+container.innerHTML=html;
+}catch(e){container.innerHTML='<div class="alert a-d">Error loading departments</div>'}
+}
+
+const user=requireAuth(['division_head']);
+if(user){
+currentUser=user;
+document.getElementById('sbName').textContent=user.name||'User';
+document.getElementById('sbRole').textContent='Division Head';
+document.getElementById('sbAvatar').textContent=(user.name||'?')[0].toUpperCase();
+document.getElementById('avatarEl').textContent=(user.name||'?')[0].toUpperCase();
+document.getElementById('sbMenu').innerHTML=getSidebarHTML(user.role);
+document.getElementById('bnav').innerHTML=getBottomNavHTML(user.role);
+loadDepartments();
+}
+</script>
+</body>
+</html>

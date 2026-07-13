@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>NGO Management - Districts</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--p:#1a6b3c;--pd:#0d4a25;--d:#dc3545;--w:#ff9800;--su:#28a745;--l:#f5f7fa;--dk:#1a1a2e;--g:#6c757d;--gl:#e9ecef;--w2:#fff}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--l);color:var(--dk);max-width:500px;margin:0 auto;min-height:100vh}
+.btn{padding:12px 24px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-p{background:linear-gradient(135deg,var(--p),var(--su));color:var(--w2)}.btn-blk{width:100%}.btn-sm{padding:8px 14px;font-size:13px;border-radius:8px}
+.btn-s{background:var(--gl);color:var(--dk)}.btn-d{background:var(--d);color:var(--w2)}.btn-su{background:var(--su);color:var(--w2)}.btn-w{background:var(--w);color:var(--w2)}
+.header{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,var(--p),var(--pd));padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.header-top{display:flex;align-items:center;gap:12px;flex:1}
+.menu-btn{background:none;border:none;color:var(--w2);font-size:22px;cursor:pointer;padding:4px}
+.header-t{color:var(--w2);font-size:17px;font-weight:600}
+.avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;color:var(--w2);font-weight:700;font-size:14px;border:2px solid rgba(255,255,255,0.4)}
+.sb-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;display:none;opacity:0;transition:opacity 0.3s}.sb-overlay.show{display:block;opacity:1}
+.sidebar{position:fixed;top:0;left:-280px;width:270px;height:100%;background:var(--w2);z-index:300;transition:left 0.3s ease;box-shadow:4px 0 20px rgba(0,0,0,0.1);display:flex;flex-direction:column}.sidebar.open{left:0}
+.sb-head{background:linear-gradient(135deg,var(--p),var(--pd));padding:24px 20px;color:var(--w2);position:relative}
+.sb-close{background:none;border:none;color:var(--w2);font-size:20px;cursor:pointer;position:absolute;top:14px;right:14px}
+.sb-user{text-align:center;margin-top:8px}.sb-user h3{font-size:16px;font-weight:600;margin-bottom:2px}.sb-user p{font-size:12px;opacity:0.8}
+.sb-user .avatar-lg{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 10px;border:3px solid rgba(255,255,255,0.4)}
+.sb-menu{list-style:none;padding:8px 0;flex:1;overflow-y:auto}
+.sb-menu li a{display:flex;align-items:center;gap:12px;padding:13px 20px;color:var(--dk);text-decoration:none;font-size:14px;font-weight:500;transition:all 0.2s}.sb-menu li a:hover{background:var(--l);color:var(--p)}.sb-menu li a.active{background:rgba(26,107,60,0.1);color:var(--p);font-weight:600;border-right:3px solid var(--p)}
+.sb-menu li a svg{width:20px;height:20px;flex-shrink:0}
+.sb-div{height:1px;background:var(--gl);margin:8px 0}
+.main{padding:16px;padding-bottom:90px}
+.card{background:var(--w2);border-radius:14px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden}
+.card-h{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--gl)}
+.card-h h3{font-size:15px;font-weight:700}
+.card-b{padding:14px 16px}
+.srch{position:relative;margin-bottom:14px}.srch input{width:100%;padding:12px 14px 12px 40px;border:2px solid var(--gl);border-radius:10px;font-size:14px;background:var(--w2)}.srch input:focus{outline:none;border-color:var(--p)}.srch svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--g)}
+.lst-i{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--gl)}.lst-i:last-child{border-bottom:none}
+.lst-a{flex:1;min-width:0}.lst-a h4{font-size:15px;font-weight:700;margin-bottom:3px}.lst-a p{font-size:13px;color:var(--g);margin-bottom:2px}
+.lst-btn{display:flex;gap:6px;flex-shrink:0}
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:400;display:none;align-items:flex-end;justify-content:center}.modal.show{display:flex}
+.modal-c{background:var(--w2);border-radius:16px 16px 0 0;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;animation:slideUp 0.3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-h{padding:16px;border-bottom:1px solid var(--gl);display:flex;justify-content:space-between;align-items:center}
+.modal-h h3{font-size:16px;font-weight:700}
+.modal-x{background:var(--gl);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.modal-b{padding:16px}
+.modal-f{padding:12px 16px;border-top:1px solid var(--gl);display:flex;gap:10px}
+.form-g{margin-bottom:16px}.form-g label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--dk)}.form-g input,.form-g select,.form-g textarea{width:100%;padding:12px;border:2px solid var(--gl);border-radius:10px;font-size:15px;transition:border 0.2s}.form-g input:focus,.form-g select:focus{outline:none;border-color:var(--p)}
+.alert{padding:12px;border-radius:10px;margin-bottom:14px;font-size:14px;font-weight:500;animation:fadeIn 0.3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.a-su{background:#d4edda;color:#155724;border-left:4px solid var(--su)}.a-d{background:#f8d7da;color:#721c24;border-left:4px solid var(--d)}.a-w{background:#fff3cd;color:#856404;border-left:4px solid var(--w)}
+.empty{text-align:center;padding:30px;color:var(--g)}.empty p{font-size:14px}
+.spinner{width:36px;height:36px;border:3px solid var(--gl);border-top-color:var(--p);border-radius:50%;animation:spin 0.8s linear infinite;margin:20px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--w2);border-top:1px solid var(--gl);display:flex;justify-content:space-around;padding:8px 0 12px;z-index:100;max-width:500px;margin:0 auto}
+.bnav a{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:var(--g);font-size:10px;font-weight:600;padding:4px 14px;border-radius:10px;transition:all 0.2s}
+.bnav a svg{width:22px;height:22px}.bnav a.active{color:var(--p)}.bnav a.active svg{background:rgba(26,107,60,0.1);padding:4px 10px;border-radius:8px}
+.cred-box{background:#e8f5e9;border:2px solid var(--su);border-radius:10px;padding:14px;margin-top:12px}
+.cred-box h4{color:var(--su);margin-bottom:8px;font-size:14px}
+.cred-box p{font-size:13px;margin:4px 0}.cred-box strong{color:var(--dk)}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tab{flex:1;padding:10px;border:2px solid var(--gl);border-radius:10px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.tab.active{background:var(--p);color:var(--w2);border-color:var(--p)}
+</style>
+</head>
+<body>
+
+<header class="header">
+<div class="header-top">
+<button class="menu-btn" onclick="toggleSidebar()">&#9776;</button>
+<span class="header-t">Districts</span>
+</div>
+<div class="avatar" id="avatarEl">D</div>
+</header>
+
+<div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
+<nav class="sidebar" id="sidebar">
+<div class="sb-head">
+<button class="sb-close" onclick="closeSidebar()">&times;</button>
+<div class="sb-user">
+<div class="avatar-lg" id="sbAvatar">D</div>
+<h3 id="sbName">-</h3>
+<p id="sbRole">-</p>
+</div>
+</div>
+<ul class="sb-menu" id="sbMenu"></ul>
+</nav>
+
+<main class="main">
+<!-- TABS -->
+<div class="tabs">
+<div class="tab active" onclick="showTab('districts')">Districts</div>
+<div class="tab" onclick="showTab('heads')">Create Head</div>
+</div>
+
+<!-- DISTRICTS TAB -->
+<div id="tab-districts">
+<div style="margin-bottom:14px"><button class="btn btn-p" onclick="openAddModal()">+ Naya District</button></div>
+<div class="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="text" id="srchDistrict" placeholder="District search..." oninput="searchItems('srchDistrict','dist-item')"></div>
+<div class="card"><div class="card-h"><h3>Sab Districts</h3><span id="distCount" style="font-size:13px;color:var(--g)"></span></div><div class="card-b" id="listContainer"><div class="spinner"></div></div></div>
+</div>
+
+<!-- CREATE HEAD TAB -->
+<div id="tab-heads" style="display:none">
+<div class="card"><div class="card-h"><h3>Naya District Head Banao</h3></div><div class="card-b">
+<div class="form-g"><label>District Select *</label><select id="headDistrict"><option value="">-- Pehle District Banao --</option></select></div>
+<div class="form-g"><label>Head Ka Naam *</label><input type="text" id="headName" placeholder="Naam likhein"></div>
+<div class="form-g"><label>Mobile Number *</label><input type="tel" id="headPhone" placeholder="XXXXXXXXXX" maxlength="10"></div>
+<div class="form-g"><label>Password *</label><input type="text" id="headPass" placeholder="Min 4 characters" value="1234"></div>
+<button class="btn btn-p btn-blk" onclick="createHead()">Head Banao</button>
+<div id="credDisplay"></div>
+</div></div>
+
+<div class="card"><div class="card-h"><h3>Sab District Heads</h3></div><div class="card-b" id="headsList"><div class="spinner"></div></div></div>
+</div>
+</main>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal" id="addModal">
+<div class="modal-c">
+<div class="modal-h"><h3 id="modalTitle">Naya District</h3><button class="modal-x" onclick="closeModal('addModal')">&times;</button></div>
+<div class="modal-b">
+<div class="form-g"><label>District Name *</label><input type="text" id="distName" placeholder="District name"></div>
+</div>
+<div class="modal-f">
+<button class="btn btn-s" onclick="closeModal('addModal')" style="flex:1">Cancel</button>
+<button class="btn btn-p" id="saveBtn" onclick="saveDistrict()" style="flex:2">Save</button>
+</div>
+</div>
+</div>
+
+<nav class="bnav" id="bnav"></nav>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.firebasestorage.app",messagingSenderId:"438479516590",appId:"1:438479516590:web:fc0a9aaa4a0285f0dc0e3f"};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+
+let editingId=null;
+let currentUser=null;
+
+function toggleSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sbOverlay').classList.add('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sbOverlay').classList.remove('show')}
+function openModal(id){document.getElementById(id).classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+function showAlert(msg,type){const d=document.createElement('div');d.className='alert a-'+type;d.innerHTML='<span>'+msg+'</span>';const m=document.querySelector('.main');if(m){m.insertBefore(d,m.firstChild);setTimeout(()=>d.remove(),4000)}}
+function confirmDel(msg){return confirm(msg||'Are you sure?')}
+function searchItems(inputId,cssClass){const v=document.getElementById(inputId).value.toLowerCase();document.querySelectorAll('.'+cssClass).forEach(i=>{i.style.display=i.textContent.toLowerCase().includes(v)?'flex':'none'})}
+function getCurrentUser(){const s=localStorage.getItem('ngoUser');return s?JSON.parse(s):null}
+function saveUser(user){localStorage.setItem('ngoUser',JSON.stringify(user))}
+function logoutUser(){auth.signOut();localStorage.removeItem('ngoUser');window.location.href='index.html'}
+function requireAuth(allowedRoles){const u=getCurrentUser();if(!u||!allowedRoles.includes(u.role)){window.location.href='index.html';return null}return u}
+
+function getSidebarHTML(role){
+const items=[
+{l:'Dashboard',h:'dashboard.html',i:'&#127968;'},
+{l:'Districts',h:'districts.html',i:'&#127961;',a:true},
+{l:'Areas',h:'areas.html',i:'&#128205;'},
+{l:'Zeli Halqas',h:'zeli-halqas.html',i:'&#128332;'},
+{l:'Departments',h:'departments.html',i:'&#128188;'},
+{l:'Approvals',h:'approvals.html',i:'&#9989;'}
+];
+return items.map(m=>'<li><a href="'+m.h+'" class="'+(m.a?'active':'')+'"><span>'+m.i+'</span><span>'+m.l+'</span></a></li>').join('')+'<div class="sb-div"></div><li><a href="index.html" onclick="logoutUser()"><span>&#128682;</span><span>Logout</span></a></li>';
+}
+function getBottomNavHTML(){
+return'<a href="dashboard.html" class=""><span>&#127968;</span><span>Home</span></a><a href="districts.html" class="active"><span>&#127961;</span><span>District</span></a><a href="approvals.html" class=""><span>&#9989;</span><span>Approvals</span></a><a href="#" onclick="toggleSidebar();return false"><span>&#9776;</span><span>More</span></a>';
+}
+
+function showTab(tab){
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+document.getElementById('tab-districts').style.display=tab==='districts'?'block':'none';
+document.getElementById('tab-heads').style.display=tab==='heads'?'block':'none';
+event.target.classList.add('active');
+if(tab==='heads')loadHeads();
+}
+
+// DISTRICT CRUD
+function openAddModal(){
+editingId=null;
+document.getElementById('modalTitle').textContent='Naya District';
+document.getElementById('distName').value='';
+document.getElementById('saveBtn').textContent='Save';
+openModal('addModal');
+}
+function openEditModal(id,name){
+editingId=id;
+document.getElementById('modalTitle').textContent='Edit District';
+document.getElementById('distName').value=name;
+document.getElementById('saveBtn').textContent='Update';
+openModal('addModal');
+}
+async function saveDistrict(){
+const name=document.getElementById('distName').value.trim();
+if(!name){showAlert('District name dalein','d');return}
+try{
+if(editingId){
+await db.collection('districts').doc(editingId).update({name,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+showAlert('District updated','su');
+}else{
+await db.collection('districts').add({name,divisionId:currentUser.levelId,status:'active',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+showAlert('District added','su');
+}
+closeModal('addModal');loadDistricts();
+}catch(e){showAlert('Error: '+e.message,'d')}
+}
+async function deleteDistrict(id){
+if(!confirmDel('District delete karna hai?'))return;
+try{await db.collection('districts').doc(id).delete();showAlert('Deleted','su');loadDistricts();}catch(e){showAlert('Error','d')}
+}
+async function loadDistricts(){
+const c=document.getElementById('listContainer');
+c.innerHTML='<div class="spinner"></div>';
+try{
+const snap=await db.collection('districts').where('divisionId','==',currentUser.levelId).get();
+document.getElementById('distCount').textContent='('+snap.size+')';
+if(snap.empty){c.innerHTML='<div class="empty"><p>Koi district nahi. Pehla district banao!</p></div>';return;document.getElementById('headDistrict').innerHTML='<option value="">-- Pehle District Banao --</option>';return}
+let html='';const opts=[];
+snap.forEach(doc=>{
+const d=doc.data();
+html+='<div class="lst-i dist-item"><div class="lst-a"><h4>&#127961; '+d.name+'</h4><p>'+(d.headName?'Head: '+d.headName:'Head assign nahi')+'</p></div><div class="lst-btn"><button class="btn btn-s btn-sm" onclick="openEditModal(\''+doc.id+'\',\''+d.name.replace(/'/g,"\\'")+'\')">Edit</button><button class="btn btn-d btn-sm" onclick="deleteDistrict(\''+doc.id+'\')">Del</button></div></div>';
+opts.push('<option value="'+doc.id+'">'+d.name+'</option>');
+});
+c.innerHTML=html;
+document.getElementById('headDistrict').innerHTML='<option value="">-- Select District --</option>'+opts.join('');
+}catch(e){c.innerHTML='<div class="alert a-d">Error loading</div>'}
+}
+
+// CREATE HEAD
+async function createHead(){
+const distId=document.getElementById('headDistrict').value;
+const name=document.getElementById('headName').value.trim();
+const phone=document.getElementById('headPhone').value.trim();
+const pass=document.getElementById('headPass').value.trim();
+
+if(!distId||!name||!phone||!pass){showAlert('Sab fields bharein','d');return}
+if(phone.length!==10){showAlert('10 digit ka mobile number dalein','d');return}
+if(pass.length<6){showAlert('Password min 6 characters','d');return}
+
+// Check if phone already exists
+const existing=await db.collection('users').where('phone','==',phone).get();
+if(!existing.empty){showAlert('Ye number pehle se registered hai!','d');return}
+
+const email=phone+'@ngo-app.local';
+const distDoc=await db.collection('districts').doc(distId).get();
+const distName=distDoc.exists?distDoc.data().name:distId;
+
+try{
+// Firebase Auth mein user banao
+const cred=await auth.createUserWithEmailAndPassword(email,pass);
+const uid=cred.user.uid;
+
+// Firestore mein save karo
+await db.collection('users').doc(uid).set({
+name,phone,email,role:'district_head',
+levelId:distId,levelType:'district',
+districtName:distName,status:'active',
+createdBy:currentUser.id,
+createdAt:firebase.firestore.FieldValue.serverTimestamp()
+});
+
+// District mein head assign karo
+await db.collection('districts').doc(distId).update({headId:uid,headName:name});
+
+// Credentials dikhao
+document.getElementById('credDisplay').innerHTML=
+'<div class="cred-box"><h4>&#9989; Head Ban Gaya!</h4>'+
+'<p><strong>Naam:</strong> '+name+'</p>'+
+'<p><strong>Mobile:</strong> '+phone+'</p>'+
+'<p><strong>Password:</strong> '+pass+'</p>'+
+'<p><strong>District:</strong> '+distName+'</p>'+
+'<p style="margin-top:8px;color:var(--d);font-size:12px">Ye credentials head ko dein - sirf ye login kar sakega!</p></div>';
+
+// Reset form
+document.getElementById('headName').value='';
+document.getElementById('headPhone').value='';
+showAlert('Head successfully bana!','su');
+loadHeads();loadDistricts();
+}catch(e){
+showAlert('Error: '+e.message,'d');
+}
+}
+
+async function loadHeads(){
+const c=document.getElementById('headsList');
+c.innerHTML='<div class="spinner"></div>';
+try{
+const snap=await db.collection('users').where('role','==','district_head').where('createdBy','==',currentUser.id).get();
+if(snap.empty){c.innerHTML='<div class="empty"><p>Abhi koi head nahi bana</p></div>';return}
+let html='';
+snap.forEach(doc=>{
+const u=doc.data();
+html+='<div class="lst-i"><div class="lst-a"><h4>&#128100; '+u.name+'</h4><p>Phone: '+u.phone+'</p><p>District: '+(u.districtName||'N/A')+'</p></div><div class="lst-btn"><span style="font-size:11px;color:var(--su);font-weight:600">Active</span></div></div>';
+});
+c.innerHTML=html;
+}catch(e){c.innerHTML='<div class="empty"><p>Error loading heads</p></div>'}
+}
+
+const user=requireAuth(['division_head']);
+if(user){
+currentUser=user;
+document.getElementById('sbName').textContent=user.name||'User';
+document.getElementById('sbRole').textContent='Division Head';
+document.getElementById('sbAvatar').textContent=(user.name||'?')[0].toUpperCase();
+document.getElementById('avatarEl').textContent=(user.name||'?')[0].toUpperCase();
+document.getElementById('sbMenu').innerHTML=getSidebarHTML(user.role);
+document.getElementById('bnav').innerHTML=getBottomNavHTML();
+loadDistricts();loadHeads();
+}
+</script>
+</body>
+</html>
