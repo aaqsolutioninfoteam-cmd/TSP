@@ -1,0 +1,636 @@
+﻿<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Districts | Tanzeem Structure Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#1a1a2e;min-height:100vh;max-width:500px;margin:0 auto;position:relative;overflow-x:hidden}
+
+.header{position:sticky;top:0;z-index:100;background:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e9ecef;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.header-left{display:flex;align-items:center;gap:12px}
+.hamburger{width:40px;height:40px;border-radius:12px;border:none;background:#f5f7fa;display:flex;align-items:center;justify-content:center;font-size:18px;color:#1a1a2e;cursor:pointer}
+.avatar{width:40px;height:40px;border-radius:12px;background:#1a6b3c;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+.header-title{font-size:18px;font-weight:700;color:#1a1a2e}
+
+.sidebar-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;display:none;opacity:0;transition:opacity 0.3s}
+.sidebar-overlay.active{display:block;opacity:1}
+.sidebar{position:fixed;top:0;left:-300px;width:280px;height:100%;background:#fff;z-index:201;transition:left 0.3s ease;overflow-y:auto;border-right:1px solid #e9ecef}
+.sidebar.open{left:0}
+.sidebar-header{padding:20px 16px;border-bottom:1px solid #e9ecef;background:#f5f7fa}
+.sidebar-user{display:flex;align-items:center;gap:12px}
+.sidebar-avatar{width:50px;height:50px;border-radius:14px;background:#1a6b3c;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
+.sidebar-info{flex:1}
+.sidebar-info h3{font-size:15px;font-weight:700;color:#1a1a2e}
+.sidebar-info p{font-size:12px;color:#6c757d;margin-top:2px}
+.sidebar-close{width:36px;height:36px;border-radius:10px;border:none;background:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;color:#6c757d}
+.sidebar-menu{padding:12px 0}
+.sidebar-menu a{display:flex;align-items:center;gap:12px;padding:12px 16px;text-decoration:none;color:#1a1a2e;font-size:14px;font-weight:500;transition:background 0.2s}
+.sidebar-menu a:hover,.sidebar-menu a.active{background:#e8f5ee;color:#1a6b3c}
+.sidebar-menu a i{width:20px;text-align:center;font-size:16px}
+.sidebar-logout{margin:12px 16px;padding:12px;border-radius:14px;background:#fff0f0;color:#dc3545;border:1px solid #ffe0e0;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none}
+
+.tabs{display:flex;background:#fff;border-bottom:1px solid #e9ecef;padding:0 16px}
+.tab{flex:1;padding:14px 0;text-align:center;font-size:14px;font-weight:600;color:#6c757d;cursor:pointer;border-bottom:3px solid transparent;transition:all 0.2s}
+.tab.active{color:#1a6b3c;border-bottom-color:#1a6b3c}
+.tab-content{display:none;padding:16px;padding-bottom:90px}
+.tab-content.active{display:block}
+
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-title{font-size:16px;font-weight:700}
+.btn-add{display:flex;align-items:center;gap:6px;padding:10px 16px;border-radius:14px;border:none;background:#1a6b3c;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.2s}
+.btn-add:hover{background:#0d4a25}
+.search-box{width:100%;padding:12px 16px 12px 42px;border-radius:14px;border:1px solid #e9ecef;background:#fff;font-size:14px;outline:none;margin-bottom:16px}
+.search-box:focus{border-color:#1a6b3c}
+.search-wrapper{position:relative;margin-bottom:16px}
+.search-wrapper i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#6c757d;font-size:14px}
+
+.district-card{background:#fff;border-radius:14px;border:1px solid #e9ecef;padding:16px;margin-bottom:12px;transition:box-shadow 0.2s}
+.district-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.06)}
+.district-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.district-code{font-size:12px;font-weight:600;color:#6c757d;background:#f5f7fa;padding:4px 10px;border-radius:8px}
+.district-name{font-size:16px;font-weight:700;margin-bottom:6px}
+.district-head{font-size:13px;color:#6c757d;margin-bottom:4px}
+.district-head i{margin-right:4px;color:#1a6b3c}
+.district-area{font-size:12px;color:#6c757d;margin-bottom:8px}
+.district-area i{margin-right:4px}
+.badge-vacant{display:inline-block;padding:3px 10px;border-radius:8px;background:#fff0f0;color:#dc3545;font-size:11px;font-weight:600}
+.badge-active{display:inline-block;padding:3px 10px;border-radius:8px;background:#e8f5ee;color:#28a745;font-size:11px;font-weight:600}
+.district-actions{display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #e9ecef}
+.btn-edit,.btn-delete{flex:1;padding:8px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s}
+.btn-edit{background:#f5f7fa;color:#1a6b3c}
+.btn-edit:hover{background:#e8f5ee}
+.btn-delete{background:#fff0f0;color:#dc3545}
+.btn-delete:hover{background:#ffe0e0}
+
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:300;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal{background:#fff;border-radius:14px 14px 0 0;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s ease;padding:0}
+.modal-overlay.active .modal{transform:translateY(0)}
+.modal-header{padding:16px 20px;border-bottom:1px solid #e9ecef;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1;border-radius:14px 14px 0 0}
+.modal-header h3{font-size:17px;font-weight:700}
+.modal-close{width:36px;height:36px;border-radius:10px;border:none;background:#f5f7fa;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;color:#6c757d}
+.modal-body{padding:20px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:6px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #e9ecef;font-size:14px;outline:none;font-family:inherit;background:#fff;transition:border-color 0.2s}
+.form-group input:focus,.form-group select:focus{border-color:#1a6b3c}
+.form-group .hint{font-size:11px;color:#6c757d;margin-top:4px}
+.btn-primary{width:100%;padding:14px;border-radius:14px;border:none;background:#1a6b3c;color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:background 0.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary:hover{background:#0d4a25}
+.btn-primary:disabled{background:#6c757d;cursor:not-allowed}
+
+.credentials-box{background:#e8f5ee;border:2px solid #28a745;border-radius:14px;padding:16px;margin:16px 0;display:none}
+.credentials-box h4{color:#28a745;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.credentials-box .cred-item{font-size:13px;margin-bottom:6px;color:#1a1a2e}
+.credentials-box .cred-item span{font-weight:700}
+.credentials-box .copy-btn{margin-top:10px;padding:8px 16px;border-radius:10px;border:1px solid #28a745;background:#fff;color:#28a745;font-size:13px;font-weight:600;cursor:pointer}
+
+.head-card{background:#fff;border-radius:14px;border:1px solid #e9ecef;padding:14px;margin-bottom:12px}
+.head-card-top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.head-card-avatar{width:44px;height:44px;border-radius:12px;background:#1a6b3c;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px}
+.head-card-info h4{font-size:15px;font-weight:600}
+.head-card-info p{font-size:12px;color:#6c757d}
+.head-card-district{font-size:12px;color:#6c757d;margin-bottom:4px}
+.head-card-district i{color:#1a6b3c;margin-right:4px}
+.head-card-pass{font-size:11px;color:#ff9800;display:flex;align-items:center;gap:4px}
+
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:#fff;border-top:1px solid #e9ecef;display:flex;padding:8px 0;padding-bottom:max(8px,env(safe-area-inset-bottom));z-index:90}
+.bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:#6c757d;font-size:10px;font-weight:500;padding:4px 0}
+.bottom-nav a.active{color:#1a6b3c}
+.bottom-nav a i{font-size:20px}
+.bottom-nav a.active i{color:#1a6b3c}
+
+.alert{position:fixed;top:70px;left:50%;transform:translateX(-50%);padding:14px 20px;border-radius:14px;font-size:14px;font-weight:600;z-index:500;max-width:460px;width:calc(100% - 32px);display:none;animation:slideDown 0.3s ease}
+.alert.success{background:#e8f5ee;color:#28a745;border:1px solid #c3e6cb}
+.alert.error{background:#fff0f0;color:#dc3545;border:1px solid #ffe0e0}
+.alert.info{background:#fff3e0;color:#ff9800;border:1px solid #ffe0b2}
+@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+.empty-state{text-align:center;padding:40px 20px;color:#6c757d}
+.empty-state i{font-size:48px;margin-bottom:12px;color:#e9ecef}
+.empty-state p{font-size:14px}
+
+.loading{text-align:center;padding:40px}
+.spinner{width:36px;height:36px;border:3px solid #e9ecef;border-top-color:#1a6b3c;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(min-width:501px){
+  body{border-left:1px solid #e9ecef;border-right:1px solid #e9ecef}
+}
+</style>
+</head>
+<body>
+
+<div class="alert success" id="alertSuccess"></div>
+<div class="alert error" id="alertError"></div>
+<div class="alert info" id="alertInfo"></div>
+
+<header class="header">
+  <div class="header-left">
+    <button class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+    <span class="header-title">Districts</span>
+  </div>
+  <div class="avatar" id="headerAvatar"></div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-user">
+      <div class="sidebar-avatar" id="sidebarAvatar"></div>
+      <div class="sidebar-info">
+        <h3 id="sidebarName"></h3>
+        <p id="sidebarRole"></p>
+      </div>
+      <button class="sidebar-close" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+    </div>
+  </div>
+  <div class="sidebar-menu" id="sidebarMenu">
+    <a href="dashboard.html"><i class="fas fa-th-large"></i>Dashboard</a>
+    <a href="districts.html" class="active"><i class="fas fa-map-marked-alt"></i>Districts</a>
+    <a href="areas.html"><i class="fas fa-map"></i>Areas</a>
+    <a href="zeli-halqas.html"><i class="fas fa-map-pin"></i>Zeli Halqas</a>
+    <a href="departments.html"><i class="fas fa-building"></i>Departments</a>
+    <a href="designations.html"><i class="fas fa-id-badge"></i>Designations</a>
+    <a href="persons.html"><i class="fas fa-users"></i>Persons</a>
+    <a href="org-tree.html"><i class="fas fa-sitemap"></i>Org Tree</a>
+    <a href="approvals.html"><i class="fas fa-check-circle"></i>Approvals</a>
+    <a href="reports.html"><i class="fas fa-chart-bar"></i>Reports</a>
+    <a href="dept-dashboard.html"><i class="fas fa-tachometer-alt"></i>Dept Dashboard</a>
+    <a href="access-control.html"><i class="fas fa-shield-alt"></i>Access Control</a>
+    <a href="maintenance.html"><i class="fas fa-wrench"></i>Maintenance</a>
+  </div>
+  <a class="sidebar-logout" href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i>Logout</a>
+  <div style="padding:16px;font-size:10px;color:rgba(255,255,255,.4);text-align:center;border-top:1px solid rgba(255,255,255,.1);margin-top:auto">Developed by<br><b style="color:rgba(255,255,255,.6)">A.A.Q. Solutions & Outsourcing</b></div>
+</nav>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('districts')"><i class="fas fa-map-marked-alt"></i> Districts</div>
+  <div class="tab" onclick="switchTab('create-head')"><i class="fas fa-user-plus"></i> Create Head</div>
+</div>
+
+<div class="tab-content active" id="tabDistricts">
+  <div class="section-header">
+    <span class="section-title">All Districts</span>
+    <button class="btn-add" onclick="openAddModal()"><i class="fas fa-plus"></i> Naya District</button>
+  </div>
+  <div class="search-wrapper">
+    <i class="fas fa-search"></i>
+    <input type="text" class="search-box" placeholder="Search districts..." oninput="filterDistricts()" id="searchInput">
+  </div>
+  <div id="districtsList">
+    <div class="loading"><div class="spinner"></div><p>Loading districts...</p></div>
+  </div>
+</div>
+
+<div class="tab-content" id="tabCreateHead">
+  <div class="section-header" style="margin-bottom:4px">
+    <span class="section-title">Create District Head</span>
+  </div>
+  <div id="credentialsBox" class="credentials-box">
+    <h4><i class="fas fa-check-circle"></i> Head Created Successfully!</h4>
+    <div class="cred-item">Email: <span id="credEmail"></span></div>
+    <div class="cred-item">Password: <span id="credPassword"></span></div>
+    <div class="cred-item">Phone: <span id="credPhone"></span></div>
+    <button class="copy-btn" onclick="copyCredentials()"><i class="fas fa-copy"></i> Copy Credentials</button>
+  </div>
+  <form id="headForm" onsubmit="createHead(event)">
+    <div class="form-group">
+      <label>Select District</label>
+      <select id="headDistrict" required>
+        <option value="">-- Select District --</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Head Name</label>
+      <input type="text" id="headName" placeholder="Enter head name" required>
+    </div>
+    <div class="form-group">
+      <label>Mobile Number</label>
+      <input type="tel" id="headPhone" placeholder="10 digit mobile number" pattern="[0-9]{10}" maxlength="10" required>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="text" id="headPassword" value="123456" required minlength="6">
+      <div class="hint">Min 6 characters. Default: 123456</div>
+    </div>
+    <button type="submit" class="btn-primary" id="btnCreateHead"><i class="fas fa-user-plus"></i> Head Banao</button>
+  </form>
+  <div style="margin-top:20px">
+    <div class="section-title" style="margin-bottom:12px">Created District Heads</div>
+    <div id="headsList">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-nav" id="bottomNav">
+  <a href="dashboard.html"><i class="fas fa-home"></i>Home</a>
+  <a href="districts.html" class="active"><i class="fas fa-map-marked-alt"></i>Districts</a>
+  <a href="approvals.html"><i class="fas fa-check-circle"></i>Approvals</a>
+  <a href="#" onclick="toggleSidebar();return false"><i class="fas fa-ellipsis-h"></i>More</a>
+</div>
+
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add District</h3>
+      <button class="modal-close" onclick="closeAddModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <form onsubmit="addDistrict(event)">
+        <div class="form-group">
+          <label>District Name</label>
+          <input type="text" id="newDistrictName" placeholder="Enter district name" required>
+        </div>
+        <button type="submit" class="btn-primary" id="btnAddDistrict"><i class="fas fa-plus"></i> Add District</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Edit District</h3>
+      <button class="modal-close" onclick="closeEditModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <form onsubmit="updateDistrict(event)">
+        <input type="hidden" id="editDistrictId">
+        <div class="form-group">
+          <label>District Name</label>
+          <input type="text" id="editDistrictName" placeholder="Enter district name" required>
+        </div>
+        <button type="submit" class="btn-primary" id="btnEditDistrict"><i class="fas fa-save"></i> Save Changes</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Delete District</h3>
+      <button class="modal-close" onclick="closeDeleteModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;margin-bottom:8px">Kya aap sach mein ye district delete karna chahte hain?</p>
+      <p style="font-size:13px;color:#6c757d;margin-bottom:20px" id="deleteDistrictName"></p>
+      <input type="hidden" id="deleteDistrictId">
+      <button class="btn-primary" style="background:#dc3545" id="btnDeleteDistrict" onclick="confirmDelete()"><i class="fas fa-trash"></i> Haan, Delete Karo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.firebasestorage.app",messagingSenderId:"438479516590",appId:"1:438479516590:web:fc0a9aaa4a0285f0dc0e3f",measurementId:"G-TJWXZSQXGH"};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+
+const menus={division_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Districts',icon:'fa-map',file:'districts.html'},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Departments',icon:'fa-building',file:'departments.html'},{label:'Designations',icon:'fa-id-badge',file:'designations.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Org Tree',icon:'fa-sitemap',file:'org-tree.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Dept Dashboard',icon:'fa-chart-pie',file:'dept-dashboard.html'},{label:'Access Control',icon:'fa-shield-alt',file:'access-control.html'},{label:'Maintenance',icon:'fa-wrench',file:'maintenance.html'},{label:'Announcements',icon:'fa-bullhorn',file:'announcements.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],district_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],area_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}]};const bottomNavs={division_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Announce',icon:'fa-bullhorn',file:'announcements.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],district_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],area_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}]};function buildSidebar(user){var n=document.getElementById('sidebarName');if(n)n.textContent=user.name;var p=document.getElementById('sidebarPhone');if(p)p.textContent=user.phone;var r=document.getElementById('sidebarRole');if(r)r.textContent=user.role.replace(/_/g,' ');var a=document.getElementById('avatarEl');if(a)a.textContent=user.name.charAt(0).toUpperCase();var menu=menus[user.role]||[];var cont=document.getElementById('sidebarMenu')||document.getElementById('sidebarNav');if(!cont)return;cont.innerHTML='';menu.forEach(function(m){var el=document.createElement('a');el.href='#';el.innerHTML='<i class="fas '+m.icon+'"></i> '+m.label;if(m.active)el.classList.add('active');el.onclick=function(e){e.preventDefault();closeSidebar();if(m.file==='logout'){localStorage.removeItem('ngoUser');window.location.href='index.html';return}if(m.file!=='dashboard.html')window.location.href=m.file};if(m.icon==='fa-sign-out-alt')el.classList.add('logout-btn');cont.appendChild(el)})}function buildBottomNav(user){var nav=document.getElementById('bottomNav');if(!nav)return;nav.innerHTML='';var items=bottomNavs[user.role]||[];items.forEach(function(b){var el=document.createElement('a');el.href='#';el.innerHTML='<i class="fas '+b.icon+'"></i><span>'+b.label+'</span>';if(b.active)el.classList.add('active');el.onclick=function(e){e.preventDefault();if(b.file==='sidebar'){toggleSidebar();return}if(b.file!=='dashboard.html')window.location.href=b.file};nav.appendChild(el)})}function closeSidebar(){var s=document.getElementById('sidebar');if(s)s.classList.remove('open');var o=document.getElementById('sidebarOverlay');if(o)o.classList.remove('active')}
+
+async function checkSystemAccess(moduleId){
+  try{
+    const raw=localStorage.getItem('ngoUser');
+    if(!raw)return;
+    const user=JSON.parse(raw);
+    if(user.role==='division_head')return;
+    const settingsSnap=await db.collection('settings').limit(1).get();
+    if(!settingsSnap.empty){
+      const s=settingsSnap.docs[0].data();
+      if(s.maintenanceMode){
+        document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-tools"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Under Development</h1><p style="font-size:16px;opacity:.7;line-height:1.6">'+(s.maintenanceMessage||'Software under development hai. Please wait karein.')+'</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+        throw new Error('maintenance');
+      }
+    }
+    const accessSnap=await db.collection('user_access').where('userId','==',user.id).limit(1).get();
+    if(!accessSnap.empty){
+      const a=accessSnap.docs[0].data();
+      if(a.expiresAt){
+        const exp=a.expiresAt.seconds?new Date(a.expiresAt.seconds*1000):new Date(a.expiresAt);
+        if(new Date()>exp){
+          document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-lock"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Access Expired</h1><p style="font-size:16px;opacity:.7">Aapka access khatam ho gaya hai. Admin se contact karein.</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+          throw new Error('access expired');
+        }
+      }
+      if(a.modules&&a.modules[moduleId]===false){
+        window.location.href='dashboard.html';
+        throw new Error('no access');
+      }
+    }
+  }catch(e){
+    if(e.message==='maintenance'||e.message==='access expired'){}
+  }
+}
+
+let user=null;
+let allDistricts=[];
+let districtAreaCounts={};
+
+function requireAuth(allowedRoles){
+  const raw=localStorage.getItem('ngoUser');
+  if(!raw){window.location.href='index.html';return null}
+  try{
+    const u=JSON.parse(raw);
+    if(!allowedRoles.includes(u.role)){window.location.href='index.html';return null}
+    return u;
+  }catch(e){window.location.href='index.html';return null}
+}
+
+function showAlert(msg,type){
+  const el=document.getElementById(type==='success'?'alertSuccess':type==='error'?'alertError':'alertInfo');
+  el.textContent=msg;el.style.display='block';
+  setTimeout(()=>{el.style.display='none'},3500);
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('active');
+}
+
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach((t,i)=>{t.classList.toggle('active',(tab==='districts'?i===0:i===1))});
+  document.getElementById('tabDistricts').classList.toggle('active',tab==='districts');
+  document.getElementById('tabCreateHead').classList.toggle('active',tab==='create-head');
+  if(tab==='create-head')loadHeadDistricts();
+  if(tab==='create-head')loadHeads();
+}
+
+);
+}
+
+function openAddModal(){
+  document.getElementById('newDistrictName').value='';
+  document.getElementById('addModal').classList.add('active');
+}
+function closeAddModal(){document.getElementById('addModal').classList.remove('active')}
+
+function openEditModal(id,name){
+  document.getElementById('editDistrictId').value=id;
+  document.getElementById('editDistrictName').value=name;
+  document.getElementById('editModal').classList.add('active');
+}
+function closeEditModal(){document.getElementById('editModal').classList.remove('active')}
+
+function openDeleteModal(id,name){
+  document.getElementById('deleteDistrictId').value=id;
+  document.getElementById('deleteDistrictName').textContent='District: '+name;
+  document.getElementById('deleteModal').classList.add('active');
+}
+function closeDeleteModal(){document.getElementById('deleteModal').classList.remove('active')}
+
+async function getNextCode(){
+  const snap=await db.collection('districts').where('divisionId','==',user.levelId).get();
+  let maxNum=0;
+  snap.forEach(doc=>{
+    const code=doc.data().code||'';
+    const num=parseInt(code.replace('D',''),10);
+    if(num>maxNum)maxNum=num;
+  });
+  return 'D'+String(maxNum+1).padStart(3,'0');
+}
+
+async function loadAreaCounts(){
+  districtAreaCounts={};
+  try{
+    const snap=await db.collection('areas').where('divisionId','==',user.levelId).get();
+    snap.forEach(doc=>{
+      const d=doc.data();
+      const distId=d.districtId;
+      if(distId){districtAreaCounts[distId]=(districtAreaCounts[distId]||0)+1}
+    });
+  }catch(e){}
+}
+
+async function loadDistricts(){
+  try{
+    const snap=await db.collection('districts').where('divisionId','==',user.levelId).get();
+    allDistricts=[];
+    snap.forEach(doc=>{allDistricts.push({id:doc.id,...doc.data()})});
+    await loadAreaCounts();
+    renderDistricts(allDistricts);
+  }catch(e){
+    document.getElementById('districtsList').innerHTML='<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading districts</p></div>';
+  }
+}
+
+function renderDistricts(list){
+  const container=document.getElementById('districtsList');
+  if(list.length===0){
+    container.innerHTML='<div class="empty-state"><i class="fas fa-map-marked-alt"></i><p>Koi district nahi mila</p></div>';
+    return;
+  }
+  container.innerHTML=list.map(d=>{
+    const areas=districtAreaCounts[d.id]||0;
+    const hasHead=d.headName&&d.headName.trim()!=='';
+    return `<div class="district-card">
+      <div class="district-top">
+        <span class="district-code">${d.code||'---'}</span>
+        ${hasHead?'<span class="badge-active">Assigned</span>':'<span class="badge-vacant">Vacant</span>'}
+      </div>
+      <div class="district-name">${d.name}</div>
+      ${hasHead?`<div class="district-head"><i class="fas fa-user"></i>${d.headName} &middot; ${d.headPhone||''}</div>`:''}
+      <div class="district-area"><i class="fas fa-map"></i>${areas} Areas</div>
+      <div class="district-actions">
+        <button class="btn-edit" onclick="openEditModal('${d.id}','${d.name.replace(/'/g,"\\'")}')"><i class="fas fa-edit"></i> Edit</button>
+        <button class="btn-delete" onclick="openDeleteModal('${d.id}','${d.name.replace(/'/g,"\\'")}')"><i class="fas fa-trash"></i> Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterDistricts(){
+  const q=document.getElementById('searchInput').value.toLowerCase().trim();
+  if(!q){renderDistricts(allDistricts);return}
+  const filtered=allDistricts.filter(d=>d.name.toLowerCase().includes(q)||(d.code||'').toLowerCase().includes(q)||(d.headName||'').toLowerCase().includes(q));
+  renderDistricts(filtered);
+}
+
+async function addDistrict(e){
+  e.preventDefault();
+  const name=document.getElementById('newDistrictName').value.trim();
+  if(!name)return;
+  const btn=document.getElementById('btnAddDistrict');
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Adding...';
+  try{
+    const code=await getNextCode();
+    await db.collection('districts').add({name,code,divisionId:user.levelId,headId:'',headName:'',headPhone:'',status:'active',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    showAlert('District added!','success');
+    closeAddModal();
+    loadDistricts();
+  }catch(e){
+    showAlert('Error: '+e.message,'error');
+  }
+  btn.disabled=false;btn.innerHTML='<i class="fas fa-plus"></i> Add District';
+}
+
+async function updateDistrict(e){
+  e.preventDefault();
+  const id=document.getElementById('editDistrictId').value;
+  const name=document.getElementById('editDistrictName').value.trim();
+  if(!name||!id)return;
+  const btn=document.getElementById('btnEditDistrict');
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';
+  try{
+    await db.collection('districts').doc(id).update({name});
+    showAlert('District updated!','success');
+    closeEditModal();
+    loadDistricts();
+  }catch(e){
+    showAlert('Error: '+e.message,'error');
+  }
+  btn.disabled=false;btn.innerHTML='<i class="fas fa-save"></i> Save Changes';
+}
+
+async function confirmDelete(){
+  const id=document.getElementById('deleteDistrictId').value;
+  if(!id)return;
+  const btn=document.getElementById('btnDeleteDistrict');
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Deleting...';
+  try{
+    await db.collection('districts').doc(id).delete();
+    showAlert('District deleted!','success');
+    closeDeleteModal();
+    loadDistricts();
+  }catch(e){
+    showAlert('Error: '+e.message,'error');
+  }
+  btn.disabled=false;btn.innerHTML='<i class="fas fa-trash"></i> Haan, Delete Karo';
+}
+
+async function loadHeadDistricts(){
+  const sel=document.getElementById('headDistrict');
+  const current=sel.value;
+  sel.innerHTML='<option value="">-- Select District --</option>';
+  try{
+    const snap=await db.collection('districts').where('divisionId','==',user.levelId).get();
+    snap.docs.filter(d=>d.data().status==='active').forEach(doc=>{
+      const d=doc.data();
+      const hasHead=d.headId&&d.headId.trim()!=='';
+      const opt=document.createElement('option');
+      opt.value=doc.id;
+      opt.textContent=d.name+(hasHead?' [Already Assigned]':'');
+      if(hasHead)opt.style.color='#6c757d';
+      sel.appendChild(opt);
+    });
+    if(current)sel.value=current;
+  }catch(e){}
+}
+
+async function loadHeads(){
+  const container=document.getElementById('headsList');
+  try{
+    const snap=await db.collection('users').where('createdBy','==',user.id||user.uid||'system').get();
+    const filtered=snap.docs.filter(d=>d.data().role==='district_head');
+    if(filtered.length===0){container.innerHTML='<div class="empty-state"><i class="fas fa-user-slash"></i><p>Koi district head nahi mila</p></div>';return}
+    let html='';
+    filtered.forEach(doc=>{
+      const h=doc.data();
+      const initials=(h.name||'').split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
+      html+=`<div class="head-card">
+        <div class="head-card-top">
+          <div class="head-card-avatar">${initials}</div>
+          <div class="head-card-info">
+            <h4>${h.name||''}</h4>
+            <p><i class="fas fa-phone" style="font-size:11px"></i> ${h.phone||''}</p>
+          </div>
+        </div>
+        <div class="head-card-district"><i class="fas fa-map-marker-alt"></i>${h.districtName||'N/A'}</div>
+        <div class="head-card-pass"><i class="fas fa-key"></i> Default pass: 123456</div>
+      </div>`;
+    });
+    container.innerHTML=html;
+  }catch(e){
+    container.innerHTML='<div class="empty-state"><p>Error loading heads</p></div>';
+  }
+}
+
+async function createHead(e){
+  e.preventDefault();
+  const districtId=document.getElementById('headDistrict').value;
+  const name=document.getElementById('headName').value.trim();
+  const phone=document.getElementById('headPhone').value.trim();
+  const password=document.getElementById('headPassword').value;
+  if(!districtId||!name||!phone||!password)return;
+  if(password.length<6){showAlert('Password min 6 characters!','error');return}
+  if(!/^[0-9]{10}$/.test(phone)){showAlert('Phone 10 digits hona chahiye!','error');return}
+
+  const btn=document.getElementById('btnCreateHead');
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Creating...';
+
+  try{
+    const email=phone+'@ngo-app.local';
+    const snap=await db.collection('users').where('phone','==',phone).get();
+    if(!snap.empty){showAlert('Ye phone number pehle se registered hai!','error');btn.disabled=false;btn.innerHTML='<i class="fas fa-user-plus"></i> Head Banao';return}
+
+    const distDoc=await db.collection('districts').doc(districtId).get();
+    const distData=distDoc.data();
+
+    const tempApp=firebase.initializeApp(firebaseConfig,'temp-'+Date.now());
+    const tempAuth=tempApp.auth();
+    await tempApp.delete();
+
+    const cred=await auth.createUserWithEmailAndPassword(email,password);
+    const uid=cred.user.uid;
+
+    await db.collection('users').doc(uid).set({
+      name,phone,email,role:'district_head',
+      levelId:districtId,levelType:'district',
+      districtName:distData.name||'',
+      createdBy:user.id||user.uid||'system',createdByName:user.name||'',status:'active',
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    await db.collection('districts').doc(districtId).update({
+      headId:uid,headName:name,headPhone:phone
+    });
+
+    document.getElementById('credEmail').textContent=email;
+    document.getElementById('credPassword').textContent=password;
+    document.getElementById('credPhone').textContent=phone;
+    document.getElementById('credentialsBox').style.display='block';
+
+    showAlert('District Head created!','success');
+    document.getElementById('headForm').reset();
+    document.getElementById('headPassword').value='123456';
+    loadHeadDistricts();
+    loadHeads();
+    loadDistricts();
+  }catch(e){
+    showAlert('Error: '+e.message,'error');
+  }
+  btn.disabled=false;btn.innerHTML='<i class="fas fa-user-plus"></i> Head Banao';
+}
+
+function copyCredentials(){
+  const email=document.getElementById('credEmail').textContent;
+  const pass=document.getElementById('credPassword').textContent;
+  const phone=document.getElementById('credPhone').textContent;
+  const text='Email: '+email+'\nPassword: '+pass+'\nPhone: '+phone;
+  navigator.clipboard.writeText(text).then(()=>{showAlert('Copied!','success')}).catch(()=>{showAlert('Copy failed','error')});
+}
+
+document.addEventListener('DOMContentLoaded',async()=>{
+  await checkSystemAccess('districts');
+  user=requireAuth(['division_head']);
+  if(!user)return;
+  document.getElementById('headerAvatar').textContent=(user.name||'U').split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
+  document.getElementById('sidebarAvatar').textContent=(user.name||'U').split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
+  document.getElementById('sidebarName').textContent=user.name||'User';
+  document.getElementById('sidebarRole').textContent='Division Head';
+  buildSidebar(user);
+  buildBottomNav(user);
+  loadDistricts();
+});
+</script>
+</body>
+</html>

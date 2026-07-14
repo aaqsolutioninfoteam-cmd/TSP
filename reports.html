@@ -1,0 +1,785 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reports | Tanzeem Structure Portal</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f7fa;color:#1a1a2e;min-height:100vh;max-width:500px;margin:0 auto;position:relative;padding-bottom:70px}
+a{text-decoration:none;color:inherit}
+
+/* Header */
+.header{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#1a6b3c,#0d4a25);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-radius:0 0 14px 14px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.header h1{font-size:18px;font-weight:600}
+.header-icons{display:flex;gap:12px}
+.header-icons span{cursor:pointer;font-size:20px}
+
+/* Sidebar Overlay */
+.sidebar-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:200;display:none}
+.sidebar-overlay.active{display:block}
+.sidebar{position:fixed;top:0;left:-280px;width:260px;height:100%;background:#fff;z-index:201;border-radius:0 14px 14px 0;transition:left .3s;overflow-y:auto;box-shadow:2px 0 12px rgba(0,0,0,.15)}
+.sidebar.open{left:0}
+.sidebar-header{background:linear-gradient(135deg,#1a6b3c,#0d4a25);color:#fff;padding:20px 16px;border-radius:0 14px 0 0}
+.sidebar-header h2{font-size:16px;margin-bottom:2px}
+.sidebar-header p{font-size:12px;opacity:.8}
+.sidebar-nav{padding:8px 0}
+.sidebar-nav a{display:flex;align-items:center;gap:12px;padding:12px 16px;font-size:14px;color:#1a1a2e;transition:background .2s}
+.sidebar-nav a:hover,.sidebar-nav a.active{background:#f0f7f2;color:#1a6b3c}
+.sidebar-nav a.active{font-weight:600;border-left:3px solid #1a6b3c}
+.sidebar-nav .divider{height:1px;background:#e9ecef;margin:8px 16px}
+.sidebar-close{position:absolute;top:12px;right:12px;color:#fff;font-size:24px;cursor:pointer;background:rgba(255,255,255,.2);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+
+/* Filter Bar */
+.filter-bar{background:#fff;padding:12px 16px;border-radius:14px;margin:12px 16px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;gap:8px;flex-wrap:wrap}
+.filter-bar select{flex:1;min-width:0;padding:8px 10px;border:1px solid #e9ecef;border-radius:10px;font-size:13px;background:#fff;color:#1a1a2e;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c757d' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+
+/* Report Cards Grid */
+.report-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 16px}
+.report-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer;transition:transform .2s,box-shadow .2s;border:2px solid transparent}
+.report-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.report-card.active{border-color:#1a6b3c}
+.report-card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:8px}
+.report-card h3{font-size:12px;font-weight:600;color:#1a1a2e;margin-bottom:4px;line-height:1.3}
+.report-card .stat{font-size:18px;font-weight:700;color:#1a6b3c}
+.report-card .stat-label{font-size:10px;color:#6c757d}
+.report-card .view-btn{display:block;text-align:center;margin-top:8px;padding:6px;border-radius:8px;background:#f0f7f2;color:#1a6b3c;font-size:11px;font-weight:600}
+
+/* Expanded Report */
+.expanded-report{background:#fff;border-radius:14px;margin:0 16px 16px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden;display:none}
+.expanded-report.show{display:block}
+.expanded-report-header{padding:14px 16px;background:#f5f7fa;border-bottom:1px solid #e9ecef;display:flex;align-items:center;justify-content:space-between}
+.expanded-report-header h2{font-size:15px;font-weight:600;color:#1a1a2e}
+.expanded-report-actions{display:flex;gap:8px}
+.btn{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer}
+.btn-print{background:#1a6b3c;color:#fff}
+.btn-close-report{background:#e9ecef;color:#1a1a2e}
+.report-filter{padding:10px 16px;background:#fafafa;border-bottom:1px solid #e9ecef;display:flex;gap:8px}
+.report-filter select,.report-filter input{padding:6px 10px;border:1px solid #e9ecef;border-radius:8px;font-size:12px;flex:1}
+
+/* Report Content */
+.report-content{padding:16px}
+.report-table{width:100%;border-collapse:collapse;font-size:12px}
+.report-table th{background:#f5f7fa;padding:8px;text-align:left;font-weight:600;color:#6c757d;border-bottom:2px solid #e9ecef;white-space:nowrap}
+.report-table td{padding:8px;border-bottom:1px solid #e9ecef;color:#1a1a2e}
+.report-table tr:hover{background:#f9fdfb}
+.status-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.status-active{background:#d4edda;color:#28a745}
+.status-inactive{background:#f8d7da;color:#dc3545}
+.status-transferred{background:#fff3cd;color:#ff9800}
+.status-left{background:#e9ecef;color:#6c757d}
+.status-pending{background:#fff3cd;color:#ff9800}
+.status-approved{background:#d4edda;color:#28a745}
+.status-rejected{background:#f8d7da;color:#dc3545}
+.status-sentback{background:#cce5ff;color:#004085}
+.vacant{color:#dc3545;font-weight:600}
+.filled{color:#28a745;font-weight:600}
+
+/* Pie Chart Style */
+.chart-bars{display:flex;flex-direction:column;gap:6px;margin:12px 0}
+.chart-bar-row{display:flex;align-items:center;gap:8px}
+.chart-bar-label{width:80px;font-size:11px;font-weight:600;color:#1a1a2e;text-align:right}
+.chart-bar-track{flex:1;height:24px;background:#e9ecef;border-radius:12px;overflow:hidden;position:relative}
+.chart-bar-fill{height:100%;border-radius:12px;transition:width .5s;display:flex;align-items:center;padding:0 8px}
+.chart-bar-fill span{font-size:10px;font-weight:600;color:#fff;white-space:nowrap}
+.chart-bar-value{font-size:11px;font-weight:600;width:40px}
+
+/* Summary Cards */
+.summary-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px;margin-bottom:16px}
+.summary-item{text-align:center;padding:10px 6px;background:#f5f7fa;border-radius:10px}
+.summary-item .num{font-size:20px;font-weight:700}
+.summary-item .lbl{font-size:10px;color:#6c757d;margin-top:2px}
+
+/* Bottom Nav */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:#fff;border-radius:14px 14px 0 0;box-shadow:0 -2px 10px rgba(0,0,0,.08);display:flex;z-index:100;padding:6px 0 8px}
+.bottom-nav a{flex:1;text-align:center;padding:6px 0;color:#6c757d;font-size:10px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bottom-nav a.active{color:#1a6b3c;font-weight:600}
+.bottom-nav a .nav-icon{font-size:20px}
+
+/* Loading */
+.loading{text-align:center;padding:40px;color:#6c757d}
+.loading-spinner{width:32px;height:32px;border:3px solid #e9ecef;border-top-color:#1a6b3c;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Empty State */
+.empty-state{text-align:center;padding:32px 16px;color:#6c757d}
+.empty-state .icon{font-size:40px;margin-bottom:8px}
+
+/* Breakdown List */
+.breakdown-list{margin-top:12px}
+.breakdown-item{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f5f7fa;border-radius:8px;margin-bottom:4px;font-size:12px}
+.breakdown-item .name{font-weight:600;color:#1a1a2e}
+.breakdown-item .counts{display:flex;gap:8px}
+.breakdown-item .count{padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600}
+
+/* Print */
+@media print{
+body{padding:0;max-width:100%;background:#fff}
+.header,.sidebar-overlay,.sidebar,.bottom-nav,.filter-bar,.expanded-report-header,.report-filter,.view-btn,.expanded-report-actions{display:none!important}
+.report-cards{display:none!important}
+.expanded-report{margin:0;border-radius:0;box-shadow:none;display:block!important;position:static}
+.report-content{padding:0}
+.report-table th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.summary-item{border:1px solid #ddd}
+.chart-bar-fill{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.report-print-title{display:block!important;font-size:18px;font-weight:700;text-align:center;margin-bottom:12px;color:#000}
+}
+.report-print-title{display:none}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="header-icons" onclick="toggleSidebar()" style="font-size:22px;cursor:pointer">☰</span>
+    <h1>Reports</h1>
+  </div>
+  <div class="header-icons">
+    <span title="Refresh" onclick="loadAllData()">🔄</span>
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-close" onclick="toggleSidebar()">✕</div>
+    <h2 id="sidebarOrg">Tanzeem Structure</h2>
+    <p id="sidebarRole"></p>
+  </div>
+  <div class="sidebar-nav" id="sidebarNav"></div>
+  <div style="padding:16px;font-size:10px;color:rgba(255,255,255,.4);text-align:center;border-top:1px solid rgba(255,255,255,.1);margin-top:auto">Developed by<br><b style="color:rgba(255,255,255,.6)">A.A.Q. Solutions & Outsourcing</b></div>
+</div>
+
+<div class="filter-bar">
+  <select id="filterReportType" onchange="filterReports()">
+    <option value="all">All Reports</option>
+    <option value="hierarchy">Hierarchy Report</option>
+    <option value="department">Department Report</option>
+    <option value="personStatus">Person Status</option>
+    <option value="headVacancy">Head/Vacancy</option>
+    <option value="approval">Approval Report</option>
+    <option value="designation">Designation Report</option>
+  </select>
+  <select id="filterLevel" onchange="filterReports()">
+    <option value="all">All Levels</option>
+    <option value="division">Division</option>
+    <option value="district">District</option>
+    <option value="area">Area</option>
+  </select>
+</div>
+
+<div class="report-cards" id="reportCards"></div>
+<div class="expanded-report" id="expandedReport">
+  <span class="report-print-title" id="reportPrintTitle"></span>
+  <div class="expanded-report-header">
+    <h2 id="expandedTitle">Report</h2>
+    <div class="expanded-report-actions">
+      <button class="btn btn-close-report" onclick="closeReport()">✕ Close</button>
+      <button class="btn btn-print" onclick="printReport()">🖨 Print</button>
+    </div>
+  </div>
+  <div class="report-filter" id="reportFilterBar"></div>
+  <div class="report-content" id="reportContent"></div>
+</div>
+
+<div class="bottom-nav" id="bottomNav"></div>
+
+<script>
+const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.firebasestorage.app",messagingSenderId:"438479516590",appId:"1:438479516590:web:fc0a9aaa4a0285f0dc0e3f",measurementId:"G-TJWXZSQXGH"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
+const menus={division_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Districts',icon:'fa-map',file:'districts.html'},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Departments',icon:'fa-building',file:'departments.html'},{label:'Designations',icon:'fa-id-badge',file:'designations.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Org Tree',icon:'fa-sitemap',file:'org-tree.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Dept Dashboard',icon:'fa-chart-pie',file:'dept-dashboard.html'},{label:'Access Control',icon:'fa-shield-alt',file:'access-control.html'},{label:'Maintenance',icon:'fa-wrench',file:'maintenance.html'},{label:'Announcements',icon:'fa-bullhorn',file:'announcements.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],district_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],area_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}]};const bottomNavs={division_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Announce',icon:'fa-bullhorn',file:'announcements.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],district_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],area_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}]};function buildSidebar(user){var n=document.getElementById('sidebarName');if(n)n.textContent=user.name;var p=document.getElementById('sidebarPhone');if(p)p.textContent=user.phone;var r=document.getElementById('sidebarRole');if(r)r.textContent=user.role.replace(/_/g,' ');var a=document.getElementById('avatarEl');if(a)a.textContent=user.name.charAt(0).toUpperCase();var menu=menus[user.role]||[];var cont=document.getElementById('sidebarMenu')||document.getElementById('sidebarNav');if(!cont)return;cont.innerHTML='';menu.forEach(function(m){var el=document.createElement('a');el.href='#';el.innerHTML='<i class="fas '+m.icon+'"></i> '+m.label;if(m.active)el.classList.add('active');el.onclick=function(e){e.preventDefault();closeSidebar();if(m.file==='logout'){localStorage.removeItem('ngoUser');window.location.href='index.html';return}if(m.file!=='dashboard.html')window.location.href=m.file};if(m.icon==='fa-sign-out-alt')el.classList.add('logout-btn');cont.appendChild(el)})}function buildBottomNav(user){var nav=document.getElementById('bottomNav');if(!nav)return;nav.innerHTML='';var items=bottomNavs[user.role]||[];items.forEach(function(b){var el=document.createElement('a');el.href='#';el.innerHTML='<i class="fas '+b.icon+'"></i><span>'+b.label+'</span>';if(b.active)el.classList.add('active');el.onclick=function(e){e.preventDefault();if(b.file==='sidebar'){toggleSidebar();return}if(b.file!=='dashboard.html')window.location.href=b.file};nav.appendChild(el)})}function closeSidebar(){var s=document.getElementById('sidebar');if(s)s.classList.remove('open');var o=document.getElementById('sidebarOverlay');if(o)o.classList.remove('active')}
+
+async function checkSystemAccess(moduleId){
+  try{
+    const raw=localStorage.getItem('ngoUser');
+    if(!raw)return;
+    const user=JSON.parse(raw);
+    if(user.role==='division_head')return;
+    const settingsSnap=await db.collection('settings').limit(1).get();
+    if(!settingsSnap.empty){
+      const s=settingsSnap.docs[0].data();
+      if(s.maintenanceMode){
+        document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-tools"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Under Development</h1><p style="font-size:16px;opacity:.7;line-height:1.6">'+(s.maintenanceMessage||'Software under development hai. Please wait karein.')+'</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+        throw new Error('maintenance');
+      }
+    }
+    const accessSnap=await db.collection('user_access').where('userId','==',user.id).limit(1).get();
+    if(!accessSnap.empty){
+      const a=accessSnap.docs[0].data();
+      if(a.expiresAt){
+        const exp=a.expiresAt.seconds?new Date(a.expiresAt.seconds*1000):new Date(a.expiresAt);
+        if(new Date()>exp){
+          document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-lock"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Access Expired</h1><p style="font-size:16px;opacity:.7">Aapka access khatam ho gaya hai. Admin se contact karein.</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+          throw new Error('access expired');
+        }
+      }
+      if(a.modules&&a.modules[moduleId]===false){
+        window.location.href='dashboard.html';
+        throw new Error('no access');
+      }
+    }
+  }catch(e){
+    if(e.message==='maintenance'||e.message==='access expired'){}
+  }
+}
+
+let currentUser=null;
+let userRole='';
+let userLevelId='';
+let userDivisionId='';
+let userDistrictId='';
+let allData={divisions:[],districts:[],areas:[],zhs:[],persons:[],departments:[],designations:[],approvals:[]};
+let activeReport=null;
+
+function requireAuth(allowedRoles){
+  const u=localStorage.getItem('ngoUser');
+  if(!u){window.location.href='index.html';return null}
+  const user=JSON.parse(u);
+  if(!allowedRoles.includes(user.role)){window.location.href='dashboard.html';return null}
+  return user;
+}
+
+async function init(){
+  await checkSystemAccess('reports');
+  currentUser=requireAuth(['division_head','district_head']);
+  if(!currentUser)return;
+  userRole=currentUser.role;
+  userLevelId=currentUser.levelId||'';
+  userDivisionId=currentUser.divisionId||currentUser.levelId||'';
+  userDistrictId=currentUser.districtId||'';
+  buildSidebar(currentUser);
+  buildBottomNav(currentUser);
+  loadAllData();
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('active');
+}
+
+async function loadAllData(){
+  document.getElementById('reportCards').innerHTML='<div class="loading"><div class="loading-spinner"></div>Loading reports data...</div>';
+  try{
+    const base=userRole==='division_head'?db.collection('divisions').doc(userDivisionId):null;
+    const districtRef=userRole==='district_head'?db.collection('districts').doc(userDistrictId):null;
+    const getCol=async(col,filterField,filterVal)=>{
+      let q=db.collection(col);
+      if(filterField&&filterVal)q=q.where(filterField,'==',filterVal);
+      const s=await q.get();
+      return s.docs.map(d=>({id:d.id,...d.data()}));
+    };
+    if(userRole==='division_head'){
+      allData.divisions=await getCol('divisions','id',userDivisionId);
+      allData.districts=await getCol('districts','divisionId',userDivisionId);
+      const dIds=allData.districts.map(d=>d.id);
+      allData.areas=dIds.length?await getCol('areas','divisionId',userDivisionId):[];
+      allData.zhs=dIds.length?await getCol('zeli_halqas','divisionId',userDivisionId):[];
+      allData.persons=dIds.length?await getCol('persons','divisionId',userDivisionId):[];
+      allData.departments=await getCol('departments','divisionId',userDivisionId);
+      allData.designations=await getCol('designations');
+      allData.approvals=await getCol('approvals','levelId',userDivisionId);
+    }else{
+      allData.districts=[await getCol('districts','id',userDistrictId)].flat().filter(Boolean);
+      allData.areas=await getCol('areas','districtId',userDistrictId);
+      allData.zhs=await getCol('zeli_halqas','districtId',userDistrictId);
+      allData.persons=await getCol('persons','districtId',userDistrictId);
+      allData.departments=await getCol('departments','districtId',userDistrictId);
+      allData.designations=await getCol('designations');
+      allData.approvals=await getCol('approvals','levelId',userDistrictId);
+      const dist=allData.districts[0];
+      if(dist){
+        userDivisionId=dist.divisionId||'';
+        allData.divisions=[dist];
+      }
+    }
+    renderReportCards();
+  }catch(e){
+    console.error(e);
+    document.getElementById('reportCards').innerHTML='<div class="empty-state"><div class="icon">⚠️</div>Error loading data. Please try again.</div>';
+  }
+}
+
+function renderReportCards(){
+  const type=document.getElementById('filterReportType').value;
+  const reports=getReportDefinitions();
+  const html=reports.filter(r=>type==='all'||r.type===type).map(r=>`
+    <div class="report-card ${activeReport===r.type?'active':''}" onclick="expandReport('${r.type}')">
+      <div class="report-card-icon" style="background:${r.bgColor}">${r.icon}</div>
+      <h3>${r.title}</h3>
+      <div class="stat">${r.getMainStat(allData)}</div>
+      <div class="stat-label">${r.statLabel}</div>
+      <div class="view-btn">View Report →</div>
+    </div>
+  `).join('');
+  document.getElementById('reportCards').innerHTML=html||'<div class="empty-state"><div class="icon">📋</div>No reports match filter</div>';
+}
+
+function getReportDefinitions(){
+  return[
+    {type:'hierarchy',icon:'📊',bgColor:'#e8f5e9',title:'Hierarchy Report',statLabel:'Total ZH',getMainStat:d=>d.zhs.length},
+    {type:'department',icon:'🏢',bgColor:'#e3f2fd',title:'Department Report',statLabel:'Departments',getMainStat:d=>d.departments.length},
+    {type:'personStatus',icon:'👤',bgColor:'#fff3e0',title:'Person Status Report',statLabel:'Total Persons',getMainStat:d=>d.persons.length},
+    {type:'headVacancy',icon:'🎖️',bgColor:'#fce4ec',title:'Head/Vacancy Report',statLabel:'Vacant Posts',getMainStat:d=>getVacancyCount(d)},
+    {type:'approval',icon:'✅',bgColor:'#f3e5f5',title:'Approval Report',statLabel:'Pending',getMainStat:d=>d.approvals.filter(a=>a.status==='pending').length},
+    {type:'designation',icon:'🏷️',bgColor:'#e0f2f1',title:'Designation Report',statLabel:'Designations',getMainStat:d=>d.designations.length}
+  ];
+}
+
+function getVacancyCount(d){
+  let v=0;
+  const distHeads=d.districts.filter(x=>!x.headId);
+  const areaHeads=d.areas.filter(x=>!x.headId);
+  const zhHeads=d.zhs.filter(x=>!x.headId);
+  v=distHeads.length+areaHeads.length+zhHeads.length;
+  return v;
+}
+
+function filterReports(){
+  renderReportCards();
+  if(activeReport){
+    const type=document.getElementById('filterReportType').value;
+    if(type!=='all'&&type!==activeReport){closeReport();return}
+    expandReport(activeReport);
+  }
+}
+
+function expandReport(type){
+  activeReport=type;
+  renderReportCards();
+  const el=document.getElementById('expandedReport');
+  el.classList.add('show');
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+  const content=document.getElementById('reportContent');
+  const filterBar=document.getElementById('reportFilterBar');
+  const title=document.getElementById('expandedTitle');
+  const printTitle=document.getElementById('reportPrintTitle');
+  content.innerHTML='<div class="loading"><div class="loading-spinner"></div>Loading report...</div>';
+  filterBar.innerHTML='';
+  switch(type){
+    case'hierarchy':renderHierarchyReport();break;
+    case'department':renderDepartmentReport();break;
+    case'personStatus':renderPersonStatusReport();break;
+    case'headVacancy':renderHeadVacancyReport();break;
+    case'approval':renderApprovalReport();break;
+    case'designation':renderDesignationReport();break;
+  }
+}
+
+function closeReport(){
+  activeReport=null;
+  document.getElementById('expandedReport').classList.remove('show');
+  renderReportCards();
+}
+
+function printReport(){
+  window.print();
+}
+
+/* ======================== HIERARCHY REPORT ======================== */
+function renderHierarchyReport(){
+  const d=allData;
+  document.getElementById('expandedTitle').textContent='Hierarchy Report';
+  document.getElementById('reportPrintTitle').textContent='Hierarchy Report';
+  document.getElementById('reportFilterBar').innerHTML=`
+    <select id="hierFilterDist" onchange="filterHierarchy()">
+      <option value="all">All Districts</option>
+      ${d.districts.map(x=>`<option value="${x.id}">${x.name||x.id}</option>`).join('')}
+    </select>
+  `;
+  buildHierarchyView('all');
+}
+
+function filterHierarchy(){
+  buildHierarchyView(document.getElementById('hierFilterDist').value);
+}
+
+function buildHierarchyView(distFilter){
+  const d=allData;
+  const districts=distFilter==='all'?d.districts:d.districts.filter(x=>x.id===distFilter);
+  const totalDistricts=districts.length;
+  const totalAreas=distFilter==='all'?d.areas.length:d.areas.filter(a=>a.districtId===distFilter).length;
+  const totalZH=distFilter==='all'?d.zhs.length:d.zhs.filter(z=>z.districtId===distFilter).length;
+  const totalPersons=distFilter==='all'?d.persons.length:d.persons.filter(p=>distFilter==='all'?true:p.districtId===distFilter).length;
+
+  let html=`
+    <span class="report-print-title">Hierarchy Report</span>
+    <div class="summary-row">
+      <div class="summary-item"><div class="num" style="color:#1a6b3c">${totalDistricts}</div><div class="lbl">Districts</div></div>
+      <div class="summary-item"><div class="num" style="color:#0d4a25">${totalAreas}</div><div class="lbl">Areas</div></div>
+      <div class="summary-item"><div class="num" style="color:#28a745">${totalZH}</div><div class="lbl">Zeli Halqas</div></div>
+      <div class="summary-item"><div class="num" style="color:#1a6b3c">${totalPersons}</div><div class="lbl">Persons</div></div>
+    </div>
+    <h3 style="font-size:13px;margin-bottom:8px;color:#1a1a2e">District Breakdown</h3>
+    <table class="report-table">
+      <thead><tr><th>District</th><th>Areas</th><th>ZH</th><th>Persons</th></tr></thead>
+      <tbody>
+  `;
+  districts.forEach(dist=>{
+    const areas=d.areas.filter(a=>a.districtId===dist.id).length;
+    const zhs=d.zhs.filter(z=>z.districtId===dist.id).length;
+    const persons=d.persons.filter(p=>p.districtId===dist.id).length;
+    html+=`<tr><td><strong>${dist.name||dist.id}</strong></td><td>${areas}</td><td>${zhs}</td><td>${persons}</td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  document.getElementById('reportContent').innerHTML=html;
+}
+
+/* ======================== DEPARTMENT REPORT ======================== */
+function renderDepartmentReport(){
+  const d=allData;
+  document.getElementById('expandedTitle').textContent='Department Report';
+  document.getElementById('reportPrintTitle').textContent='Department Report';
+  document.getElementById('reportFilterBar').innerHTML=`
+    <select id="deptFilter" onchange="filterDeptReport()">
+      <option value="all">All Departments</option>
+      ${d.departments.map(x=>`<option value="${x.id}">${x.name||x.id}</option>`).join('')}
+    </select>
+  `;
+  buildDeptView('all');
+}
+
+function filterDeptReport(){
+  buildDeptView(document.getElementById('deptFilter').value);
+}
+
+function buildDeptView(filter){
+  const d=allData;
+  const depts=filter==='all'?d.departments:d.departments.filter(x=>x.id===filter);
+  const totalPersons=d.persons.length;
+  let html=`
+    <span class="report-print-title">Department Report</span>
+    <div class="summary-row">
+      <div class="summary-item"><div class="num" style="color:#1a6b3c">${depts.length}</div><div class="lbl">Departments</div></div>
+      <div class="summary-item"><div class="num" style="color:#0d4a25">${totalPersons}</div><div class="lbl">Total Persons</div></div>
+    </div>
+    <table class="report-table">
+      <thead><tr><th>Department</th><th>Head</th><th>Persons</th><th>Coverage</th></tr></thead>
+      <tbody>
+  `;
+  depts.forEach(dept=>{
+    const deptPersons=d.persons.filter(p=>p.departmentId===dept.id);
+    const count=deptPersons.length;
+    const pct=totalPersons>0?((count/totalPersons)*100).toFixed(1):0;
+    html+=`<tr>
+      <td><strong>${dept.name||dept.id}</strong></td>
+      <td>${dept.headName||dept.headId||'<span class="vacant">Vacant</span>'}</td>
+      <td>${count}</td>
+      <td>${pct}%</td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  document.getElementById('reportContent').innerHTML=html;
+}
+
+/* ======================== PERSON STATUS REPORT ======================== */
+function renderPersonStatusReport(){
+  const d=allData;
+  document.getElementById('expandedTitle').textContent='Person Status Report';
+  document.getElementById('reportPrintTitle').textContent='Person Status Report';
+  document.getElementById('reportFilterBar').innerHTML=`
+    <select id="psFilter" onchange="filterPSReport()">
+      <option value="all">All Status</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+      <option value="transferred">Transferred</option>
+      <option value="left">Left</option>
+    </select>
+  `;
+  buildPSView('all');
+}
+
+function filterPSReport(){
+  buildPSView(document.getElementById('psFilter').value);
+}
+
+function buildPSView(filter){
+  const d=allData;
+  const total=d.persons.length;
+  const active=d.persons.filter(p=>(p.status||'active')==='active').length;
+  const inactive=d.persons.filter(p=>p.status==='inactive').length;
+  const transferred=d.persons.filter(p=>p.status==='transferred').length;
+  const left=d.persons.filter(p=>p.status==='left').length;
+  const colors={active:'#28a745',inactive:'#dc3545',transferred:'#ff9800',left:'#6c757d'};
+  const labels={active:'Active',inactive:'Inactive',transferred:'Transferred',left:'Left'};
+  const counts={active,inactive,transferred,left};
+
+  let html=`
+    <span class="report-print-title">Person Status Report</span>
+    <div class="summary-row">
+      <div class="summary-item"><div class="num" style="color:#28a745">${active}</div><div class="lbl">Active</div></div>
+      <div class="summary-item"><div class="num" style="color:#dc3545">${inactive}</div><div class="lbl">Inactive</div></div>
+      <div class="summary-item"><div class="num" style="color:#ff9800">${transferred}</div><div class="lbl">Transferred</div></div>
+      <div class="summary-item"><div class="num" style="color:#6c757d">${left}</div><div class="lbl">Left</div></div>
+    </div>
+    <div class="chart-bars">
+  `;
+  Object.keys(counts).forEach(k=>{
+    const pct=total>0?((counts[k]/total)*100).toFixed(0):0;
+    html+=`<div class="chart-bar-row">
+      <div class="chart-bar-label">${labels[k]}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${pct}%;background:${colors[k]}"><span>${counts[k]}</span></div></div>
+      <div class="chart-bar-value">${pct}%</div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  const persons=filter==='all'?d.persons:d.persons.filter(p=>(p.status||'active')===filter);
+  html+=`<h3 style="font-size:13px;margin:12px 0 8px">Person List (${persons.length})</h3>
+    <table class="report-table">
+      <thead><tr><th>Name</th><th>Dept</th><th>Status</th></tr></thead><tbody>`;
+  persons.forEach(p=>{
+    const st=p.status||'active';
+    const stClass='status-'+st;
+    html+=`<tr>
+      <td><strong>${p.name||p.id}</strong></td>
+      <td>${getDeptName(p.departmentId)}</td>
+      <td><span class="status-badge ${stClass}">${st.charAt(0).toUpperCase()+st.slice(1)}</span></td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  document.getElementById('reportContent').innerHTML=html;
+}
+
+/* ======================== HEAD/VACANCY REPORT ======================== */
+function renderHeadVacancyReport(){
+  document.getElementById('expandedTitle').textContent='Head/Vacancy Report';
+  document.getElementById('reportPrintTitle').textContent='Head/Vacancy Report';
+  document.getElementById('reportFilterBar').innerHTML=`
+    <select id="hvFilter" onchange="filterHVReport()">
+      <option value="all">All Positions</option>
+      <option value="district">District Heads</option>
+      <option value="area">Area Heads</option>
+      <option value="zh">ZH Heads</option>
+    </select>
+  `;
+  buildHVView('all');
+}
+
+function filterHVReport(){
+  buildHVView(document.getElementById('hvFilter').value);
+}
+
+function buildHVView(filter){
+  const d=allData;
+  const distHeadCount=d.districts.length;
+  const distFilled=d.districts.filter(x=>x.headId).length;
+  const areaHeadCount=d.areas.length;
+  const areaFilled=d.areas.filter(x=>x.headId).length;
+  const zhHeadCount=d.zhs.length;
+  const zhFilled=d.zhs.filter(x=>x.headId).length;
+  const totalVacant=(distHeadCount-distFilled)+(areaHeadCount-areaFilled)+(zhHeadCount-zhFilled);
+  const totalFilled=distFilled+areaFilled+zhFilled;
+
+  let html=`
+    <span class="report-print-title">Head/Vacancy Report</span>
+    <div class="summary-row">
+      <div class="summary-item"><div class="num" style="color:#28a745">${totalFilled}</div><div class="lbl">Filled</div></div>
+      <div class="summary-item"><div class="num" style="color:#dc3545">${totalVacant}</div><div class="lbl">Vacant</div></div>
+      <div class="summary-item"><div class="num" style="color:#1a6b3c">${totalFilled+totalVacant}</div><div class="lbl">Total Posts</div></div>
+    </div>
+    <div class="chart-bars">
+      <div class="chart-bar-row">
+        <div class="chart-bar-label">District</div>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${distHeadCount>0?((distFilled/distHeadCount)*100):0}%;background:#28a745"><span>${distFilled}/${distHeadCount}</span></div></div>
+        <div class="chart-bar-value">${distHeadCount>0?((distFilled/distHeadCount)*100).toFixed(0):0}%</div>
+      </div>
+      <div class="chart-bar-row">
+        <div class="chart-bar-label">Area</div>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${areaHeadCount>0?((areaFilled/areaHeadCount)*100):0}%;background:#1a6b3c"><span>${areaFilled}/${areaHeadCount}</span></div></div>
+        <div class="chart-bar-value">${areaHeadCount>0?((areaFilled/areaHeadCount)*100).toFixed(0):0}%</div>
+      </div>
+      <div class="chart-bar-row">
+        <div class="chart-bar-label">ZH</div>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${zhHeadCount>0?((zhFilled/zhHeadCount)*100):0}%;background:#0d4a25"><span>${zhFilled}/${zhHeadCount}</span></div></div>
+        <div class="chart-bar-value">${zhHeadCount>0?((zhFilled/zhHeadCount)*100).toFixed(0):0}%</div>
+      </div>
+    </div>
+  `;
+
+  if(filter==='all'||filter==='district'){
+    html+=`<h3 style="font-size:13px;margin:12px 0 8px">District Heads</h3>
+    <table class="report-table"><thead><tr><th>District</th><th>Head</th><th>Status</th></tr></thead><tbody>`;
+    d.districts.forEach(x=>{
+      html+=`<tr><td><strong>${x.name||x.id}</strong></td><td>${x.headName||x.headId||'-'}</td>
+        <td>${x.headId?'<span class="filled">Filled</span>':'<span class="vacant">Vacant</span>'}</td></tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+
+  if(filter==='all'||filter==='area'){
+    html+=`<h3 style="font-size:13px;margin:12px 0 8px">Area Heads</h3>
+    <table class="report-table"><thead><tr><th>Area</th><th>District</th><th>Head</th><th>Status</th></tr></thead><tbody>`;
+    d.areas.forEach(x=>{
+      const distName=getDistName(x.districtId);
+      html+=`<tr><td><strong>${x.name||x.id}</strong></td><td>${distName}</td><td>${x.headName||x.headId||'-'}</td>
+        <td>${x.headId?'<span class="filled">Filled</span>':'<span class="vacant">Vacant</span>'}</td></tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+
+  if(filter==='all'||filter==='zh'){
+    html+=`<h3 style="font-size:13px;margin:12px 0 8px">ZH Heads</h3>
+    <table class="report-table"><thead><tr><th>Zeli Halqa</th><th>Area</th><th>Head</th><th>Status</th></tr></thead><tbody>`;
+    d.zhs.forEach(x=>{
+      const areaName=getAreaName(x.areaId);
+      html+=`<tr><td><strong>${x.name||x.id}</strong></td><td>${areaName}</td><td>${x.headName||x.headId||'-'}</td>
+        <td>${x.headId?'<span class="filled">Filled</span>':'<span class="vacant">Vacant</span>'}</td></tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+
+  document.getElementById('reportContent').innerHTML=html;
+}
+
+/* ======================== APPROVAL REPORT ======================== */
+function renderApprovalReport(){
+  document.getElementById('expandedTitle').textContent='Approval Report';
+  document.getElementById('reportPrintTitle').textContent='Approval Report';
+  document.getElementById('reportFilterBar').innerHTML=`
+    <select id="apprFilter" onchange="filterApprReport()">
+      <option value="all">All Status</option>
+      <option value="pending">Pending</option>
+      <option value="approved">Approved</option>
+      <option value="rejected">Rejected</option>
+      <option value="sent_back">Sent Back</option>
+    </select>
+  `;
+  buildApprView('all');
+}
+
+function filterApprReport(){
+  buildApprView(document.getElementById('apprFilter').value);
+}
+
+function buildApprView(filter){
+  const d=allData;
+  const total=d.approvals.length;
+  const pending=d.approvals.filter(a=>a.status==='pending').length;
+  const approved=d.approvals.filter(a=>a.status==='approved').length;
+  const rejected=d.approvals.filter(a=>a.status==='rejected').length;
+  const sentBack=d.approvals.filter(a=>a.status==='sent_back').length;
+  const colors={pending:'#ff9800',approved:'#28a745',rejected:'#dc3545',sent_back:'#004085'};
+  const labels={pending:'Pending',approved:'Approved',rejected:'Rejected',sent_back:'Sent Back'};
+  const counts={pending,approved,rejected,sent_back};
+
+  let html=`
+    <span class="report-print-title">Approval Report</span>
+    <div class="summary-row">
+      <div class="summary-item"><div class="num" style="color:#ff9800">${pending}</div><div class="lbl">Pending</div></div>
+      <div class="summary-item"><div class="num" style="color:#28a745">${approved}</div><div class="lbl">Approved</div></div>
+      <div class="summary-item"><div class="num" style="color:#dc3545">${rejected}</div><div class="lbl">Rejected</div></div>
+      <div class="summary-item"><div class="num" style="color:#004085">${sentBack}</div><div class="lbl">Sent Back</div></div>
+    </div>
+    <div class="chart-bars">
+  `;
+  Object.keys(counts).forEach(k=>{
+    const pct=total>0?((counts[k]/total)*100).toFixed(0):0;
+    html+=`<div class="chart-bar-row">
+      <div class="chart-bar-label">${labels[k]}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${pct}%;background:${colors[k]}"><span>${counts[k]}</span></div></div>
+      <div class="chart-bar-value">${pct}%</div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  const approvals=filter==='all'?d.approvals:d.approvals.filter(a=>a.status===filter);
+  html+=`<h3 style="font-size:13px;margin:12px 0 8px">Recent Approvals (${approvals.length})</h3>
+    <table class="report-table"><thead><tr><th>Type</th><th>Requested By</th><th>Status</th><th>Date</th></tr></thead><tbody>`;
+  approvals.slice(0,50).forEach(a=>{
+    const st=a.status||'pending';
+    const stLabel=st.replace('_',' ').replace(/\b\w/g,l=>l.toUpperCase());
+    const stClass='status-'+(st==='sent_back'?'sentback':st);
+    const date=a.createdAt?(a.createdAt.seconds?new Date(a.createdAt.seconds*1000).toLocaleDateString():a.createdAt):'-';
+    html+=`<tr>
+      <td><strong>${a.type||a.requestType||'-'}</strong></td>
+      <td>${a.requestedBy||a.requesterName||a.userId||'-'}</td>
+      <td><span class="status-badge ${stClass}">${stLabel}</span></td>
+      <td>${date}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  document.getElementById('reportContent').innerHTML=html;
+}
+
+/* ======================== DESIGNATION REPORT ======================== */
+function renderDesignationReport(){
+  document.getElementById('expandedTitle').textContent='Designation Report';
+  document.getElementById('reportPrintTitle').textContent='Designation Report';
+  document.getElementById('reportFilterBar').innerHTML=`
+    <select id="desgFilter" onchange="filterDesgReport()">
+      <option value="all">All Designations</option>
+      ${allData.designations.map(x=>`<option value="${x.id}">${x.name||x.id}</option>`).join('')}
+    </select>
+  `;
+  buildDesgView('all');
+}
+
+function filterDesgReport(){
+  buildDesgView(document.getElementById('desgFilter').value);
+}
+
+function buildDesgView(filter){
+  const d=allData;
+  const total=d.persons.length;
+  const desigs=filter==='all'?d.designations:d.designations.filter(x=>x.id===filter);
+  const maxCount=Math.max(...desigs.map(des=>{
+    return d.persons.filter(p=>p.designationId===des.id).length;
+  }),1);
+
+  let html=`
+    <span class="report-print-title">Designation Report</span>
+    <div class="summary-row">
+      <div class="summary-item"><div class="num" style="color:#1a6b3c">${desigs.length}</div><div class="lbl">Designations</div></div>
+      <div class="summary-item"><div class="num" style="color:#0d4a25">${total}</div><div class="lbl">Total Persons</div></div>
+    </div>
+    <div class="chart-bars">
+  `;
+  const barColors=['#1a6b3c','#28a745','#0d4a25','#ff9800','#dc3545','#6c757d','#004085','#1a6b3c'];
+  desigs.forEach((des,i)=>{
+    const count=d.persons.filter(p=>p.designationId===des.id).length;
+    const pct=maxCount>0?((count/maxCount)*100):0;
+    html+=`<div class="chart-bar-row">
+      <div class="chart-bar-label" style="width:100px">${des.name||des.id}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${pct}%;background:${barColors[i%barColors.length]}"><span>${count}</span></div></div>
+      <div class="chart-bar-value">${count}</div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  html+=`<h3 style="font-size:13px;margin:12px 0 8px">Person Distribution</h3>
+    <table class="report-table"><thead><tr><th>Designation</th><th>Persons</th><th>% Share</th></tr></thead><tbody>`;
+  desigs.forEach(des=>{
+    const count=d.persons.filter(p=>p.designationId===des.id).length;
+    const pct=total>0?((count/total)*100).toFixed(1):0;
+    html+=`<tr><td><strong>${des.name||des.id}</strong></td><td>${count}</td><td>${pct}%</td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  document.getElementById('reportContent').innerHTML=html;
+}
+
+/* ======================== HELPERS ======================== */
+function getDeptName(id){
+  if(!id)return '-';
+  const d=allData.departments.find(x=>x.id===id);
+  return d?(d.name||d.id):'-';
+}
+function getDistName(id){
+  if(!id)return '-';
+  const d=allData.districts.find(x=>x.id===id);
+  return d?(d.name||d.id):'-';
+}
+function getAreaName(id){
+  if(!id)return '-';
+  const d=allData.areas.find(x=>x.id===id);
+  return d?(d.name||d.id):'-';
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,817 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Dept Dashboard | Tanzeem Structure Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#1a6b3c;--dark:#0d4a25;--red:#dc3545;--orange:#ff9800;--success:#28a745;--light:#f5f7fa;--dark-text:#1a1a2e;--gray:#6c757d;--border:#e9ecef;--white:#fff;--radius:14px}
+body{font-family:'Inter',sans-serif;background:var(--light);color:var(--dark-text);max-width:500px;margin:0 auto;min-height:100vh;overflow-x:hidden}
+.header{position:sticky;top:0;z-index:100;background:var(--primary);color:var(--white);padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.hamburger{background:none;border:none;color:var(--white);font-size:22px;cursor:pointer;padding:4px}
+.header-title{flex:1;font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-search{position:relative;flex:1;max-width:180px}
+.header-search input{width:100%;padding:8px 12px 8px 34px;border-radius:20px;border:none;background:rgba(255,255,255,.2);color:var(--white);font-size:13px;outline:none}
+.header-search input::placeholder{color:rgba(255,255,255,.7)}
+.header-search i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.7);font-size:13px}
+.sidebar-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;display:none;opacity:0;transition:opacity .3s}
+.sidebar-overlay.active{display:block;opacity:1}
+.sidebar{position:fixed;top:0;left:-280px;width:280px;height:100%;background:var(--white);z-index:300;transition:left .3s ease;overflow-y:auto;box-shadow:2px 0 20px rgba(0,0,0,.2)}
+.sidebar.open{left:0}
+.sidebar-header{background:var(--primary);color:var(--white);padding:20px 16px;text-align:center}
+.sidebar-header h3{font-size:16px;font-weight:700;margin-bottom:4px}
+.sidebar-header p{font-size:12px;opacity:.8}
+.sidebar-nav a{display:flex;align-items:center;gap:12px;padding:13px 16px;color:var(--dark-text);text-decoration:none;font-size:14px;font-weight:500;border-bottom:1px solid var(--border);transition:background .2s}
+.sidebar-nav a:hover,.sidebar-nav a.active{background:rgba(26,107,60,.08);color:var(--primary)}
+.sidebar-nav a.active{border-left:4px solid var(--primary)}
+.sidebar-nav a i{width:22px;text-align:center;font-size:16px}
+.sidebar-nav a.logout{color:var(--red)}
+.content{padding:16px;padding-bottom:80px}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:var(--white);border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,.08)}
+.bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0;color:var(--gray);text-decoration:none;font-size:10px;font-weight:600;transition:color .2s}
+.bottom-nav a.active,.bottom-nav a:hover{color:var(--primary)}
+.bottom-nav a i{font-size:20px}
+.card{background:var(--white);border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid var(--border)}
+.section-title{font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-title i{color:var(--primary)}
+
+/* Department Selector */
+.dept-selector{margin-bottom:16px}
+.dept-selector label{font-size:13px;font-weight:600;color:var(--gray);display:block;margin-bottom:6px}
+.dept-selector select{width:100%;padding:12px 14px;border-radius:var(--radius);border:1.5px solid var(--border);font-size:14px;font-weight:500;color:var(--dark-text);background:var(--white);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c757d' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+
+/* Coverage Stats */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-box{background:var(--light);border-radius:12px;padding:14px;text-align:center;border:1px solid var(--border)}
+.stat-box .stat-val{font-size:26px;font-weight:800;color:var(--primary);line-height:1.1}
+.stat-box .stat-label{font-size:11px;color:var(--gray);font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.stat-box.orange .stat-val{color:var(--orange)}
+.stat-box.red .stat-val{color:var(--red)}
+.stat-box.success .stat-val{color:var(--success)}
+
+/* Coverage Bar */
+.coverage-bar-wrap{margin-top:4px}
+.coverage-bar{height:10px;border-radius:5px;background:var(--border);overflow:hidden;display:flex}
+.coverage-bar .filled{background:var(--success);transition:width .6s ease}
+.coverage-bar .vacant{background:var(--border);flex:1}
+.coverage-labels{display:flex;justify-content:space-between;margin-top:4px;font-size:11px;font-weight:600}
+.coverage-labels .fl{color:var(--success)}
+.coverage-labels .vl{color:var(--gray)}
+
+/* Dept Overview Cards (no dept selected) */
+.dept-grid{display:grid;gap:10px}
+.dept-card{background:var(--white);border-radius:var(--radius);padding:14px;border:1.5px solid var(--border);cursor:pointer;transition:all .2s}
+.dept-card:active{transform:scale(.98);border-color:var(--primary)}
+.dept-card-name{font-size:15px;font-weight:700;color:var(--dark-text);margin-bottom:2px}
+.dept-card-head{font-size:12px;color:var(--gray);margin-bottom:8px}
+.dept-card-head i{margin-right:4px}
+.dept-card-stats{display:flex;gap:12px;margin-bottom:8px}
+.dept-card-stats span{font-size:11px;font-weight:600;color:var(--gray)}
+.dept-card-stats span b{color:var(--dark-text)}
+.dept-mini-bar{height:6px;border-radius:3px;background:var(--border);overflow:hidden}
+.dept-mini-bar .fill{height:100%;background:var(--success);border-radius:3px;transition:width .4s}
+
+/* Hierarchy Tree */
+.tree{font-size:13px;line-height:1.9;padding:4px 0;font-family:'Courier New',monospace}
+.tree-node{padding-left:20px;position:relative}
+.tree-node::before{content:'';position:absolute;left:6px;top:0;border-left:1.5px solid var(--border)}
+.tree-item{position:relative;padding-left:14px}
+.tree-item::before{content:'';position:absolute;left:-8px;top:12px;width:12px;border-top:1.5px solid var(--border)}
+.tree-item.last::before{width:8px}
+.tree-icon{margin-right:5px}
+.tree-label{font-family:'Inter',sans-serif;font-weight:500}
+.tree-count{color:var(--gray);font-size:11px;font-family:'Inter',sans-serif}
+.tree-person{color:var(--primary);font-weight:600;font-family:'Inter',sans-serif}
+.tree-designation{color:var(--gray);font-size:12px;font-family:'Inter',sans-serif}
+
+/* Person List */
+.person-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.person-item:last-child{border-bottom:none}
+.person-avatar{width:36px;height:36px;border-radius:50%;background:var(--primary);color:var(--white);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.person-info{flex:1;min-width:0}
+.person-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.person-meta{font-size:11px;color:var(--gray)}
+.person-status{font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;text-transform:uppercase}
+.person-status.active{background:rgba(40,167,69,.12);color:var(--success)}
+.person-status.inactive{background:rgba(220,53,69,.12);color:var(--red)}
+.person-status.pending{background:rgba(255,152,0,.12);color:var(--orange)}
+
+/* Recent Changes */
+.change-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.change-item:last-child{border-bottom:none}
+.change-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.change-icon.assign{background:rgba(40,167,69,.12);color:var(--success)}
+.change-icon.remove{background:rgba(220,53,69,.12);color:var(--red)}
+.change-icon.update{background:rgba(255,152,0,.12);color:var(--orange)}
+.change-info{flex:1}
+.change-text{font-size:12px;font-weight:500;line-height:1.4}
+.change-text b{font-weight:700}
+.change-date{font-size:11px;color:var(--gray);margin-top:2px}
+
+/* Pending Approvals */
+.approval-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.approval-item:last-child{border-bottom:none}
+.approval-num{font-size:13px;font-weight:700;color:var(--primary);min-width:70px}
+.approval-action{flex:1;font-size:12px;font-weight:500}
+.approval-status{font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;text-transform:uppercase}
+.approval-status.pending{background:rgba(255,152,0,.12);color:var(--orange)}
+.approval-status.approved{background:rgba(40,167,69,.12);color:var(--success)}
+.approval-status.rejected{background:rgba(220,53,69,.12);color:var(--red)}
+
+.info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.info-row:last-child{border-bottom:none}
+.info-row .il{color:var(--gray);font-weight:500}
+.info-row .iv{font-weight:600;text-align:right;max-width:60%}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--gray)}
+.empty-state i{font-size:48px;color:var(--border);margin-bottom:12px;display:block}
+.empty-state p{font-size:13px}
+
+.loader{display:flex;justify-content:center;padding:30px}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.badge{display:inline-block;background:var(--primary);color:var(--white);font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;margin-left:6px;vertical-align:middle}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+  <div class="header-title">Dept Dashboard</div>
+  <div class="header-search">
+    <i class="fas fa-search"></i>
+    <input type="text" id="globalSearch" placeholder="Search..." oninput="handleSearch(this.value)">
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h3>Tanzeem Structure</h3>
+<p style="font-size:11px;opacity:0.8;margin-top:2px">Dept Dashboard</p>
+    <p id="sidebarUser">Division Head</p>
+  </div>
+  <div class="sidebar-nav" id="sidebarMenu">
+    <a href="dashboard.html"><i class="fas fa-th-large"></i> Dashboard</a>
+    <a href="districts.html"><i class="fas fa-city"></i> Districts</a>
+    <a href="areas.html"><i class="fas fa-map-marked-alt"></i> Areas</a>
+    <a href="zeli-halqas.html"><i class="fas fa-circle-notch"></i> Zeli Halqas</a>
+    <a href="departments.html"><i class="fas fa-building"></i> Departments</a>
+    <a href="designations.html"><i class="fas fa-medal"></i> Designations</a>
+    <a href="persons.html"><i class="fas fa-users"></i> Persons</a>
+    <a href="org-tree.html"><i class="fas fa-sitemap"></i> Org Tree</a>
+    <a href="approvals.html"><i class="fas fa-check-double"></i> Approvals</a>
+    <a href="reports.html"><i class="fas fa-chart-bar"></i> Reports</a>
+    <a href="dept-dashboard.html" class="active"><i class="fas fa-chart-pie"></i> Dept Dashboard</a>
+    <a href="access-control.html"><i class="fas fa-shield-alt"></i> Access Control</a>
+    <a href="maintenance.html"><i class="fas fa-wrench"></i> Maintenance</a>
+    <a href="#" class="logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+  </div>
+  <div style="padding:16px;font-size:10px;color:rgba(255,255,255,.4);text-align:center;border-top:1px solid rgba(255,255,255,.1);margin-top:auto">Developed by<br><b style="color:rgba(255,255,255,.6)">A.A.Q. Solutions & Outsourcing</b></div>
+</div>
+
+<div class="content" id="mainContent">
+  <div class="dept-selector">
+    <label>Select Department</label>
+    <select id="deptSelect" onchange="onDeptChange(this.value)">
+      <option value="">-- All Departments --</option>
+    </select>
+  </div>
+  <div id="dashboardArea">
+    <div class="loader"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<div class="bottom-nav" id="bottomNav">
+  <a href="dashboard.html"><i class="fas fa-home"></i>Home</a>
+  <a href="districts.html"><i class="fas fa-city"></i>Districts</a>
+  <a href="approvals.html"><i class="fas fa-check-double"></i>Approvals</a>
+  <a href="#" onclick="toggleSidebar();return false"><i class="fas fa-ellipsis-h"></i>More</a>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.firebasestorage.app",messagingSenderId:"438479516590",appId:"1:438479516590:web:fc0a9aaa4a0285f0dc0e3f",measurementId:"G-TJWXZSQXGH"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
+const menus={division_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Districts',icon:'fa-map',file:'districts.html'},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Departments',icon:'fa-building',file:'departments.html'},{label:'Designations',icon:'fa-id-badge',file:'designations.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Org Tree',icon:'fa-sitemap',file:'org-tree.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Dept Dashboard',icon:'fa-chart-pie',file:'dept-dashboard.html'},{label:'Access Control',icon:'fa-shield-alt',file:'access-control.html'},{label:'Maintenance',icon:'fa-wrench',file:'maintenance.html'},{label:'Announcements',icon:'fa-bullhorn',file:'announcements.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],district_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],area_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}]};const bottomNavs={division_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Announce',icon:'fa-bullhorn',file:'announcements.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],district_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],area_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}]};function buildSidebar(user){var n=document.getElementById('sidebarName');if(n)n.textContent=user.name;var p=document.getElementById('sidebarPhone');if(p)p.textContent=user.phone;var r=document.getElementById('sidebarRole');if(r)r.textContent=user.role.replace(/_/g,' ');var a=document.getElementById('avatarEl');if(a)a.textContent=user.name.charAt(0).toUpperCase();var menu=menus[user.role]||[];var cont=document.getElementById('sidebarMenu')||document.getElementById('sidebarNav');if(!cont)return;cont.innerHTML='';menu.forEach(function(m){var el=document.createElement('a');el.href='#';el.innerHTML='<i class="fas '+m.icon+'"></i> '+m.label;if(m.active)el.classList.add('active');el.onclick=function(e){e.preventDefault();closeSidebar();if(m.file==='logout'){localStorage.removeItem('ngoUser');window.location.href='index.html';return}if(m.file!=='dashboard.html')window.location.href=m.file};if(m.icon==='fa-sign-out-alt')el.classList.add('logout-btn');cont.appendChild(el)})}function buildBottomNav(user){var nav=document.getElementById('bottomNav');if(!nav)return;nav.innerHTML='';var items=bottomNavs[user.role]||[];items.forEach(function(b){var el=document.createElement('a');el.href='#';el.innerHTML='<i class="fas '+b.icon+'"></i><span>'+b.label+'</span>';if(b.active)el.classList.add('active');el.onclick=function(e){e.preventDefault();if(b.file==='sidebar'){toggleSidebar();return}if(b.file!=='dashboard.html')window.location.href=b.file};nav.appendChild(el)})}function closeSidebar(){var s=document.getElementById('sidebar');if(s)s.classList.remove('open');var o=document.getElementById('sidebarOverlay');if(o)o.classList.remove('active')}
+
+async function checkSystemAccess(moduleId){
+  try{
+    const raw=localStorage.getItem('ngoUser');
+    if(!raw)return;
+    const user=JSON.parse(raw);
+    if(user.role==='division_head')return;
+    const settingsSnap=await db.collection('settings').limit(1).get();
+    if(!settingsSnap.empty){
+      const s=settingsSnap.docs[0].data();
+      if(s.maintenanceMode){
+        document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-tools"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Under Development</h1><p style="font-size:16px;opacity:.7;line-height:1.6">'+(s.maintenanceMessage||'Software under development hai. Please wait karein.')+'</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+        throw new Error('maintenance');
+      }
+    }
+    const accessSnap=await db.collection('user_access').where('userId','==',user.id).limit(1).get();
+    if(!accessSnap.empty){
+      const a=accessSnap.docs[0].data();
+      if(a.expiresAt){
+        const exp=a.expiresAt.seconds?new Date(a.expiresAt.seconds*1000):new Date(a.expiresAt);
+        if(new Date()>exp){
+          document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-lock"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Access Expired</h1><p style="font-size:16px;opacity:.7">Aapka access khatam ho gaya hai. Admin se contact karein.</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+          throw new Error('access expired');
+        }
+      }
+      if(a.modules&&a.modules[moduleId]===false){
+        window.location.href='dashboard.html';
+        throw new Error('no access');
+      }
+    }
+  }catch(e){
+    if(e.message==='maintenance'||e.message==='access expired'){}
+  }
+}
+
+let currentUser=null;
+let allDepts=[];
+let allPersons=[];
+let allStaff=[];
+let allDistricts=[];
+let allAreas=[];
+let allZH=[];
+let allApprovals=[];
+let allDesignations=[];
+let allHistory=[];
+let selectedDeptId='';
+
+function requireAuth(roles){
+  const raw=localStorage.getItem('ngoUser');
+  if(!raw){window.location.href='index.html';return null;}
+  try{
+    const u=JSON.parse(raw);
+    if(!roles||roles.length===0)return u;
+    if(roles.includes(u.role))return u;
+    window.location.href='dashboard.html';return null;
+  }catch(e){window.location.href='index.html';return null;}
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('active');
+}
+
+).catch(()=>{window.location.href='index.html';});
+}
+
+function getInitials(name){
+  if(!name)return'?';
+  return name.split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2);
+}
+
+function formatDate(ts){
+  if(!ts)return'-';
+  const d=ts.toDate?ts.toDate():new Date(ts);
+  const now=new Date();
+  const diff=now-d;
+  if(diff<60000)return'Just now';
+  if(diff<3600000)return Math.floor(diff/60000)+'m ago';
+  if(diff<86400000)return Math.floor(diff/3600000)+'h ago';
+  if(diff<604800000)return Math.floor(diff/86400000)+'d ago';
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:d.getFullYear()!==now.getFullYear()?'numeric':undefined});
+}
+
+function getDesigLevel(desigName){
+  const n=(desigName||'').toLowerCase();
+  if(n.includes('head')||n.includes('director')||n.includes('coordinator')||n.includes('president'))return 1;
+  if(n.includes('deputy')||n.includes('vice'))return 2;
+  if(n.includes('secretary')||n.includes('manager'))return 3;
+  if(n.includes('supervisor')||n.includes('leader'))return 4;
+  if(n.includes('member')||n.includes('volunteer'))return 5;
+  return 6;
+}
+
+function handleSearch(q){
+  const s=q.toLowerCase().trim();
+  if(!s){
+    if(selectedDeptId)renderDeptDetail(selectedDeptId);
+    else renderAllDepts();
+    return;
+  }
+  if(!selectedDeptId){
+    const filtered=allDepts.filter(d=>(d.name||'').toLowerCase().includes(s)||(d.code||'').toLowerCase().includes(s));
+    renderAllDepts(filtered);
+  }else{
+    const dept=allDepts.find(d=>d.id===selectedDeptId);
+    const persons=allPersons.filter(p=>p.primaryDeptId===selectedDeptId&&(
+      (p.name||'').toLowerCase().includes(s)||(p.designation||'').toLowerCase().includes(s)
+    ));
+    renderDeptDetail(selectedDeptId,persons);
+  }
+}
+
+function onDeptChange(val){
+  selectedDeptId=val;
+  if(!val){renderAllDepts();}
+  else{renderDeptDetail(val);}
+}
+
+function renderAllDepts(deptList){
+  const list=deptList||allDepts;
+  const area=document.getElementById('dashboardArea');
+  if(!list.length){
+    area.innerHTML='<div class="empty-state"><i class="fas fa-building"></i><p>No departments found in your division.</p></div>';
+    return;
+  }
+  let html='';
+  list.forEach(d=>{
+    const persons=allPersons.filter(p=>p.primaryDeptId===d.id);
+    const staff=allStaff.filter(s=>s.deptId===d.id);
+    const totalPositions=(d.totalPositions||0)||(persons.length+staff.length)||1;
+    const filled=persons.length;
+    const pct=totalPositions>0?Math.round((filled/totalPositions)*100):0;
+    const headName=d.headName||'Not Assigned';
+    html+=`<div class="card dept-card" onclick="selectDept('${d.id}')">
+      <div class="dept-card-name">${d.name||'Unnamed'} <span class="badge">${d.code||''}</span></div>
+      <div class="dept-card-head"><i class="fas fa-user-tie"></i> ${headName}</div>
+      <div class="dept-card-stats">
+        <span>Persons: <b>${filled}</b></span>
+        <span>Positions: <b>${totalPositions}</b></span>
+        <span>Coverage: <b>${pct}%</b></span>
+      </div>
+      <div class="dept-mini-bar"><div class="fill" style="width:${pct}%"></div></div>
+    </div>`;
+  });
+  area.innerHTML=html;
+}
+
+function selectDept(id){
+  document.getElementById('deptSelect').value=id;
+  selectedDeptId=id;
+  renderDeptDetail(id);
+}
+
+function renderDeptDetail(deptId,filteredPersons){
+  const dept=allDepts.find(d=>d.id===deptId);
+  if(!dept){renderAllDepts();return;}
+  const area=document.getElementById('dashboardArea');
+  const persons=filteredPersons||allPersons.filter(p=>p.primaryDeptId===deptId);
+  const deptStaff=allStaff.filter(s=>s.deptId===deptId);
+  const totalPositions=(dept.totalPositions||0)||(persons.length+deptStaff.length)||1;
+  const filled=persons.length;
+  const vacant=Math.max(0,totalPositions-filled);
+  const pct=totalPositions>0?Math.round((filled/totalPositions)*100):0;
+
+  let html='';
+
+  // Department Info Card
+  html+=`<div class="card">
+    <div class="section-title"><i class="fas fa-building"></i> Department Info</div>
+    <div class="info-row"><span class="il">Name</span><span class="iv">${dept.name||'-'}</span></div>
+    <div class="info-row"><span class="il">Code</span><span class="iv">${dept.code||'-'}</span></div>
+    <div class="info-row"><span class="il">Description</span><span class="iv">${dept.description||'-'}</span></div>
+    <div class="info-row"><span class="il">Head</span><span class="iv">${dept.headName||'Not Assigned'}</span></div>
+    <div class="info-row"><span class="il">Head Phone</span><span class="iv">${dept.headPhone||'-'}</span></div>
+    <div class="info-row"><span class="il">Scope</span><span class="iv">${dept.scope||'Division'}</span></div>
+  </div>`;
+
+  // Coverage Stats
+  html+=`<div class="card">
+    <div class="section-title"><i class="fas fa-chart-pie"></i> Coverage Stats</div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-val">${totalPositions}</div><div class="stat-label">Total Positions</div></div>
+      <div class="stat-box success"><div class="stat-val">${filled}</div><div class="stat-label">Filled</div></div>
+      <div class="stat-box red"><div class="stat-val">${vacant}</div><div class="stat-label">Vacant</div></div>
+      <div class="stat-box orange"><div class="stat-val">${pct}%</div><div class="stat-label">Coverage</div></div>
+    </div>
+    <div class="coverage-bar-wrap" style="margin-top:12px">
+      <div class="coverage-bar">
+        <div class="filled" style="width:${pct}%"></div>
+        <div class="vacant"></div>
+      </div>
+      <div class="coverage-labels">
+        <span class="fl">Filled: ${filled} (${pct}%)</span>
+        <span class="vl">Vacant: ${vacant} (${100-pct}%)</span>
+      </div>
+    </div>
+  </div>`;
+
+  // Hierarchy Tree
+  html+=`<div class="card">
+    <div class="section-title"><i class="fas fa-sitemap"></i> Hierarchy Tree</div>
+    <div class="tree" id="hierarchyTree"><div class="loader" style="padding:10px"><div class="spinner"></div></div></div>
+  </div>`;
+
+  // Person List
+  const sortedPersons=[...persons].sort((a,b)=>getDesigLevel(a.designation)-getDesigLevel(b.designation));
+  html+=`<div class="card">
+    <div class="section-title"><i class="fas fa-users"></i> Persons <span class="badge">${sortedPersons.length}</span></div>
+    <div id="personListArea">`;
+  if(!sortedPersons.length){
+    html+='<div class="empty-state" style="padding:20px"><i class="fas fa-user-slash"></i><p>No persons assigned to this department.</p></div>';
+  }else{
+    sortedPersons.forEach(p=>{
+      const status=(p.status||'active').toLowerCase();
+      const areaName=getAreaName(p.areaId);
+      html+=`<div class="person-item">
+        <div class="person-avatar">${getInitials(p.name)}</div>
+        <div class="person-info">
+          <div class="person-name">${p.name||'Unknown'}</div>
+          <div class="person-meta">${p.designation||'Member'}${areaName?' - '+areaName:''}</div>
+        </div>
+        <span class="person-status ${status}">${status}</span>
+      </div>`;
+    });
+  }
+  html+=`</div></div>`;
+
+  // Recent Changes
+  html+=`<div class="card">
+    <div class="section-title"><i class="fas fa-history"></i> Recent Changes</div>
+    <div id="historyArea"><div class="loader" style="padding:10px"><div class="spinner"></div></div></div>
+  </div>`;
+
+  // Pending Approvals
+  html+=`<div class="card">
+    <div class="section-title"><i class="fas fa-clock"></i> Pending Approvals</div>
+    <div id="approvalArea"><div class="loader" style="padding:10px"><div class="spinner"></div></div></div>
+  </div>`;
+
+  area.innerHTML=html;
+  loadHierarchyTree(deptId);
+  loadDeptHistory(deptId);
+  loadDeptApprovals(deptId);
+}
+
+function getAreaName(areaId){
+  if(!areaId)return'';
+  const a=allAreas.find(x=>x.id===areaId);
+  return a?a.name:'';
+}
+
+function getDistrictName(distId){
+  if(!distId)return'';
+  const d=allDistricts.find(x=>x.id===distId);
+  return d?d.name:'';
+}
+
+function loadHierarchyTree(deptId){
+  const tree=document.getElementById('hierarchyTree');
+  if(!tree)return;
+  const dept=allDepts.find(d=>d.id===deptId);
+  const persons=allPersons.filter(p=>p.primaryDeptId===deptId);
+  const deptStaff=allStaff.filter(s=>s.deptId===deptId);
+
+  // Group by district then area
+  const distMap={};
+  persons.forEach(p=>{
+    const distId=p.districtId||'unknown';
+    if(!distMap[distId])distMap[distId]={};
+    const areaId=p.areaId||'unknown';
+    if(!distMap[distId][areaId])distMap[distId][areaId]=[];
+    distMap[distId][areaId].push(p);
+  });
+
+  // Also add staff who might have district/area info
+  deptStaff.forEach(s=>{
+    if(s.districtId){
+      const distId=s.districtId;
+      if(!distMap[distId])distMap[distId]={};
+      const areaId=s.areaId||'unknown';
+      if(!distMap[distId][areaId])distMap[distId][areaId]=[];
+      distMap[distId].__staff=distMap[distId].__staff||[];
+      distMap[distId].__staff.push(s);
+    }
+  });
+
+  const distIds=Object.keys(distMap);
+  if(!distIds.length){
+    // Check ZH level
+    const zhPersons=allZH.filter(z=>z.deptId===deptId);
+    if(!persons.length&&!deptStaff.length&&!zhPersons.length){
+      tree.innerHTML='<div style="font-family:Inter,sans-serif;font-size:13px;color:var(--gray);padding:10px">No hierarchy data available.</div>';
+      return;
+    }
+    // Simple list
+    let h=`<div style="font-family:Inter,sans-serif;font-size:13px;font-weight:600;margin-bottom:6px">📋 ${dept?dept.name:'Department'}</div>`;
+    persons.forEach(p=>{
+      const status=(p.status||'active').toLowerCase();
+      h+=`<div class="tree-item" style="padding-left:14px">
+        <span class="tree-icon">👤</span>
+        <span class="tree-person">${p.name||'Unknown'}</span>
+        <span class="tree-designation"> - ${p.designation||'Member'}</span>
+        <span class="person-status ${status}" style="font-size:9px;padding:2px 6px;margin-left:6px">${status}</span>
+      </div>`;
+    });
+    tree.innerHTML=h;
+    return;
+  }
+
+  let h=`<div style="font-family:Inter,sans-serif;font-size:13px;font-weight:700;margin-bottom:8px">📋 ${dept?dept.name:'Department'}</div>`;
+  distIds.forEach((distId,di)=>{
+    const isLastDist=di===distIds.length-1;
+    const distName=distId==='unknown'?'Unknown District':getDistrictName(distId)||distId;
+    const distPersons=persons.filter(p=>p.districtId===distId);
+    const distCount=distPersons.length;
+    const areas=Object.keys(distMap[distId]).filter(k=>k!=='__staff');
+    h+=`<div class="tree-node">
+      <div class="tree-item${isLastDist&&areas.length===0?' last':''}">
+        <span class="tree-icon">📁</span>
+        <span class="tree-label">District: ${distName}</span>
+        <span class="tree-count"> (${distCount} persons)</span>
+      </div>`;
+
+    areas.forEach((areaId,ai)=>{
+      const isLastArea=ai===areas.length-1;
+      const areaName=areaId==='unknown'?'Unknown Area':getAreaName(areaId)||areaId;
+      const areaPersons=distMap[distId][areaId];
+      h+=`<div class="tree-node" style="padding-left:20px">
+        <div class="tree-item${isLastArea?' last':''}">
+          <span class="tree-icon">📍</span>
+          <span class="tree-label">Area: ${areaName}</span>
+          <span class="tree-count"> (${areaPersons.length} person${areaPersons.length!==1?'s':''})</span>
+        </div>`;
+
+      areaPersons.forEach((p,pi)=>{
+        const isLastPerson=pi===areaPersons.length-1;
+        const status=(p.status||'active').toLowerCase();
+        h+=`<div class="tree-node" style="padding-left:20px">
+          <div class="tree-item${isLastPerson?' last':''}">
+            <span class="tree-icon">👤</span>
+            <span class="tree-person">${p.name||'Unknown'}</span>
+            <span class="tree-designation"> - ${p.designation||'Member'}</span>
+          </div>
+        </div>`;
+      });
+
+      h+=`</div>`;
+    });
+
+    // Staff at district level
+    const staff=distMap[distId].__staff||[];
+    staff.forEach((s,si)=>{
+      const isLast=si===staff.length-1;
+      h+=`<div class="tree-node" style="padding-left:20px">
+        <div class="tree-item${isLast?' last':''}">
+          <span class="tree-icon">👤</span>
+          <span class="tree-person">${s.name||s.personName||'Staff'}</span>
+          <span class="tree-designation"> - ${s.designation||s.role||'Staff'}</span>
+        </div>
+      </div>`;
+    });
+
+    h+=`</div>`;
+  });
+  tree.innerHTML=h;
+}
+
+function loadDeptHistory(deptId){
+  const el=document.getElementById('historyArea');
+  if(!el)return;
+  const dept=allDepts.find(d=>d.id===deptId);
+  if(!dept){el.innerHTML='<div style="font-size:13px;color:var(--gray);padding:10px">No changes found.</div>';return;}
+
+  // Try loading from person_history where deptId matches
+  db.collection('person_history')
+    .where('deptId','==',deptId)
+    .orderBy('timestamp','desc')
+    .limit(15)
+    .get()
+    .then(snap=>{
+      if(snap.empty){
+        // Also try with departmentId field
+        return db.collection('person_history')
+          .where('departmentId','==',deptId)
+          .orderBy('timestamp','desc')
+          .limit(15)
+          .get();
+      }
+      return snap;
+    })
+    .then(snap=>{
+      if(!snap||snap.empty){
+        // Try filtering all history for this dept's persons
+        const deptPersonIds=allPersons.filter(p=>p.primaryDeptId===deptId).map(p=>p.id);
+        if(deptPersonIds.length===0){
+          el.innerHTML='<div style="font-size:13px;color:var(--gray);padding:10px">No changes recorded yet.</div>';
+          return;
+        }
+        // Load from person_history matching personIds
+        const chunks=[];
+        for(let i=0;i<deptPersonIds.length;i+=10){
+          chunks.push(deptPersonIds.slice(i,i+10));
+        }
+        return Promise.all(chunks.map(c=>db.collection('person_history').where('personId','in',c).limit(30).get()))
+          .then(results=>{
+            const merged=[];
+            results.forEach(r=>r.forEach(doc=>merged.push(doc)));
+            merged.sort((a,b)=>{
+              const ta=a.data().timestamp;const tb=b.data().timestamp;
+              if(!ta)return 1;if(!tb)return -1;
+              return tb.toMillis()-ta.toMillis();
+            });
+            renderHistory(el,merged.slice(0,10));
+          });
+      }
+      renderHistory(el,snap.docs.slice(0,10));
+    })
+    .catch(()=>{
+      el.innerHTML='<div style="font-size:13px;color:var(--gray);padding:10px">Unable to load history.</div>';
+    });
+}
+
+function renderHistory(el,docs){
+  if(!docs||!docs.length){
+    el.innerHTML='<div style="font-size:13px;color:var(--gray);padding:10px">No changes recorded yet.</div>';
+    return;
+  }
+  let h='';
+  docs.forEach(doc=>{
+    const d=doc.data();
+    const type=(d.type||d.changeType||'update').toLowerCase();
+    let icon='update',iconClass='update';
+    if(type.includes('assign')||type.includes('add')){icon='fa-user-plus';iconClass='assign';}
+    else if(type.includes('remove')||type.includes('delete')){icon='fa-user-minus';iconClass='remove';}
+
+    const personName=d.personName||d.personId||'Unknown';
+    const desc=d.description||d.details||d.change||type;
+    h+=`<div class="change-item">
+      <div class="change-icon ${iconClass}"><i class="fas ${icon}"></i></div>
+      <div class="change-info">
+        <div class="change-text"><b>${personName}</b> - ${desc}</div>
+        <div class="change-date">${formatDate(d.timestamp||d.createdAt||d.date)}</div>
+      </div>
+    </div>`;
+  });
+  el.innerHTML=h;
+}
+
+function loadDeptApprovals(deptId){
+  const el=document.getElementById('approvalArea');
+  if(!el)return;
+  const dept=allDepts.find(d=>d.id===deptId);
+
+  db.collection('approvals')
+    .where('deptId','==',deptId)
+    .orderBy('createdAt','desc')
+    .limit(10)
+    .get()
+    .then(snap=>{
+      if(snap.empty){
+        return db.collection('approvals')
+          .where('departmentId','==',deptId)
+          .orderBy('createdAt','desc')
+          .limit(10)
+          .get();
+      }
+      return snap;
+    })
+    .then(snap=>{
+      if(!snap||snap.empty){
+        // Check related person approvals
+        const deptPersonIds=allPersons.filter(p=>p.primaryDeptId===deptId).map(p=>p.id);
+        if(deptPersonIds.length===0){
+          el.innerHTML='<div style="font-size:13px;color:var(--gray);padding:10px">No approvals found.</div>';
+          return;
+        }
+        const chunks=[];
+        for(let i=0;i<deptPersonIds.length;i+=10){
+          chunks.push(deptPersonIds.slice(i,i+10));
+        }
+        return Promise.all(chunks.map(c=>db.collection('approvals').where('personId','in',c).limit(20).get()))
+          .then(results=>{
+            const merged=[];
+            results.forEach(r=>r.forEach(doc=>merged.push(doc)));
+            merged.sort((a,b)=>{
+              const ta=a.data().createdAt;const tb=b.data().createdAt;
+              if(!ta)return 1;if(!tb)return -1;
+              return tb.toMillis()-ta.toMillis();
+            });
+            renderApprovals(el,merged.slice(0,10));
+          });
+      }
+      renderApprovals(el,snap.docs.slice(0,10));
+    })
+    .catch(()=>{
+      el.innerHTML='<div style="font-size:13px;color:var(--gray);padding:10px">Unable to load approvals.</div>';
+    });
+}
+
+function renderApprovals(el,docs){
+  if(!docs||!docs.length){
+    el.innerHTML='<div style="font-size:13px;color:var(--gray);padding:10px">No pending approvals for this department.</div>';
+    return;
+  }
+  let h='';
+  docs.forEach(doc=>{
+    const d=doc.data();
+    const status=(d.status||'pending').toLowerCase();
+    const reqNum=d.requestNumber||d.requestNo||doc.id.substring(0,8).toUpperCase();
+    const action=d.action||d.type||d.description||'Review';
+    h+=`<div class="approval-item">
+      <div class="approval-num">#${reqNum}</div>
+      <div class="approval-action">${action}</div>
+      <span class="approval-status ${status}">${status}</span>
+    </div>`;
+  });
+  el.innerHTML=h;
+}
+
+async function loadAllData(user){
+  try{
+    const divisionId=user.levelId;
+    // Load departments
+    const deptSnap=await db.collection('departments').where('divisionId','==',divisionId).get();
+    allDepts=deptSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+    // Load districts in this division
+    const distSnap=await db.collection('districts').where('divisionId','==',divisionId).get();
+    allDistricts=distSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+    // Load areas in these districts
+    if(allDistricts.length>0){
+      const distIds=allDistricts.map(d=>d.id);
+      const chunks=[];
+      for(let i=0;i<distIds.length;i+=10){
+        chunks.push(distIds.slice(i,i+10));
+      }
+      const areaResults=await Promise.all(chunks.map(c=>db.collection('areas').where('districtId','in',c).get()));
+      allAreas=[];
+      areaResults.forEach(r=>r.forEach(d=>allAreas.push({id:d.id,...d.data()})));
+    }
+
+    // Load ZH
+    if(allAreas.length>0){
+      const areaIds=allAreas.map(a=>a.id);
+      const chunks=[];
+      for(let i=0;i<areaIds.length;i+=10){
+        chunks.push(areaIds.slice(i,i+10));
+      }
+      const zhResults=await Promise.all(chunks.map(c=>db.collection('zeli_halqas').where('areaId','in',c).get()));
+      allZH=[];
+      zhResults.forEach(r=>r.forEach(d=>allZH.push({id:d.id,...d.data()})));
+    }
+
+    // Load persons with primaryDeptId in this division's departments
+    allPersons=[];
+    if(allDepts.length>0){
+      const deptIds=allDepts.map(d=>d.id);
+      const chunks=[];
+      for(let i=0;i<deptIds.length;i+=10){
+        chunks.push(deptIds.slice(i,i+10));
+      }
+      const personResults=await Promise.all(chunks.map(c=>db.collection('persons').where('primaryDeptId','in',c).get()));
+      personResults.forEach(r=>r.forEach(d=>allPersons.push({id:d.id,...d.data()})));
+    }
+
+    // Load dept_staff
+    allStaff=[];
+    if(allDepts.length>0){
+      const deptIds=allDepts.map(d=>d.id);
+      const chunks=[];
+      for(let i=0;i<deptIds.length;i+=10){
+        chunks.push(deptIds.slice(i,i+10));
+      }
+      const staffResults=await Promise.all(chunks.map(c=>db.collection('dept_staff').where('deptId','in',c).get()));
+      staffResults.forEach(r=>r.forEach(d=>allStaff.push({id:d.id,...d.data()})));
+    }
+
+    // Load designations for reference
+    try{
+      const desSnap=await db.collection('designations').get();
+      allDesignations=desSnap.docs.map(d=>({id:d.id,...d.data()}));
+    }catch(e){allDesignations=[];}
+
+    // Populate dept select
+    const sel=document.getElementById('deptSelect');
+    allDepts.forEach(d=>{
+      const opt=document.createElement('option');
+      opt.value=d.id;
+      opt.textContent=d.name+(d.code?' ('+d.code+')':'');
+      sel.appendChild(opt);
+    });
+
+    renderAllDepts();
+  }catch(e){
+    console.error('Data load error:',e);
+    document.getElementById('dashboardArea').innerHTML='<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading data. Please try again.</p></div>';
+  }
+}
+
+// Init
+(async function(){
+  currentUser=requireAuth(['division_head']);
+  if(!currentUser)return;
+buildSidebar(currentUser);
+  buildBottomNav(currentUser);
+  await checkSystemAccess('dept_dashboard');
+  document.getElementById('sidebarUser').textContent=(currentUser.name||'Division Head')+' - Division';
+  loadAllData(currentUser);
+})();
+</script>
+</body>
+</html>

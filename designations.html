@@ -1,0 +1,533 @@
+﻿<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Designations | Tanzeem Structure Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f7fa;color:#1a1a2e;max-width:500px;margin:0 auto;min-height:100vh;padding-bottom:70px}
+:root{--primary:#1a6b3c;--dark:#0d4a25;--red:#dc3545;--orange:#ff9800;--success:#28a745;--light:#f5f7fa;--dark-text:#1a1a2e;--gray:#6c757d;--border:#e9ecef;--white:#fff;--radius:14px}
+
+.header{position:sticky;top:0;z-index:100;background:var(--primary);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.header .menu-btn{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px}
+.header h1{font-size:17px;font-weight:600;flex:1}
+
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200}
+.sidebar-overlay.open{display:block}
+.sidebar{position:fixed;top:0;left:-280px;width:270px;height:100%;background:#fff;z-index:201;transition:left .3s ease;overflow-y:auto;box-shadow:2px 0 12px rgba(0,0,0,.15)}
+.sidebar.open{left:0}
+.sidebar-header{background:var(--primary);color:#fff;padding:20px 16px;text-align:center}
+.sidebar-header h2{font-size:16px;font-weight:700}
+.sidebar-header p{font-size:12px;opacity:.85;margin-top:4px}
+.sidebar-nav{padding:8px 0}
+.sidebar-nav a{display:flex;align-items:center;gap:12px;padding:12px 18px;color:var(--dark-text);text-decoration:none;font-size:14px;border-bottom:1px solid var(--border);transition:background .2s}
+.sidebar-nav a:hover,.sidebar-nav a.active{background:rgba(26,107,60,.08);color:var(--primary);font-weight:600}
+.sidebar-nav a.active{border-left:3px solid var(--primary)}
+.sidebar-nav a i{width:20px;text-align:center;font-size:16px;color:var(--primary)}
+.sidebar-nav .logout-link{color:var(--red);margin-top:8px;border-top:2px solid var(--border)}
+.sidebar-nav .logout-link i{color:var(--red)}
+.sidebar-close{position:absolute;top:12px;right:14px;background:none;border:none;color:#fff;font-size:20px;cursor:pointer}
+
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:#fff;display:flex;border-top:1px solid var(--border);z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+.bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px 6px;text-decoration:none;color:var(--gray);font-size:10px;gap:2px;transition:color .2s}
+.bottom-nav a i{font-size:18px}
+.bottom-nav a.active{color:var(--primary);font-weight:600}
+
+.container{padding:16px}
+
+.search-box{position:relative;margin-bottom:14px}
+.search-box input{width:100%;padding:12px 14px 12px 40px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:#fff;outline:none;transition:border .2s}
+.search-box input:focus{border-color:var(--primary)}
+.search-box i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--gray);font-size:14px}
+
+.btn-primary{background:var(--primary);color:#fff;border:none;padding:12px 18px;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;width:100%;justify-content:center;transition:background .2s}
+.btn-primary:hover{background:var(--dark)}
+
+.stats-row{display:flex;gap:10px;margin-bottom:16px}
+.stat-card{flex:1;background:#fff;border-radius:var(--radius);padding:12px 10px;text-align:center;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.stat-card .num{font-size:22px;font-weight:700;color:var(--primary)}
+.stat-card .lbl{font-size:11px;color:var(--gray);margin-top:2px}
+
+.desig-card{background:#fff;border-radius:var(--radius);padding:14px;margin-bottom:12px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.desig-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.desig-name{font-size:15px;font-weight:700;color:var(--dark-text)}
+.desig-code{font-size:11px;color:var(--gray);font-family:monospace;margin-top:2px}
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;margin:2px 4px 2px 0}
+.badge-division{background:#e8f5e9;color:#1a6b3c}
+.badge-district{background:#e3f2fd;color:#1565c0}
+.badge-area{background:#fff3e0;color:#e65100}
+.badge-zeli{background:#fce4ec;color:#c62828}
+.badge-department{background:#f3e5f5;color:#7b1fa2}
+.badge-head{background:#e8f5e9;color:#28a745}
+.badge-assistant{background:#e3f2fd;color:#1976d2}
+.badge-coordinator{background:#fff3e0;color:#ff9800}
+.badge-member{background:#f5f5f5;color:#6c757d}
+.badge-active{background:#e8f5e9;color:#28a745}
+.badge-inactive{background:#ffeef0;color:#dc3545}
+.desig-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:8px}
+.desig-footer{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding-top:10px;margin-top:4px}
+.desig-footer .persons{font-size:12px;color:var(--gray)}
+.desig-footer .persons i{margin-right:4px}
+.desig-actions{display:flex;gap:8px}
+.desig-actions button{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;transition:all .2s}
+.btn-edit{color:var(--primary)}
+.btn-edit:hover{background:rgba(26,107,60,.08)}
+.btn-delete{color:var(--red)}
+.btn-delete:hover{background:rgba(220,53,69,.08)}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--gray)}
+.empty-state i{font-size:48px;color:var(--border);margin-bottom:12px}
+.empty-state p{font-size:14px}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;width:100%;max-width:500px;border-radius:var(--radius) var(--radius) 0 0;padding:0;max-height:90vh;overflow-y:auto;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;z-index:1;border-radius:var(--radius) var(--radius) 0 0}
+.modal-header h3{font-size:16px;font-weight:700}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray);padding:4px}
+.modal-body{padding:16px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--dark-text);margin-bottom:6px}
+.form-group input,.form-group select{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;outline:none;transition:border .2s;background:#fff}
+.form-group input:focus,.form-group select:focus{border-color:var(--primary)}
+.form-group input:disabled{background:#f5f5f5;color:var(--gray)}
+.modal-footer{display:flex;gap:10px;padding:14px 16px;border-top:1px solid var(--border);position:sticky;bottom:0;background:#fff}
+.btn-cancel{flex:1;padding:11px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:14px;font-weight:600;cursor:pointer;color:var(--gray)}
+.btn-save{flex:1;padding:11px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+
+.warning-box{background:#fff3e0;border:1px solid #ffcc80;border-radius:10px;padding:10px 12px;margin-bottom:14px;display:none;font-size:13px;color:#e65100}
+.warning-box i{margin-right:6px}
+
+.alert-overlay{display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:468px;z-index:400;margin-top:16px}
+.alert-overlay.show{display:block;animation:slideDown .3s ease}
+@keyframes slideDown{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+.alert-box{padding:12px 16px;border-radius:10px;color:#fff;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.alert-success{background:var(--success)}
+.alert-error{background:var(--red)}
+.alert-warning{background:var(--orange);color:#1a1a2e}
+</style>
+</head>
+<body>
+
+<div class="alert-overlay" id="alertOverlay"><div class="alert-box" id="alertBox"></div></div>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <button class="sidebar-close" id="sidebarClose">&times;</button>
+    <h2>Tanzeem Structure</h2>
+<p style="font-size:11px;opacity:0.8;margin-top:2px">Dept & Zimmedaran Portal</p>
+    <p>Division Head Panel</p>
+  </div>
+  <div class="sidebar-nav" id="sidebarMenu">
+    <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+    <a href="districts.html"><i class="fas fa-map-marker-alt"></i> Districts</a>
+    <a href="areas.html"><i class="fas fa-map"></i> Areas</a>
+    <a href="zeli-halqas.html"><i class="fas fa-users"></i> Zeli Halqas</a>
+    <a href="departments.html"><i class="fas fa-building"></i> Departments</a>
+    <a href="designations.html" class="active"><i class="fas fa-id-badge"></i> Designations</a>
+    <a href="persons.html"><i class="fas fa-user-tie"></i> Persons</a>
+    <a href="org-tree.html"><i class="fas fa-sitemap"></i> Org Tree</a>
+    <a href="approvals.html"><i class="fas fa-check-circle"></i> Approvals</a>
+    <a href="reports.html"><i class="fas fa-chart-bar"></i> Reports</a>
+    <a href="dept-dashboard.html"><i class="fas fa-th-large"></i> Dept Dashboard</a>
+    <a href="access-control.html"><i class="fas fa-shield-alt"></i> Access Control</a>
+    <a href="maintenance.html"><i class="fas fa-wrench"></i> Maintenance</a>
+    <a href="#" class="logout-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+  </div>
+  <div style="padding:16px;font-size:10px;color:rgba(255,255,255,.4);text-align:center;border-top:1px solid rgba(255,255,255,.1);margin-top:auto">Developed by<br><b style="color:rgba(255,255,255,.6)">A.A.Q. Solutions & Outsourcing</b></div>
+</div>
+
+<header class="header">
+  <button class="menu-btn" id="menuBtn"><i class="fas fa-bars"></i></button>
+  <h1>Designation Master</h1>
+</header>
+
+<div class="container">
+  <div class="search-box">
+    <i class="fas fa-search"></i>
+    <input type="text" id="searchInput" placeholder="Search designations...">
+  </div>
+
+  <button class="btn-primary" id="addBtn" style="margin-bottom:16px">
+    <i class="fas fa-plus"></i> Naya Designation
+  </button>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="num" id="totalCount">0</div><div class="lbl">Total Designations</div></div>
+    <div class="stat-card"><div class="num" id="activeCount">0</div><div class="lbl">Active</div></div>
+    <div class="stat-card"><div class="num" id="inactiveCount">0</div><div class="lbl">Inactive</div></div>
+  </div>
+
+  <div id="designationList"></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Naya Designation</h3>
+      <button class="modal-close" id="modalClose">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="warning-box" id="warningBox"><i class="fas fa-exclamation-triangle"></i><span id="warningText"></span></div>
+      <div class="form-group">
+        <label>Designation Name *</label>
+        <input type="text" id="desigName" placeholder="Designation name enter karein">
+      </div>
+      <div class="form-group">
+        <label>Designation Code</label>
+        <input type="text" id="desigCode" disabled placeholder="Auto-generated">
+      </div>
+      <div class="form-group">
+        <label>Level *</label>
+        <select id="desigLevel">
+          <option value="">Select Level</option>
+          <option value="Division">Division</option>
+          <option value="District">District</option>
+          <option value="Area">Area</option>
+          <option value="Zeli Halqa">Zeli Halqa</option>
+          <option value="Department">Department</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Type *</label>
+        <select id="desigType">
+          <option value="">Select Type</option>
+          <option value="Head">Head</option>
+          <option value="Assistant Head">Assistant Head</option>
+          <option value="Coordinator">Coordinator</option>
+          <option value="Member">Member</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="desigStatus">
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="cancelBtn">Cancel</button>
+      <button class="btn-save" id="saveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav" id="bottomNav">
+  <a href="dashboard.html"><i class="fas fa-home"></i>Home</a>
+  <a href="districts.html"><i class="fas fa-map-marker-alt"></i>Districts</a>
+  <a href="approvals.html"><i class="fas fa-check-circle"></i>Approvals</a>
+  <a href="#" id="moreBtn"><i class="fas fa-ellipsis-h"></i>More</a>
+</nav>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+var firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.firebasestorage.app",messagingSenderId:"438479516590",appId:"1:438479516590:web:fc0a9aaa4a0285f0dc0e3f",measurementId:"G-TJWXZSQXGH"};
+if(!firebase.apps.length){firebase.initializeApp(firebaseConfig)}
+var db=firebase.firestore();
+
+const menus={division_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Districts',icon:'fa-map',file:'districts.html'},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Departments',icon:'fa-building',file:'departments.html'},{label:'Designations',icon:'fa-id-badge',file:'designations.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Org Tree',icon:'fa-sitemap',file:'org-tree.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Dept Dashboard',icon:'fa-chart-pie',file:'dept-dashboard.html'},{label:'Access Control',icon:'fa-shield-alt',file:'access-control.html'},{label:'Maintenance',icon:'fa-wrench',file:'maintenance.html'},{label:'Announcements',icon:'fa-bullhorn',file:'announcements.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],district_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],area_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}]};const bottomNavs={division_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Announce',icon:'fa-bullhorn',file:'announcements.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],district_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],area_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}]};
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('active');
+}
+
+function buildSidebar(user){var n=document.getElementById('sidebarName');if(n)n.textContent=user.name;var p=document.getElementById('sidebarPhone');if(p)p.textContent=user.phone;var r=document.getElementById('sidebarRole');if(r)r.textContent=user.role.replace(/_/g,' ');var a=document.getElementById('avatarEl');if(a)a.textContent=user.name.charAt(0).toUpperCase();var menu=menus[user.role]||[];var cont=document.getElementById('sidebarMenu')||document.getElementById('sidebarNav');if(!cont)return;cont.innerHTML='';menu.forEach(function(m){var el=document.createElement('a');el.href='#';el.innerHTML='<i class="fas '+m.icon+'"></i> '+m.label;if(m.active)el.classList.add('active');el.onclick=function(e){e.preventDefault();closeSidebar();if(m.file==='logout'){localStorage.removeItem('ngoUser');window.location.href='index.html';return}if(m.file!=='dashboard.html')window.location.href=m.file};if(m.icon==='fa-sign-out-alt')el.classList.add('logout-btn');cont.appendChild(el)})}function buildBottomNav(user){var nav=document.getElementById('bottomNav');if(!nav)return;nav.innerHTML='';var items=bottomNavs[user.role]||[];items.forEach(function(b){var el=document.createElement('a');el.href='#';el.innerHTML='<i class="fas '+b.icon+'"></i><span>'+b.label+'</span>';if(b.active)el.classList.add('active');el.onclick=function(e){e.preventDefault();if(b.file==='sidebar'){toggleSidebar();return}if(b.file!=='dashboard.html')window.location.href=b.file};nav.appendChild(el)})}function closeSidebar(){var s=document.getElementById('sidebar');if(s)s.classList.remove('open');var o=document.getElementById('sidebarOverlay');if(o)o.classList.remove('active')}
+
+var auth=firebase.auth();
+
+async function checkSystemAccess(moduleId){
+  try{
+    const raw=localStorage.getItem('ngoUser');
+    if(!raw)return;
+    const user=JSON.parse(raw);
+    if(user.role==='division_head')return;
+    const settingsSnap=await db.collection('settings').limit(1).get();
+    if(!settingsSnap.empty){
+      const s=settingsSnap.docs[0].data();
+      if(s.maintenanceMode){
+        document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-tools"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Under Development</h1><p style="font-size:16px;opacity:.7;line-height:1.6">'+(s.maintenanceMessage||'Software under development hai. Please wait karein.')+'</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+        throw new Error('maintenance');
+      }
+    }
+    const accessSnap=await db.collection('user_access').where('userId','==',user.id).limit(1).get();
+    if(!accessSnap.empty){
+      const a=accessSnap.docs[0].data();
+      if(a.expiresAt){
+        const exp=a.expiresAt.seconds?new Date(a.expiresAt.seconds*1000):new Date(a.expiresAt);
+        if(new Date()>exp){
+          document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-lock"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Access Expired</h1><p style="font-size:16px;opacity:.7">Aapka access khatam ho gaya hai. Admin se contact karein.</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+          throw new Error('access expired');
+        }
+      }
+      if(a.modules&&a.modules[moduleId]===false){
+        window.location.href='dashboard.html';
+        throw new Error('no access');
+      }
+    }
+  }catch(e){
+    if(e.message==='maintenance'||e.message==='access expired'){}
+  }
+}
+
+var ALLOWED_ROLES=['division_head'];
+var currentUser=null;
+var designationsData=[];
+var editingId=null;
+var nextCode='DES001';
+
+function requireAuth(roles){
+  var u=JSON.parse(localStorage.getItem('ngoUser')||'null');
+  if(!u||!u.email){window.location.href='index.html';return null}
+  if(roles&&roles.indexOf(u.role)===-1){window.location.href='dashboard.html';return null}
+  return u;
+}
+
+function showAlert(msg,type){
+  var o=document.getElementById('alertOverlay');
+  var b=document.getElementById('alertBox');
+  b.className='alert-box alert-'+type;
+  b.innerHTML='<i class="fas fa-'+(type==='success'?'check-circle':type==='error'?'times-circle':'exclamation-triangle')+'"></i> '+msg;
+  o.classList.add('show');
+  setTimeout(function(){o.classList.remove('show')},3000);
+}
+
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sidebarOverlay').classList.add('open')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('open')}
+function openModal(){document.getElementById('modalOverlay').classList.add('open')}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');resetForm()}
+
+function resetForm(){
+  document.getElementById('desigName').value='';
+  document.getElementById('desigCode').value='';
+  document.getElementById('desigLevel').value='';
+  document.getElementById('desigType').value='';
+  document.getElementById('desigStatus').value='Active';
+  document.getElementById('warningBox').style.display='none';
+  editingId=null;
+  document.getElementById('modalTitle').textContent='Naya Designation';
+  document.getElementById('saveBtn').textContent='Save';
+}
+
+function generateCode(){
+  var max=0;
+  designationsData.forEach(function(d){
+    if(d.code){
+      var num=parseInt(d.code.replace('DES',''));
+      if(num>max)max=num;
+    }
+  });
+  var next=max+1;
+  nextCode='DES'+(next<10?'00':next<100?'0':'')+next;
+  document.getElementById('desigCode').value=nextCode;
+}
+
+function getLevelBadgeClass(level){
+  var m={'Division':'badge-division','District':'badge-district','Area':'badge-area','Zeli Halqa':'badge-zeli','Department':'badge-department'};
+  return m[level]||'badge-member';
+}
+
+function getTypeBadgeClass(type){
+  var m={'Head':'badge-head','Assistant Head':'badge-assistant','Coordinator':'badge-coordinator','Member':'badge-member'};
+  return m[type]||'badge-member';
+}
+
+function getStatusBadgeClass(s){
+  return s==='Active'?'badge-active':'badge-inactive';
+}
+
+function renderDesignations(filter){
+  var f=(filter||'').toLowerCase();
+  var filtered=designationsData.filter(function(d){
+    return !f||d.name.toLowerCase().indexOf(f)!==-1||d.code.toLowerCase().indexOf(f)!==-1||d.level.toLowerCase().indexOf(f)!==-1||d.type.toLowerCase().indexOf(f)!==-1;
+  });
+
+  var total=designationsData.length;
+  var active=designationsData.filter(function(d){return d.status==='Active'}).length;
+  var inactive=total-active;
+  document.getElementById('totalCount').textContent=total;
+  document.getElementById('activeCount').textContent=active;
+  document.getElementById('inactiveCount').textContent=inactive;
+
+  var c=document.getElementById('designationList');
+  if(filtered.length===0){
+    c.innerHTML='<div class="empty-state"><i class="fas fa-id-badge"></i><p>'+(f?'Search results nahi mile':'Koi designation nahi hai')+'</p></div>';
+    return;
+  }
+
+  var html='';
+  filtered.forEach(function(d){
+    var personsCount=d.personsCount||0;
+    html+='<div class="desig-card">';
+    html+='<div class="desig-top"><div><div class="desig-name">'+escHtml(d.name)+'</div><div class="desig-code">'+escHtml(d.code)+'</div></div></div>';
+    html+='<div class="desig-meta">';
+    html+='<span class="badge '+getLevelBadgeClass(d.level)+'">'+escHtml(d.level)+'</span>';
+    html+='<span class="badge '+getTypeBadgeClass(d.type)+'">'+escHtml(d.type)+'</span>';
+    html+='<span class="badge '+getStatusBadgeClass(d.status)+'">'+escHtml(d.status)+'</span>';
+    html+='</div>';
+    html+='<div class="desig-footer">';
+    html+='<div class="persons"><i class="fas fa-user-tie"></i>'+personsCount+' person(s) assigned</div>';
+    html+='<div class="desig-actions">';
+    html+='<button class="btn-edit" onclick="editDesig(\''+d.id+'\')"><i class="fas fa-edit"></i> Edit</button>';
+    html+='<button class="btn-delete" onclick="deleteDesig(\''+d.id+'\')"><i class="fas fa-trash"></i> Delete</button>';
+    html+='</div></div></div>';
+  });
+  c.innerHTML=html;
+}
+
+function escHtml(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+function loadDesignations(){
+  db.collection('designations').orderBy('createdAt','desc').get().then(function(snap){
+    designationsData=[];
+    var promises=[];
+    snap.forEach(function(doc){
+      var d=doc.data();d.id=doc.id;d.personsCount=0;
+      designationsData.push(d);
+    });
+    var batchPromises=designationsData.map(function(d){
+      return db.collection('persons').where('designationId','==',d.id).get().then(function(ps){
+        d.personsCount=ps.size;
+      }).catch(function(){d.personsCount=0});
+    });
+    Promise.all(batchPromises).then(function(){
+      renderDesignations(document.getElementById('searchInput').value);
+    });
+  }).catch(function(e){
+    console.error(e);
+    showAlert('Data load nahi ho paya','error');
+  });
+}
+
+function checkHeadDuplicate(level,type){
+  if(type!=='Head')return null;
+  var existing=null;
+  designationsData.forEach(function(d){
+    if(d.level===level&&d.type==='Head'&&d.id!==editingId)existing=d;
+  });
+  return existing;
+}
+
+function editDesig(id){
+  var d=designationsData.find(function(x){return x.id===id});
+  if(!d)return;
+  editingId=id;
+  document.getElementById('modalTitle').textContent='Designation Edit Karein';
+  document.getElementById('saveBtn').textContent='Update';
+  document.getElementById('desigName').value=d.name;
+  document.getElementById('desigCode').value=d.code;
+  document.getElementById('desigLevel').value=d.level;
+  document.getElementById('desigType').value=d.type;
+  document.getElementById('desigStatus').value=d.status;
+  document.getElementById('warningBox').style.display='none';
+  openModal();
+}
+
+function deleteDesig(id){
+  if(!confirm('Kya aap is designation ko delete karna chahte hain?'))return;
+  db.collection('designations').doc(id).delete().then(function(){
+    showAlert('Designation delete ho gaya','success');
+    loadDesignations();
+  }).catch(function(e){
+    console.error(e);
+    showAlert('Delete nahi ho paya','error');
+  });
+}
+
+function saveDesig(){
+  var name=document.getElementById('desigName').value.trim();
+  var level=document.getElementById('desigLevel').value;
+  var type=document.getElementById('desigType').value;
+  var status=document.getElementById('desigStatus').value;
+  var code=editingId?document.getElementById('desigCode').value:nextCode;
+
+  if(!name){showAlert('Designation name darj karein','error');return}
+  if(!level){showAlert('Level select karein','error');return}
+  if(!type){showAlert('Type select karein','error');return}
+
+  var dup=checkHeadDuplicate(level,type);
+  if(dup){
+    var w=document.getElementById('warningBox');
+    document.getElementById('warningText').textContent=level+' level pe pehle se ek "Head" designation hai: '+dup.name+'. Phir bhi create karna hai?';
+    w.style.display='block';
+  }
+
+  var data={name:name,code:code,level:level,type:type,status:status,createdAt:editingId?undefined:firebase.firestore.FieldValue.serverTimestamp()};
+
+  if(editingId){
+    data.updatedAt=firebase.firestore.FieldValue.serverTimestamp();
+    db.collection('designations').doc(editingId).update(data).then(function(){
+      showAlert('Designation update ho gaya','success');
+      closeModal();loadDesignations();
+    }).catch(function(e){console.error(e);showAlert('Update nahi ho paya','error')});
+  }else{
+    db.collection('designations').add(data).then(function(){
+      showAlert('Designation ban gaya','success');
+      closeModal();loadDesignations();
+    }).catch(function(e){console.error(e);showAlert('Create nahi ho paya','error')});
+  }
+}
+
+document.getElementById('menuBtn').addEventListener('click',openSidebar);
+document.getElementById('sidebarClose').addEventListener('click',closeSidebar);
+document.getElementById('sidebarOverlay').addEventListener('click',closeSidebar);
+document.getElementById('moreBtn').addEventListener('click',function(e){e.preventDefault();openSidebar()});
+document.getElementById('addBtn').addEventListener('click',function(){resetForm();generateCode();openModal()});
+document.getElementById('modalClose').addEventListener('click',closeModal);
+document.getElementById('cancelBtn').addEventListener('click',closeModal);
+document.getElementById('saveBtn').addEventListener('click',saveDesig);
+document.getElementById('searchInput').addEventListener('input',function(){renderDesignations(this.value)});
+document.getElementById('logoutBtn').addEventListener('click',function(e){
+  e.preventDefault();
+  localStorage.removeItem('ngoUser');
+  auth.signOut().then(function(){window.location.href='index.html'}).catch(function(){window.location.href='index.html'});
+});
+
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal()});
+
+document.getElementById('desigLevel').addEventListener('change',function(){
+  if(!editingId){
+    var w=document.getElementById('warningBox');
+    var level=this.value;
+    var type=document.getElementById('desigType').value;
+    if(level&&type){
+      var dup=checkHeadDuplicate(level,type);
+      if(dup){
+        document.getElementById('warningText').textContent=level+' level pe pehle se ek "Head" designation hai: '+dup.name;
+        w.style.display='block';
+      }else{w.style.display='none'}
+    }else{w.style.display='none'}
+  }
+});
+document.getElementById('desigType').addEventListener('change',function(){
+  if(!editingId){
+    var w=document.getElementById('warningBox');
+    var level=document.getElementById('desigLevel').value;
+    var type=this.value;
+    if(level&&type){
+      var dup=checkHeadDuplicate(level,type);
+      if(dup){
+        document.getElementById('warningText').textContent=level+' level pe pehle se ek "Head" designation hai: '+dup.name;
+        w.style.display='block';
+      }else{w.style.display='none'}
+    }else{w.style.display='none'}
+  }
+});
+
+currentUser=requireAuth(ALLOWED_ROLES);
+(async function(){
+  if(!currentUser)return;
+buildSidebar(currentUser);
+  buildBottomNav(currentUser);
+  await checkSystemAccess('designations');
+  loadDesignations();
+})();
+</script>
+</body>
+</html>

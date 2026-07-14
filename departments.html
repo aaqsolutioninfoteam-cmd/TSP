@@ -1,0 +1,595 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Departments | Tanzeem Structure Portal</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--primary:#1a6b3c;--dark:#0d4a25;--red:#dc3545;--orange:#ff9800;--success:#28a745;--light:#f5f7fa;--dark-text:#1a1a2e;--gray:#6c757d;--border:#e9ecef;--white:#fff;--radius:14px;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--light);color:var(--dark-text);max-width:500px;margin:0 auto;min-height:100vh;padding-bottom:70px;}
+.header{position:sticky;top:0;z-index:100;background:var(--primary);color:var(--white);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+.header h1{font-size:18px;font-weight:700;}
+.header-icons{display:flex;gap:14px;}
+.header-icons button{background:none;border:none;color:var(--white);font-size:20px;cursor:pointer;}
+.hamburger{background:none;border:none;color:var(--white);font-size:22px;cursor:pointer;}
+.overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:200;}
+.overlay.active{display:block;}
+.sidebar{position:fixed;top:0;left:-280px;width:270px;height:100%;background:var(--white);z-index:300;transition:left 0.3s;overflow-y:auto;box-shadow:2px 0 10px rgba(0,0,0,0.1);}
+.sidebar.open{left:0;}
+.sidebar-header{background:var(--primary);color:var(--white);padding:20px 16px;}
+.sidebar-header h2{font-size:16px;font-weight:700;}
+.sidebar-header p{font-size:12px;opacity:0.8;margin-top:4px;}
+.sidebar-menu{padding:10px 0;}
+.sidebar-menu a{display:flex;align-items:center;gap:12px;padding:12px 16px;color:var(--dark-text);text-decoration:none;font-size:14px;border-bottom:1px solid var(--border);}
+.sidebar-menu a:hover,.sidebar-menu a.active{background:var(--light);color:var(--primary);font-weight:600;}
+.sidebar-menu a .icon{font-size:18px;width:24px;text-align:center;}
+.main{padding:16px;}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--white);border-radius:var(--radius);padding:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.stat-card .num{font-size:24px;font-weight:800;color:var(--primary);}
+.stat-card .label{font-size:11px;color:var(--gray);margin-top:2px;}
+.search-box{position:relative;margin-bottom:12px;}
+.search-box input{width:100%;padding:12px 16px 12px 40px;border:2px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--white);}
+.search-box input:focus{outline:none;border-color:var(--primary);}
+.search-box .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--gray);}
+.btn{padding:12px 20px;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;width:100%;}
+.btn-primary{background:var(--primary);color:var(--white);}
+.btn-danger{background:var(--red);color:var(--white);}
+.btn-success{background:var(--success);color:var(--white);}
+.btn-sm{padding:8px 14px;font-size:12px;width:auto;}
+.tabs{display:flex;gap:0;margin-bottom:16px;background:var(--white);border-radius:var(--radius);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.tab{flex:1;padding:12px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--gray);border-bottom:3px solid transparent;}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary);background:var(--light);}
+.tab-content{display:none;}.tab-content.active{display:block;}
+.dept-card{background:var(--white);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.dept-card .dept-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.dept-card .dept-name{font-size:15px;font-weight:700;color:var(--dark-text);}
+.dept-card .dept-code{font-size:11px;color:var(--gray);background:var(--light);padding:2px 8px;border-radius:20px;}
+.dept-card .dept-info{font-size:13px;color:var(--gray);margin-bottom:4px;}
+.dept-card .dept-info strong{color:var(--dark-text);}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-division{background:#e8f5e9;color:var(--primary);}
+.badge-district{background:#fff3e0;color:var(--orange);}
+.badge-area{background:#e3f2fd;color:#1976d2;}
+.hierarchy{margin-top:10px;padding:10px;background:var(--light);border-radius:10px;font-family:'Courier New',monospace;font-size:11px;line-height:1.6;color:var(--dark-text);overflow-x:auto;white-space:pre;}
+.hierarchy .line{display:block;}
+.hierarchy .hl-district{color:var(--primary);font-weight:700;}
+.hierarchy .hl-area{color:var(--orange);font-weight:700;}
+.hierarchy .hl-zh{color:var(--red);font-weight:700;}
+.dept-actions{display:flex;gap:8px;margin-top:10px;}
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:400;align-items:flex-end;justify-content:center;}
+.modal-overlay.active{display:flex;}
+.modal{background:var(--white);width:100%;max-width:500px;border-radius:var(--radius) var(--radius) 0 0;padding:20px;max-height:85vh;overflow-y:auto;animation:slideUp 0.3s;}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal h2{font-size:17px;margin-bottom:16px;color:var(--dark-text);}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--dark-text);}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;font-size:14px;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary);}
+.form-group textarea{resize:vertical;min-height:60px;}
+.form-actions{display:flex;gap:10px;margin-top:16px;}
+.form-actions .btn{flex:1;}
+.alert{padding:12px 16px;border-radius:10px;margin-bottom:12px;font-size:13px;font-weight:500;display:none;}
+.alert.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb;}
+.alert.error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;}
+.alert.show{display:block;}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:var(--white);display:flex;border-top:1px solid var(--border);z-index:100;box-shadow:0 -2px 10px rgba(0,0,0,0.05);}
+.bottom-nav a{flex:1;padding:10px 0;text-align:center;text-decoration:none;color:var(--gray);font-size:11px;}
+.bottom-nav a .nav-icon{font-size:20px;display:block;}
+.bottom-nav a.active{color:var(--primary);font-weight:700;}
+.staff-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);}
+.staff-item:last-child{border:none;}
+.staff-item .staff-name{font-size:13px;font-weight:600;}
+.staff-item .staff-role{font-size:11px;color:var(--gray);}
+.staff-count{font-size:11px;color:var(--primary);font-weight:600;margin-top:6px;}
+.dept-description{font-size:12px;color:var(--gray);margin:4px 0 8px;line-height:1.4;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--gray);}
+.empty-state .empty-icon{font-size:48px;margin-bottom:10px;}
+.loading{text-align:center;padding:30px;color:var(--gray);font-size:13px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  <h1>Departments</h1>
+  <div class="header-icons">
+    <button onclick="location.reload()">⟳</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2 id="sidebarOrg">Tanzeem Structure</h2>
+    <p id="sidebarUser">Loading...</p>
+  </div>
+  <div class="sidebar-menu" id="sidebarMenu"></div>
+  <div style="padding:16px;font-size:10px;color:rgba(255,255,255,.4);text-align:center;border-top:1px solid rgba(255,255,255,.1);margin-top:auto">Developed by<br><b style="color:rgba(255,255,255,.6)">A.A.Q. Solutions & Outsourcing</b></div>
+</div>
+
+<div id="alertBox" class="alert"></div>
+
+<div class="main">
+  <div class="stats" id="statsArea">
+    <div class="stat-card"><div class="num" id="statTotal">0</div><div class="label">Total Depts</div></div>
+    <div class="stat-card"><div class="num" id="statDivision">0</div><div class="label">Division Level</div></div>
+    <div class="stat-card"><div class="num" id="statDistrict">0</div><div class="label">District Level</div></div>
+    <div class="stat-card"><div class="num" id="statArea">0</div><div class="label">Area Level</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('depts')">Departments</button>
+    <button class="tab" onclick="switchTab('staff')">Staff</button>
+  </div>
+
+  <div class="tab-content active" id="tabDepts">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search departments..." oninput="filterDepts()">
+    </div>
+    <button class="btn btn-primary" onclick="openAddModal()" style="margin-bottom:14px;">+ Naya Department</button>
+    <div id="deptList"><div class="loading">Loading departments...</div></div>
+  </div>
+
+  <div class="tab-content" id="tabStaff">
+    <div class="form-group">
+      <label>Select Department</label>
+      <select id="staffDeptSelect" onchange="loadStaff()"><option value="">-- Choose Dept --</option></select>
+    </div>
+    <div id="staffFormArea" style="display:none;">
+      <div class="form-group"><label>Staff Name *</label><input type="text" id="staffName" placeholder="Enter name"></div>
+      <div class="form-group"><label>Phone (10 digit) *</label><input type="tel" id="staffPhone" maxlength="10" placeholder="10 digit phone"></div>
+      <div class="form-group"><label>Role/Position *</label><input type="text" id="staffRole" placeholder="e.g. Coordinator"></div>
+      <button class="btn btn-success" onclick="addStaff()">Staff Add</button>
+    </div>
+    <div id="staffList" style="margin-top:14px;"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="deptModal">
+  <div class="modal">
+    <h2 id="modalTitle">Naya Department</h2>
+    <input type="hidden" id="editDeptId">
+    <div class="form-group"><label>Department Name *</label><input type="text" id="deptName" placeholder="e.g. HR Department"></div>
+    <div class="form-group"><label>Department Head Name *</label><input type="text" id="deptHeadName" placeholder="Head name"></div>
+    <div class="form-group"><label>Head Phone * (10 digit)</label><input type="tel" id="deptHeadPhone" maxlength="10" placeholder="10 digit phone"></div>
+    <div class="form-group"><label>Scope *</label>
+      <select id="deptScope" onchange="onScopeChange()">
+        <option value="division">Division Level</option>
+        <option value="district">District Level</option>
+        <option value="area">Area Level</option>
+      </select>
+    </div>
+    <div class="form-group" id="districtGroup" style="display:none;"><label>District *</label><select id="deptDistrict"><option value="">-- Select District --</option></select></div>
+    <div class="form-group" id="areaGroup" style="display:none;"><label>Area *</label><select id="deptArea"><option value="">-- Select Area --</option></select></div>
+    <div class="form-group"><label>Description</label><textarea id="deptDesc" placeholder="Description..."></textarea></div>
+    <div class="form-actions">
+      <button class="btn" style="background:var(--border);color:var(--dark-text);" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDept()">Save</button>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav" id="bottomNav"></nav>
+
+<script>
+const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.firebasestorage.app",messagingSenderId:"438479516590",appId:"1:438479516590:web:fc0a9aaa4a0285f0dc0e3f",measurementId:"G-TJWXZSQXGH"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
+const menus={division_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Districts',icon:'fa-map',file:'districts.html'},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Departments',icon:'fa-building',file:'departments.html'},{label:'Designations',icon:'fa-id-badge',file:'designations.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Org Tree',icon:'fa-sitemap',file:'org-tree.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Dept Dashboard',icon:'fa-chart-pie',file:'dept-dashboard.html'},{label:'Access Control',icon:'fa-shield-alt',file:'access-control.html'},{label:'Maintenance',icon:'fa-wrench',file:'maintenance.html'},{label:'Announcements',icon:'fa-bullhorn',file:'announcements.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],district_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],area_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}]};const bottomNavs={division_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Announce',icon:'fa-bullhorn',file:'announcements.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],district_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],area_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}]};function buildSidebar(user){var n=document.getElementById('sidebarName');if(n)n.textContent=user.name;var p=document.getElementById('sidebarPhone');if(p)p.textContent=user.phone;var r=document.getElementById('sidebarRole');if(r)r.textContent=user.role.replace(/_/g,' ');var a=document.getElementById('avatarEl');if(a)a.textContent=user.name.charAt(0).toUpperCase();var menu=menus[user.role]||[];var cont=document.getElementById('sidebarMenu')||document.getElementById('sidebarNav');if(!cont)return;cont.innerHTML='';menu.forEach(function(m){var el=document.createElement('a');el.href='#';el.innerHTML='<i class="fas '+m.icon+'"></i> '+m.label;if(m.active)el.classList.add('active');el.onclick=function(e){e.preventDefault();closeSidebar();if(m.file==='logout'){localStorage.removeItem('ngoUser');window.location.href='index.html';return}if(m.file!=='dashboard.html')window.location.href=m.file};if(m.icon==='fa-sign-out-alt')el.classList.add('logout-btn');cont.appendChild(el)})}function buildBottomNav(user){var nav=document.getElementById('bottomNav');if(!nav)return;nav.innerHTML='';var items=bottomNavs[user.role]||[];items.forEach(function(b){var el=document.createElement('a');el.href='#';el.innerHTML='<i class="fas '+b.icon+'"></i><span>'+b.label+'</span>';if(b.active)el.classList.add('active');el.onclick=function(e){e.preventDefault();if(b.file==='sidebar'){toggleSidebar();return}if(b.file!=='dashboard.html')window.location.href=b.file};nav.appendChild(el)})}function closeSidebar(){var s=document.getElementById('sidebar');if(s)s.classList.remove('open');var o=document.getElementById('sidebarOverlay');if(o)o.classList.remove('active')}
+
+async function checkSystemAccess(moduleId){
+  try{
+    const raw=localStorage.getItem('ngoUser');
+    if(!raw)return;
+    const user=JSON.parse(raw);
+    if(user.role==='division_head')return;
+    const settingsSnap=await db.collection('settings').limit(1).get();
+    if(!settingsSnap.empty){
+      const s=settingsSnap.docs[0].data();
+      if(s.maintenanceMode){
+        document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-tools"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Under Development</h1><p style="font-size:16px;opacity:.7;line-height:1.6">'+(s.maintenanceMessage||'Software under development hai. Please wait karein.')+'</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+        throw new Error('maintenance');
+      }
+    }
+    const accessSnap=await db.collection('user_access').where('userId','==',user.id).limit(1).get();
+    if(!accessSnap.empty){
+      const a=accessSnap.docs[0].data();
+      if(a.expiresAt){
+        const exp=a.expiresAt.seconds?new Date(a.expiresAt.seconds*1000):new Date(a.expiresAt);
+        if(new Date()>exp){
+          document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-lock"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Access Expired</h1><p style="font-size:16px;opacity:.7">Aapka access khatam ho gaya hai. Admin se contact karein.</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+          throw new Error('access expired');
+        }
+      }
+      if(a.modules&&a.modules[moduleId]===false){
+        window.location.href='dashboard.html';
+        throw new Error('no access');
+      }
+    }
+  }catch(e){
+    if(e.message==='maintenance'||e.message==='access expired'){}
+  }
+}
+
+let currentUser=null;
+let allDepts=[];
+let districts=[];
+let allAreas=[];
+let allZH=[];
+let deptStaffMap={};
+
+function requireAuth(roles){
+  const raw=localStorage.getItem('ngoUser');
+  if(!raw){location.href='index.html';return null;}
+  const u=JSON.parse(raw);
+  if(!roles.includes(u.role)){location.href='index.html';return null;}
+  return u;
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('active');
+}
+
+function showAlert(msg,type){
+  const el=document.getElementById('alertBox');
+  el.className='alert '+type+' show';
+  el.textContent=msg;
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach((el,i)=>{
+    el.classList.toggle('active',t==='depts'?i===0:i===1);
+  });
+  document.getElementById('tabDepts').classList.toggle('active',t==='depts');
+  document.getElementById('tabStaff').classList.toggle('active',t==='staff');
+  if(t==='staff')populateStaffDeptSelect();
+}
+
+
+
+function generateCode(idx){
+  return 'DEPT'+String(idx+1).padStart(3,'0');
+}
+
+function onScopeChange(){
+  const s=document.getElementById('deptScope').value;
+  document.getElementById('districtGroup').style.display=(s==='district'||s==='area')?'block':'none';
+  document.getElementById('areaGroup').style.display=s==='area'?'block':'none';
+}
+
+function openAddModal(){
+  document.getElementById('modalTitle').textContent='Naya Department';
+  document.getElementById('editDeptId').value='';
+  document.getElementById('deptName').value='';
+  document.getElementById('deptHeadName').value='';
+  document.getElementById('deptHeadPhone').value='';
+  document.getElementById('deptScope').value='division';
+  document.getElementById('deptDistrict').value='';
+  document.getElementById('deptArea').value='';
+  document.getElementById('deptDesc').value='';
+  onScopeChange();
+  document.getElementById('deptModal').classList.add('active');
+}
+
+function openEditModal(d){
+  document.getElementById('modalTitle').textContent='Edit Department';
+  document.getElementById('editDeptId').value=d.id;
+  document.getElementById('deptName').value=d.name;
+  document.getElementById('deptHeadName').value=d.headName;
+  document.getElementById('deptHeadPhone').value=d.headPhone;
+  document.getElementById('deptScope').value=d.scope;
+  document.getElementById('deptDesc').value=d.description||'';
+  onScopeChange();
+  setTimeout(()=>{
+    if(d.scope==='district'||d.scope==='area'){
+      document.getElementById('deptDistrict').value=d.districtId||'';
+      onAreaLoadForDistrict(d.districtId,d.areaId);
+    }
+    if(d.scope==='area'){
+      document.getElementById('deptArea').value=d.areaId||'';
+    }
+  },200);
+  document.getElementById('deptModal').classList.add('active');
+}
+
+function closeModal(){document.getElementById('deptModal').classList.remove('active');}
+
+async function loadDistricts(){
+  const snap=await db.collection('districts').where('divisionId','==',currentUser.levelId).get();
+  districts=[];
+  snap.forEach(d=>{if(d.data().status==='active')districts.push({id:d.id,...d.data()})});
+  populateDistrictSelect();
+}
+
+function populateDistrictSelect(sel){
+  const s=document.getElementById('deptDistrict');
+  const cur=s.value;
+  s.innerHTML='<option value="">-- Select District --</option>'+districts.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+  if(sel)s.value=sel;
+}
+
+async function loadAreas(){
+  const districtIds=districts.map(d=>d.id);
+  if(!districtIds.length){allAreas=[];return;}
+  const snap=await db.collection('areas').where('districtId','in',districtIds).get();
+  allAreas=[];
+  snap.forEach(a=>{if(a.data().status==='active')allAreas.push({id:a.id,...a.data()})});
+}
+
+document.getElementById('deptDistrict').addEventListener('change',async function(){
+  const did=this.value;
+  await loadAreasForDistrict(did);
+});
+
+async function loadAreasForDistrict(did){
+  const areas=allAreas.filter(a=>a.districtId===did);
+  const s=document.getElementById('deptArea');
+  s.innerHTML='<option value="">-- Select Area --</option>'+areas.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
+}
+
+function onAreaLoadForDistrict(did,aid){
+  const areas=allAreas.filter(a=>a.districtId===did);
+  const s=document.getElementById('deptArea');
+  s.innerHTML='<option value="">-- Select Area --</option>'+areas.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
+  if(aid)s.value=aid;
+}
+
+async function loadZeliHalqas(){
+  const snap=await db.collection('zeli_halqas').where('status','==','active').get();
+  allZH=[];
+  snap.forEach(z=>allZH.push({id:z.id,...z.data()}));
+}
+
+async function saveDept(){
+  const name=document.getElementById('deptName').value.trim();
+  const headName=document.getElementById('deptHeadName').value.trim();
+  const headPhone=document.getElementById('deptHeadPhone').value.trim();
+  const scope=document.getElementById('deptScope').value;
+  const districtId=document.getElementById('deptDistrict').value;
+  const areaId=document.getElementById('deptArea').value;
+  const description=document.getElementById('deptDesc').value.trim();
+  const editId=document.getElementById('editDeptId').value;
+
+  if(!name||!headName||!headPhone){showAlert('Please fill all required fields.','error');return;}
+  if(!/^\d{10}$/.test(headPhone)){showAlert('Phone must be 10 digits.','error');return;}
+  if(scope==='district'&&!districtId){showAlert('Select a district.','error');return;}
+  if(scope==='area'&&(!districtId||!areaId)){showAlert('Select district and area.','error');return;}
+
+  try{
+    if(editId){
+      await db.collection('departments').doc(editId).update({
+        name,headName,headPhone,scope,description,
+        districtId:scope==='division'?'':districtId,
+        areaId:scope==='area'?areaId:'',
+        divisionId:currentUser.levelId
+      });
+      showAlert('Department updated!','success');
+    }else{
+      const snap=await db.collection('departments').where('divisionId','==',currentUser.levelId).get();
+      const code=generateCode(snap.docs.filter(d=>d.data().status==='active').length);
+      await db.collection('departments').add({
+        name,code,headName,headPhone,scope,description,
+        districtId:scope==='division'?'':districtId,
+        areaId:scope==='area'?areaId:'',
+        divisionId:currentUser.levelId,
+        status:'active',
+        createdAt:new Date().toISOString()
+      });
+      showAlert('Department added!','success');
+    }
+    closeModal();
+    loadDepts();
+  }catch(e){showAlert('Error: '+e.message,'error');}
+}
+
+async function deleteDept(id){
+  if(!confirm('Are you sure you want to delete this department?'))return;
+  try{
+    await db.collection('departments').doc(id).update({status:'deleted'});
+    showAlert('Department deleted.','success');
+    loadDepts();
+  }catch(e){showAlert('Error: '+e.message,'error');}
+}
+
+async function loadDepts(){
+  let q;
+  if(currentUser.role==='division_head'){
+    q=db.collection('departments').where('divisionId','==',currentUser.levelId);
+  }else if(currentUser.role==='district_head'){
+    q=db.collection('departments').where('districtId','==',currentUser.levelId);
+  }else{
+    q=db.collection('departments').where('areaId','==',currentUser.levelId);
+  }
+  const snap=await q.get();
+  allDepts=[];
+  snap.forEach(d=>{if(d.data().status==='active')allDepts.push({id:d.id,...d.data()})});
+
+  document.getElementById('statTotal').textContent=allDepts.length;
+  document.getElementById('statDivision').textContent=allDepts.filter(d=>d.scope==='division').length;
+  document.getElementById('statDistrict').textContent=allDepts.filter(d=>d.scope==='district').length;
+  document.getElementById('statArea').textContent=allDepts.filter(d=>d.scope==='area').length;
+
+  await loadStaffForDepts();
+  filterDepts();
+}
+
+function filterDepts(){
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  const filtered=allDepts.filter(d=>d.name.toLowerCase().includes(q)||(d.code||'').toLowerCase().includes(q));
+  renderDepts(filtered);
+}
+
+function buildHierarchy(d){
+  const divId=d.divisionId;
+  const divDistricts=districts.filter(x=>x.divisionId===divId);
+  let lines=[];
+  lines.push('▼ Hierarchy Coverage:');
+
+  if(d.scope==='division'){
+    divDistricts.forEach(dist=>{
+      lines.push(`<span class="hl-district">├── District: ${dist.name}</span>`);
+      const areas=allAreas.filter(a=>a.districtId===dist.id);
+      areas.forEach((area,ai)=>{
+        const isLastA=ai===areas.length-1;
+        const prefix=isLastA?'   └──':'   ├──';
+        lines.push(`${prefix}<span class="hl-area">Area: ${area.name}</span> | Head: ${area.headName||'N/A'}`);
+        const zhs=allZH.filter(z=>z.areaId===area.id);
+        zhs.forEach((zh,zi)=>{
+          const isLastZ=zi===zhs.length-1;
+          const zp=isLastZ?(isLastA?'       └──':'       └──'):(isLastA?'       ├──':'       ├──');
+          lines.push(`${zp}<span class="hl-zh">ZH: ${zh.name}</span> | Head: ${zh.headName||'N/A'} | Imam: ${zh.imamName||'N/A'}`);
+        });
+      });
+    });
+  }else if(d.scope==='district'){
+    const areas=allAreas.filter(a=>a.districtId===d.districtId);
+    areas.forEach((area,ai)=>{
+      const isLastA=ai===areas.length-1;
+      const prefix=isLastA?'└──':'├──';
+      lines.push(`${prefix}<span class="hl-area">Area: ${area.name}</span> | Head: ${area.headName||'N/A'}`);
+      const zhs=allZH.filter(z=>z.areaId===area.id);
+      zhs.forEach((zh,zi)=>{
+        const isLastZ=zi===zhs.length-1;
+        const zp=isLastZ?(isLastA?'    └──':'    └──'):(isLastA?'    ├──':'    ├──');
+        lines.push(`${zp}<span class="hl-zh">ZH: ${zh.name}</span> | Head: ${zh.headName||'N/A'} | Imam: ${zh.imamName||'N/A'}`);
+      });
+    });
+  }else{
+    const zhs=allZH.filter(z=>z.areaId===d.areaId);
+    zhs.forEach((zh,zi)=>{
+      const isLastZ=zi===zhs.length-1;
+      const prefix=isLastZ?'└──':'├──';
+      lines.push(`${prefix}<span class="hl-zh">ZH: ${zh.name}</span> | Head: ${zh.headName||'N/A'} | Imam: ${zh.imamName||'N/A'}`);
+    });
+  }
+  if(lines.length===1)lines.push('(No sub-units found)');
+  return lines.join('\n');
+}
+
+function getDistrictName(id){const d=districts.find(x=>x.id===id);return d?d.name:'';}
+function getAreaName(id){const a=allAreas.find(x=>x.id===id);return a?a.name:'';}
+
+function renderDepts(list){
+  const el=document.getElementById('deptList');
+  if(!list.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>No departments found</p></div>';return;}
+  el.innerHTML=list.map(d=>{
+    const badgeClass=d.scope==='division'?'badge-division':d.scope==='district'?'badge-district':'badge-area';
+    const scopeLabel=d.scope==='division'?'Division Level':d.scope==='district'?'District Level':'Area Level';
+    const staffList=deptStaffMap[d.id]||[];
+    let loc='';
+    if(d.scope==='district'&&d.districtId)loc='📍 '+getDistrictName(d.districtId);
+    if(d.scope==='area'){loc='📍 '+getDistrictName(d.districtId)+' → '+getAreaName(d.areaId);}
+    const hierarchy=buildHierarchy(d);
+    return `<div class="dept-card">
+      <div class="dept-header">
+        <span class="dept-name">📋 ${d.name}</span>
+        <span class="dept-code">${d.code||'N/A'}</span>
+      </div>
+      <div class="dept-info">👤 Head: <strong>${d.headName}</strong> | 📱 ${d.headPhone}</div>
+      <div><span class="badge ${badgeClass}">${scopeLabel}</span></div>
+      ${loc?`<div class="dept-info" style="margin-top:4px;">${loc}</div>`:''}
+      ${d.description?`<div class="dept-description">${d.description}</div>`:''}
+      ${staffList.length?`<div class="staff-count">👥 Staff: ${staffList.length} member(s)</div>`:''}
+      <div class="hierarchy">${hierarchy}</div>
+      <div class="dept-actions">
+        <button class="btn btn-primary btn-sm" onclick='openEditModal(${JSON.stringify(d).replace(/'/g,"&#39;")})'>✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDept('${d.id}')">🗑️ Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function loadStaffForDepts(){
+  deptStaffMap={};
+  const deptIds=allDepts.map(d=>d.id);
+  if(!deptIds.length)return;
+  try{
+    const chunks=[];
+    for(let i=0;i<deptIds.length;i+=10)chunks.push(deptIds.slice(i,i+10));
+    for(const chunk of chunks){
+      const snap=await db.collection('dept_staff').where('deptId','in',chunk).get();
+      snap.forEach(s=>{
+        const data=s.data();
+        if(!deptStaffMap[data.deptId])deptStaffMap[data.deptId]=[];
+        deptStaffMap[data.deptId].push({id:s.id,...data});
+      });
+    }
+  }catch(e){console.error('Staff load error',e);}
+}
+
+function populateStaffDeptSelect(){
+  const s=document.getElementById('staffDeptSelect');
+  s.innerHTML='<option value="">-- Choose Dept --</option>'+allDepts.map(d=>`<option value="${d.id}">${d.name} (${d.code})</option>`).join('');
+}
+
+document.getElementById('staffDeptSelect').addEventListener('change',function(){
+  document.getElementById('staffFormArea').style.display=this.value?'block':'none';
+  loadStaff();
+});
+
+async function loadStaff(){
+  const deptId=document.getElementById('staffDeptSelect').value;
+  if(!deptId){document.getElementById('staffList').innerHTML='';return;}
+  const list=deptStaffMap[deptId]||[];
+  const el=document.getElementById('staffList');
+  if(!list.length){el.innerHTML='<div class="empty-state"><p>No staff members yet</p></div>';return;}
+  el.innerHTML=list.map(s=>`<div class="dept-card">
+    <div class="staff-item"><div><div class="staff-name">👤 ${s.name}</div><div class="staff-role">${s.role||''} | 📱 ${s.phone}</div></div>
+    <button class="btn btn-danger btn-sm" onclick="deleteStaff('${s.id}','${deptId}')">🗑️</button></div>
+  </div>`).join('');
+}
+
+async function addStaff(){
+  const deptId=document.getElementById('staffDeptSelect').value;
+  const name=document.getElementById('staffName').value.trim();
+  const phone=document.getElementById('staffPhone').value.trim();
+  const role=document.getElementById('staffRole').value.trim();
+  if(!deptId||!name||!phone||!role){showAlert('Fill all fields.','error');return;}
+  if(!/^\d{10}$/.test(phone)){showAlert('Phone must be 10 digits.','error');return;}
+  try{
+    await db.collection('dept_staff').add({
+      deptId,name,phone,role,divisionId:currentUser.levelId,createdAt:new Date().toISOString()
+    });
+    showAlert('Staff added!','success');
+    document.getElementById('staffName').value='';
+    document.getElementById('staffPhone').value='';
+    document.getElementById('staffRole').value='';
+    await loadDepts();
+    loadStaff();
+  }catch(e){showAlert('Error: '+e.message,'error');}
+}
+
+async function deleteStaff(id,deptId){
+  if(!confirm('Delete this staff member?'))return;
+  try{
+    await db.collection('dept_staff').doc(id).delete();
+    showAlert('Staff removed.','success');
+    await loadDepts();
+    loadStaff();
+  }catch(e){showAlert('Error: '+e.message,'error');}
+}
+
+async function init(){
+  await checkSystemAccess('departments');
+  currentUser=requireAuth(['division_head','district_head','area_head']);
+  if(!currentUser)return;
+  document.getElementById('sidebarUser').textContent=currentUser.name+' ('+currentUser.role+')';
+  buildSidebar(currentUser);
+  buildBottomNav(currentUser);
+  await Promise.all([loadDistricts(),loadAreas(),loadZeliHalqas()]);
+  await loadDepts();
+}
+
+init();
+</script>
+</body>
+</html>

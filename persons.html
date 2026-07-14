@@ -1,0 +1,1039 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Persons | Tanzeem Structure Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#1a1a2e;max-width:500px;margin:0 auto;min-height:100vh;overflow-x:hidden;}
+:root{--primary:#1a6b3c;--dark:#0d4a25;--red:#dc3545;--orange:#ff9800;--success:#28a745;--light:#f5f7fa;--dark-text:#1a1a2e;--gray:#6c757d;--border:#e9ecef;--white:#fff;--radius:14px;}
+
+.sidebar{position:fixed;left:-280px;top:0;width:260px;height:100vh;background:var(--white);box-shadow:2px 0 15px rgba(0,0,0,.1);z-index:1000;transition:left .3s;overflow-y:auto;padding-bottom:80px;}
+.sidebar.open{left:0;}
+.sidebar-header{background:var(--primary);color:#fff;padding:20px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:1;}
+.sidebar-header img{width:40px;height:40px;border-radius:50%;object-fit:cover;}
+.sidebar-header .info h3{font-size:14px;font-weight:600;}
+.sidebar-header .info p{font-size:11px;opacity:.8;}
+.sidebar-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:999;display:none;}
+.sidebar-overlay.show{display:block;}
+.sidebar nav a{display:flex;align-items:center;gap:12px;padding:12px 16px;color:var(--dark-text);text-decoration:none;font-size:14px;border-bottom:1px solid var(--border);transition:background .2s;}
+.sidebar nav a:hover,.sidebar nav a.active{background:#e8f5e9;color:var(--primary);font-weight:600;}
+.sidebar nav a i{width:20px;text-align:center;color:var(--primary);}
+
+.topbar{position:sticky;top:0;background:var(--primary);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;z-index:100;}
+.topbar .menu-btn{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;}
+.topbar h1{font-size:17px;font-weight:600;flex:1;}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 16px;}
+.stat-box{background:var(--white);border-radius:var(--radius);padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.stat-box .num{font-size:20px;font-weight:700;}
+.stat-box .lbl{font-size:10px;color:var(--gray);margin-top:2px;}
+.stat-box:nth-child(1) .num{color:var(--primary);}
+.stat-box:nth-child(2) .num{color:var(--success);}
+.stat-box:nth-child(3) .num{color:var(--red);}
+.stat-box:nth-child(4) .num{color:var(--orange);}
+
+.search-box{padding:0 16px 8px;}
+.search-box input{width:100%;padding:10px 14px 10px 36px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--white);outline:none;}
+.search-box{position:relative;}
+.search-box i{position:absolute;left:28px;top:50%;transform:translateY(-50%);color:var(--gray);font-size:14px;}
+
+.filter-tabs{display:flex;gap:6px;padding:0 16px 10px;overflow-x:auto;}
+.filter-tabs button{padding:6px 14px;border:1px solid var(--border);border-radius:20px;background:var(--white);font-size:12px;cursor:pointer;white-space:nowrap;font-weight:500;color:var(--gray);}
+.filter-tabs button.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+.persons-list{padding:0 16px 100px;}
+.person-card{background:var(--white);border-radius:var(--radius);padding:12px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer;transition:box-shadow .2s;}
+.person-card:active{box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.person-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.person-photo{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:14px;}
+.person-photo img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
+.person-info{flex:1;min-width:0;}
+.person-info .pid{font-size:10px;color:var(--gray);}
+.person-info .pname{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.person-meta{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:11px;color:var(--gray);margin-bottom:6px;}
+.person-meta i{margin-right:3px;color:var(--primary);}
+.status-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+.status-active{background:#e8f5e9;color:var(--success);}
+.status-inactive{background:#ffeaea;color:var(--red);}
+.status-hold{background:#fff3e0;color:var(--orange);}
+.status-transferred{background:#e3f2fd;color:#1976d2;}
+.status-left{background:#ffeaea;color:var(--red);}
+.person-actions{display:flex;gap:6px;margin-top:8px;border-top:1px solid var(--border);padding-top:8px;}
+.person-actions button{flex:1;padding:6px;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;}
+.btn-view{background:#e3f2fd;color:#1976d2;}
+.btn-edit{background:#fff3e0;color:var(--orange);}
+.btn-delete{background:#ffeaea;color:var(--red);}
+.btn-status{background:#f3e5f5;color:#7b1fa2;}
+
+.person-detail{display:none;margin-top:10px;padding-top:8px;border-top:1px dashed var(--border);font-size:12px;color:var(--gray);}
+.person-detail.show{display:block;}
+.detail-row{display:flex;justify-content:space-between;padding:3px 0;}
+.detail-row .dlabel{font-weight:500;color:var(--dark-text);}
+
+.empty-state{text-align:center;padding:40px 16px;color:var(--gray);}
+.empty-state i{font-size:48px;color:var(--border);margin-bottom:12px;}
+.empty-state p{font-size:14px;}
+
+.fab{position:fixed;bottom:70px;right:calc(50% - 230px);width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 12px rgba(26,107,60,.4);z-index:50;display:flex;align-items:center;justify-content:center;}
+@media(max-width:500px){.fab{right:16px;}}
+
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:var(--white);border-top:1px solid var(--border);display:flex;z-index:100;}
+.bottom-nav a{flex:1;text-align:center;padding:8px 4px;text-decoration:none;color:var(--gray);font-size:10px;}
+.bottom-nav a i{display:block;font-size:18px;margin-bottom:2px;}
+.bottom-nav a.active{color:var(--primary);font-weight:600;}
+
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:2000;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--white);width:100%;max-width:500px;max-height:92vh;border-radius:16px 16px 0 0;overflow-y:auto;animation:slideUp .3s ease;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-header{position:sticky;top:0;background:var(--primary);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;z-index:1;}
+.modal-header h2{font-size:16px;font-weight:600;}
+.modal-header button{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;}
+.modal-body{padding:16px;padding-bottom:30px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--dark-text);margin-bottom:4px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:14px;outline:none;background:var(--white);font-family:inherit;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary);}
+.form-group textarea{resize:vertical;min-height:60px;}
+.form-group .required::after{content:' *';color:var(--red);}
+.photo-upload{text-align:center;margin-bottom:14px;}
+.photo-upload .preview{width:80px;height:80px;border-radius:50%;background:var(--border);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.photo-upload .preview img{width:100%;height:100%;object-fit:cover;}
+.photo-upload .preview i{font-size:28px;color:var(--gray);}
+.photo-upload input[type=file]{display:none;}
+.photo-upload label{display:inline-block;padding:6px 16px;background:var(--primary);color:#fff;border-radius:20px;font-size:12px;cursor:pointer;}
+.btn-row{display:flex;gap:10px;margin-top:16px;}
+.btn-row button{flex:1;padding:12px;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;}
+.btn-save{background:var(--primary);color:#fff;}
+.btn-cancel{background:var(--border);color:var(--dark-text);}
+.btn-delete-confirm{background:var(--red);color:#fff;}
+
+.loading{text-align:center;padding:20px;color:var(--gray);font-size:13px;}
+.loading i{animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.status-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:2500;display:none;align-items:center;justify-content:center;}
+.status-modal.show{display:flex;}
+.status-modal-content{background:var(--white);width:90%;max-width:360px;border-radius:var(--radius);padding:20px;text-align:center;}
+.status-modal-content h3{font-size:16px;margin-bottom:12px;}
+.status-options{display:flex;flex-direction:column;gap:8px;margin:12px 0;}
+.status-options button{padding:10px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;background:var(--white);text-align:left;}
+.status-options button.selected{border-color:var(--primary);background:#e8f5e9;}
+
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:10px;color:#fff;font-size:13px;font-weight:500;z-index:3000;animation:fadeInOut 3s;white-space:nowrap;}
+.toast.success{background:var(--success);}
+.toast.error{background:var(--red);}
+@keyframes fadeInOut{0%{opacity:0;transform:translateX(-50%) translateY(10px)}10%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0}}
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;"><i class="fas fa-users"></i></div>
+    <div class="info">
+      <h3 id="sidebarName">Loading...</h3>
+      <p id="sidebarRole">-</p>
+    </div>
+  </div>
+  <nav id="sidebarNav"></nav>
+  <div style="padding:16px;font-size:10px;color:rgba(255,255,255,.4);text-align:center;border-top:1px solid rgba(255,255,255,.1);margin-top:auto">Developed by<br><b style="color:rgba(255,255,255,.6)">A.A.Q. Solutions & Outsourcing</b></div>
+</div>
+
+<div class="topbar">
+  <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+  <h1><i class="fas fa-users" style="margin-right:6px;font-size:15px;"></i> Persons</h1>
+</div>
+
+<div class="stats-row">
+  <div class="stat-box"><div class="num" id="statTotal">0</div><div class="lbl">Total</div></div>
+  <div class="stat-box"><div class="num" id="statActive">0</div><div class="lbl">Active</div></div>
+  <div class="stat-box"><div class="num" id="statInactive">0</div><div class="lbl">Inactive</div></div>
+  <div class="stat-box"><div class="num" id="statTransferred">0</div><div class="lbl">Transferred</div></div>
+</div>
+
+<div class="search-box">
+  <i class="fas fa-search"></i>
+  <input type="text" id="searchInput" placeholder="Search by name, phone, ID..." oninput="filterPersons()">
+</div>
+
+<div class="filter-tabs" id="filterTabs">
+  <button class="active" data-filter="all" onclick="setFilter('all',this)">All</button>
+  <button data-filter="Active" onclick="setFilter('Active',this)">Active</button>
+  <button data-filter="Inactive" onclick="setFilter('Inactive',this)">Inactive</button>
+  <button data-filter="Transferred" onclick="setFilter('Transferred',this)">Transferred</button>
+</div>
+
+<div class="persons-list" id="personsList">
+  <div class="loading"><i class="fas fa-spinner"></i> Loading persons...</div>
+</div>
+
+<button class="fab" onclick="openAddModal()"><i class="fas fa-plus"></i></button>
+
+<div class="bottom-nav" id="bottomNav"></div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="personModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Add Person</h2>
+      <button onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="photo-upload">
+        <div class="preview" id="photoPreview"><i class="fas fa-camera"></i></div>
+        <input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)">
+        <label for="photoInput"><i class="fas fa-camera"></i> Choose Photo</label>
+      </div>
+
+      <div class="form-group">
+        <label>Person ID</label>
+        <input type="text" id="personIdField" disabled style="background:#f0f0f0;">
+      </div>
+      <div class="form-group">
+        <label class="required">Name</label>
+        <input type="text" id="nameField" placeholder="Full name">
+      </div>
+      <div class="form-group">
+        <label>Father Name</label>
+        <input type="text" id="fatherNameField" placeholder="Father name">
+      </div>
+      <div class="form-group">
+        <label class="required">Phone</label>
+        <input type="tel" id="phoneField" placeholder="10 digit phone" maxlength="10">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="emailField" placeholder="Optional email">
+      </div>
+      <div class="form-group">
+        <label>Division</label>
+        <select id="divisionField"></select>
+      </div>
+      <div class="form-group">
+        <label class="required">District</label>
+        <select id="districtField" onchange="onDistrictChange()"></select>
+      </div>
+      <div class="form-group">
+        <label class="required">Area</label>
+        <select id="areaField" onchange="onAreaChange()"></select>
+      </div>
+      <div class="form-group">
+        <label>Zeli Halqa</label>
+        <select id="zeliHalqaField"></select>
+      </div>
+      <div class="form-group">
+        <label>Primary Department</label>
+        <select id="deptField"></select>
+      </div>
+      <div class="form-group">
+        <label>Designation</label>
+        <select id="desigField"></select>
+      </div>
+      <div class="form-group">
+        <label>Reporting Head</label>
+        <select id="reportingField"></select>
+      </div>
+      <div class="form-group">
+        <label>Joining Date</label>
+        <input type="date" id="joinDateField">
+      </div>
+      <div class="form-group">
+        <label>Responsibility Start Date</label>
+        <input type="date" id="respDateField">
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="statusField">
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+          <option value="Hold">Hold</option>
+          <option value="Transferred">Transferred</option>
+          <option value="Left">Left</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Remarks</label>
+        <textarea id="remarksField" placeholder="Optional remarks"></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-save" id="saveBtn" onclick="savePerson()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Status Change Modal -->
+<div class="status-modal" id="statusModal">
+  <div class="status-modal-content">
+    <h3>Change Status</h3>
+    <p style="font-size:12px;color:var(--gray);margin-bottom:8px;" id="statusPersonName"></p>
+    <div class="status-options">
+      <button onclick="selectStatus('Active',this)"><span class="status-badge status-active">Active</span></button>
+      <button onclick="selectStatus('Inactive',this)"><span class="status-badge status-inactive">Inactive</span></button>
+      <button onclick="selectStatus('Hold',this)"><span class="status-badge status-hold">Hold</span></button>
+      <button onclick="selectStatus('Transferred',this)"><span class="status-badge status-transferred">Transferred</span></button>
+      <button onclick="selectStatus('Left',this)"><span class="status-badge status-left">Left</span></button>
+    </div>
+    <div class="btn-row">
+      <button class="btn-cancel" onclick="closeStatusModal()">Cancel</button>
+      <button class="btn-save" onclick="confirmStatusChange()">Update</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="status-modal" id="deleteModal">
+  <div class="status-modal-content">
+    <h3><i class="fas fa-trash" style="color:var(--red);margin-right:6px;"></i>Delete Person</h3>
+    <p style="font-size:13px;color:var(--gray);margin:12px 0;" id="deletePersonName">Are you sure?</p>
+    <div class="btn-row">
+      <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn-delete-confirm" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.firebasestorage.app",messagingSenderId:"438479516590",appId:"1:438479516590:web:fc0a9aaa4a0285f0dc0e3f",measurementId:"G-TJWXZSQXGH"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
+const menus={division_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Districts',icon:'fa-map',file:'districts.html'},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Departments',icon:'fa-building',file:'departments.html'},{label:'Designations',icon:'fa-id-badge',file:'designations.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Org Tree',icon:'fa-sitemap',file:'org-tree.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Dept Dashboard',icon:'fa-chart-pie',file:'dept-dashboard.html'},{label:'Access Control',icon:'fa-shield-alt',file:'access-control.html'},{label:'Maintenance',icon:'fa-wrench',file:'maintenance.html'},{label:'Announcements',icon:'fa-bullhorn',file:'announcements.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],district_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],area_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}]};const bottomNavs={division_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Announce',icon:'fa-bullhorn',file:'announcements.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],district_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],area_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}]};function buildSidebar(user){var n=document.getElementById('sidebarName');if(n)n.textContent=user.name;var p=document.getElementById('sidebarPhone');if(p)p.textContent=user.phone;var r=document.getElementById('sidebarRole');if(r)r.textContent=user.role.replace(/_/g,' ');var a=document.getElementById('avatarEl');if(a)a.textContent=user.name.charAt(0).toUpperCase();var menu=menus[user.role]||[];var cont=document.getElementById('sidebarMenu')||document.getElementById('sidebarNav');if(!cont)return;cont.innerHTML='';menu.forEach(function(m){var el=document.createElement('a');el.href='#';el.innerHTML='<i class="fas '+m.icon+'"></i> '+m.label;if(m.active)el.classList.add('active');el.onclick=function(e){e.preventDefault();closeSidebar();if(m.file==='logout'){localStorage.removeItem('ngoUser');window.location.href='index.html';return}if(m.file!=='dashboard.html')window.location.href=m.file};if(m.icon==='fa-sign-out-alt')el.classList.add('logout-btn');cont.appendChild(el)})}function buildBottomNav(user){var nav=document.getElementById('bottomNav');if(!nav)return;nav.innerHTML='';var items=bottomNavs[user.role]||[];items.forEach(function(b){var el=document.createElement('a');el.href='#';el.innerHTML='<i class="fas '+b.icon+'"></i><span>'+b.label+'</span>';if(b.active)el.classList.add('active');el.onclick=function(e){e.preventDefault();if(b.file==='sidebar'){toggleSidebar();return}if(b.file!=='dashboard.html')window.location.href=b.file};nav.appendChild(el)})}function closeSidebar(){var s=document.getElementById('sidebar');if(s)s.classList.remove('open');var o=document.getElementById('sidebarOverlay');if(o)o.classList.remove('active')}
+
+async function checkSystemAccess(moduleId){
+  try{
+    const raw=localStorage.getItem('ngoUser');
+    if(!raw)return;
+    const user=JSON.parse(raw);
+    if(user.role==='division_head')return;
+    const settingsSnap=await db.collection('settings').limit(1).get();
+    if(!settingsSnap.empty){
+      const s=settingsSnap.docs[0].data();
+      if(s.maintenanceMode){
+        document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-tools"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Under Development</h1><p style="font-size:16px;opacity:.7;line-height:1.6">'+(s.maintenanceMessage||'Software under development hai. Please wait karein.')+'</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+        throw new Error('maintenance');
+      }
+    }
+    const accessSnap=await db.collection('user_access').where('userId','==',user.id).limit(1).get();
+    if(!accessSnap.empty){
+      const a=accessSnap.docs[0].data();
+      if(a.expiresAt){
+        const exp=a.expiresAt.seconds?new Date(a.expiresAt.seconds*1000):new Date(a.expiresAt);
+        if(new Date()>exp){
+          document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-lock"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Access Expired</h1><p style="font-size:16px;opacity:.7">Aapka access khatam ho gaya hai. Admin se contact karein.</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+          throw new Error('access expired');
+        }
+      }
+      if(a.modules&&a.modules[moduleId]===false){
+        window.location.href='dashboard.html';
+        throw new Error('no access');
+      }
+    }
+  }catch(e){
+    if(e.message==='maintenance'||e.message==='access expired'){}
+  }
+}
+
+let currentUser=null;
+let userRole='';
+let userDivision='';
+let userDistrict='';
+let userArea='';
+let allPersons=[];
+let filteredPersons=[];
+let currentFilter='all';
+let editingPersonId=null;
+let allDivisions=[];
+let allDistricts=[];
+let allAreas=[];
+let allZeliHalqas=[];
+let allDepts=[];
+let allDesignations=[];
+let photoBase64='';
+let currentStatusPersonId=null;
+let deleteTargetId=null;
+let selectedNewStatus='';
+let expandedCard=null;
+
+function requireAuth(allowedRoles){
+  const raw=localStorage.getItem('ngoUser');
+  if(!raw){window.location.href='index.html';return null;}
+  try{
+    const u=JSON.parse(raw);
+    if(!allowedRoles.includes(u.role)){window.location.href='dashboard.html';return null;}
+    return u;
+  }catch(e){window.location.href='index.html';return null;}
+}
+
+function statusBadge(s){
+  const cls={Active:'status-active',Inactive:'status-inactive',Hold:'status-hold',Transferred:'status-transferred',Left:'status-left'};
+  return `<span class="status-badge ${cls[s]||'status-active'}">${s}</span>`;
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+
+function showToast(msg,type){
+  const t=document.createElement('div');
+  t.className='toast '+type;
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+function getInitials(name){
+  if(!name)return'?';
+  const parts=name.trim().split(/\s+/);
+  if(parts.length>=2)return (parts[0][0]+parts[1][0]).toUpperCase();
+  return parts[0].substring(0,2).toUpperCase();
+}
+
+function resizeImage(file,maxW,maxH,cb){
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const img=new Image();
+    img.onload=function(){
+      let w=img.width,h=img.height;
+      if(w>maxW){h=h*maxW/w;w=maxW;}
+      if(h>maxH){w=w*maxH/h;h=maxH;}
+      const c=document.createElement('canvas');
+      c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      cb(c.toDataURL('image/jpeg',0.7));
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function handlePhoto(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  if(file.size>2*1024*1024){showToast('Image must be under 2MB','error');return;}
+  resizeImage(file,200,200,function(dataUrl){
+    photoBase64=dataUrl;
+    document.getElementById('photoPreview').innerHTML='<img src="'+dataUrl+'">';
+  });
+}
+
+
+
+function buildQuery(){
+  let q=db.collection('persons');
+  if(userRole==='district_head'){
+    q=q.where('districtId','==',userDistrict);
+  }else if(userRole==='area_head'){
+    q=q.where('areaId','==',userArea);
+  }
+  return q;
+}
+
+async function loadPersons(){
+  document.getElementById('personsList').innerHTML='<div class="loading"><i class="fas fa-spinner"></i> Loading persons...</div>';
+  try{
+    const snap=await buildQuery().get();
+    allPersons=[];
+    snap.forEach(doc=>{allPersons.push({id:doc.id,...doc.data()});});
+    allPersons.sort((a,b)=>(a.personId||'').localeCompare(b.personId||''));
+    filterPersons();
+    updateStats();
+  }catch(e){
+    console.error(e);
+    document.getElementById('personsList').innerHTML='<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading persons</p></div>';
+  }
+}
+
+function updateStats(){
+  let total=allPersons.length;
+  let active=allPersons.filter(p=>p.status==='Active').length;
+  let inactive=allPersons.filter(p=>p.status==='Inactive'||p.status==='Left'||p.status==='Hold').length;
+  let transferred=allPersons.filter(p=>p.status==='Transferred').length;
+  document.getElementById('statTotal').textContent=total;
+  document.getElementById('statActive').textContent=active;
+  document.getElementById('statInactive').textContent=inactive;
+  document.getElementById('statTransferred').textContent=transferred;
+}
+
+function setFilter(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-tabs button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  filterPersons();
+}
+
+function filterPersons(){
+  const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
+  filteredPersons=allPersons.filter(p=>{
+    if(currentFilter!=='all'&&p.status!==currentFilter)return false;
+    if(!q)return true;
+    return (p.name||'').toLowerCase().includes(q)||(p.phone||'').includes(q)||(p.personId||'').toLowerCase().includes(q)||(p.fatherName||'').toLowerCase().includes(q);
+  });
+  renderList();
+}
+
+function renderList(){
+  const list=document.getElementById('personsList');
+  if(filteredPersons.length===0){
+    list.innerHTML='<div class="empty-state"><i class="fas fa-users"></i><p>No persons found</p></div>';
+    return;
+  }
+  let html='';
+  filteredPersons.forEach(p=>{
+    const photoHtml=p.photo?`<img src="${p.photo}">`:getInitials(p.name);
+    html+=`<div class="person-card" id="card-${p.id}">
+      <div class="person-top" onclick="toggleDetail('${p.id}')">
+        <div class="person-photo">${photoHtml}</div>
+        <div class="person-info">
+          <div class="pid">${p.personId||'-'} &bull; ${statusBadge(p.status||'Active')}</div>
+          <div class="pname">${p.name||'Unknown'}</div>
+        </div>
+      </div>
+      <div class="person-meta">
+        ${p.fatherName?`<span><i class="fas fa-user"></i>${p.fatherName}</span>`:''}
+        ${p.phone?`<span><i class="fas fa-phone"></i>${p.phone}</span>`:''}
+        ${p.designationName?`<span><i class="fas fa-id-badge"></i>${p.designationName}</span>`:''}
+        ${p.areaName?`<span><i class="fas fa-map-marker-alt"></i>${p.areaName}</span>`:''}
+        ${p.districtName?`<span><i class="fas fa-map"></i>${p.districtName}</span>`:''}
+      </div>
+      <div class="person-detail" id="detail-${p.id}">
+        ${p.email?`<div class="detail-row"><span class="dlabel">Email</span><span>${p.email}</span></div>`:''}
+        ${p.zeliHalqaName?`<div class="detail-row"><span class="dlabel">Zeli Halqa</span><span>${p.zeliHalqaName}</span></div>`:''}
+        ${p.primaryDeptName?`<div class="detail-row"><span class="dlabel">Department</span><span>${p.primaryDeptName}</span></div>`:''}
+        ${p.reportingToName?`<div class="detail-row"><span class="dlabel">Reports To</span><span>${p.reportingToName}</span></div>`:''}
+        ${p.joiningDate?`<div class="detail-row"><span class="dlabel">Joining Date</span><span>${p.joiningDate}</span></div>`:''}
+        ${p.responsibilityStartDate?`<div class="detail-row"><span class="dlabel">Resp. Start</span><span>${p.responsibilityStartDate}</span></div>`:''}
+        ${p.remarks?`<div class="detail-row"><span class="dlabel">Remarks</span><span>${p.remarks}</span></div>`:''}
+      </div>
+      <div class="person-actions" onclick="event.stopPropagation()">
+        <button class="btn-view" onclick="toggleDetail('${p.id}')"><i class="fas fa-eye"></i> View</button>
+        <button class="btn-edit" onclick="openEditModal('${p.id}')"><i class="fas fa-edit"></i> Edit</button>
+        <button class="btn-status" onclick="openStatusModal('${p.id}')"><i class="fas fa-exchange-alt"></i> Status</button>
+        <button class="btn-delete" onclick="openDeleteModal('${p.id}')"><i class="fas fa-trash"></i> Delete</button>
+      </div>
+    </div>`;
+  });
+  list.innerHTML=html;
+}
+
+function toggleDetail(id){
+  const el=document.getElementById('detail-'+id);
+  if(!el)return;
+  el.classList.toggle('show');
+}
+
+async function loadDivisions(){
+  try{
+    const snap=await db.collection('divisions').get();
+    allDivisions=[];
+    snap.forEach(d=>allDivisions.push({id:d.id,...d.data()}));
+  }catch(e){console.error('Div error',e);}
+}
+
+async function loadDistricts(){
+  try{
+    let q=db.collection('districts');
+    if(userRole==='division_head'){
+      if(userDivision)q=q.where('divisionId','==',userDivision);
+    }else if(userRole==='district_head'){
+      q=q.where('divisionId','==',userDivision);
+    }
+    const snap=await q.get();
+    allDistricts=[];
+    snap.forEach(d=>allDistricts.push({id:d.id,...d.data()}));
+  }catch(e){console.error('Dist error',e);}
+}
+
+async function loadAreas(districtId){
+  try{
+    let q=db.collection('areas');
+    if(userRole==='area_head'){
+      q=db.collection('areas').doc(userArea);
+      const doc=await q.get();
+      allAreas=doc.exists?[{id:doc.id,...doc.data()}]:[];
+    }else if(districtId){
+      q=q.where('districtId','==',districtId);
+      const snap=await q.get();
+      allAreas=[];
+      snap.forEach(d=>allAreas.push({id:d.id,...d.data()}));
+    }else if(userRole==='district_head'){
+      q=q.where('districtId','==',userDistrict);
+      const snap=await q.get();
+      allAreas=[];
+      snap.forEach(d=>allAreas.push({id:d.id,...d.data()}));
+    }else{
+      allAreas=[];
+    }
+  }catch(e){console.error('Area error',e);}
+}
+
+async function loadZeliHalqas(areaId){
+  try{
+    let q=db.collection('zeli_halqas');
+    if(areaId){
+      q=q.where('areaId','==',areaId);
+    }else{
+      allZeliHalqas=[];
+      return;
+    }
+    const snap=await q.get();
+    allZeliHalqas=[];
+    snap.forEach(d=>allZeliHalqas.push({id:d.id,...d.data()}));
+  }catch(e){console.error('ZH error',e);}
+}
+
+async function loadDepartments(){
+  try{
+    const snap=await db.collection('departments').get();
+    allDepts=[];
+    snap.forEach(d=>allDepts.push({id:d.id,...d.data()}));
+  }catch(e){console.error('Dept error',e);}
+}
+
+async function loadDesignations(){
+  try{
+    const snap=await db.collection('designations').get();
+    allDesignations=[];
+    snap.forEach(d=>allDesignations.push({id:d.id,...d.data()}));
+  }catch(e){console.error('Desig error',e);}
+}
+
+function populateSelect(id,list,labelKey,valueKey,selectedId){
+  const sel=document.getElementById(id);
+  sel.innerHTML='<option value="">Select</option>';
+  list.forEach(item=>{
+    const opt=document.createElement('option');
+    opt.value=item.id;
+    opt.textContent=item[labelKey]||item.name||item.id;
+    if(item.id===selectedId)opt.selected=true;
+    sel.appendChild(opt);
+  });
+}
+
+function populateDivisionSelect(selectedId){
+  const sel=document.getElementById('divisionField');
+  if(userRole==='division_head'){
+    sel.innerHTML='';
+    const opt=document.createElement('option');
+    opt.value=userDivision;
+    opt.textContent=userDivision;
+    opt.selected=true;
+    sel.appendChild(opt);
+    sel.disabled=true;
+  }else{
+    sel.innerHTML='<option value="">Select</option>';
+    allDivisions.forEach(d=>{
+      const opt=document.createElement('option');
+      opt.value=d.id;
+      opt.textContent=d.name||d.id;
+      if(d.id===selectedId)opt.selected=true;
+      sel.appendChild(opt);
+    });
+    sel.disabled=false;
+  }
+}
+
+function populateDistrictSelect(selectedId){
+  const sel=document.getElementById('districtField');
+  sel.innerHTML='<option value="">Select</option>';
+  allDistricts.forEach(d=>{
+    const opt=document.createElement('option');
+    opt.value=d.id;
+    opt.textContent=d.name||d.id;
+    if(d.id===selectedId)opt.selected=true;
+    sel.appendChild(opt);
+  });
+}
+
+async function populateAreaSelect(selectedId){
+  const sel=document.getElementById('areaField');
+  sel.innerHTML='<option value="">Select</option>';
+  allAreas.forEach(d=>{
+    const opt=document.createElement('option');
+    opt.value=d.id;
+    opt.textContent=d.name||d.id;
+    if(d.id===selectedId)opt.selected=true;
+    sel.appendChild(opt);
+  });
+}
+
+function populateZHSelect(selectedId){
+  const sel=document.getElementById('zeliHalqaField');
+  sel.innerHTML='<option value="">Select</option>';
+  allZeliHalqas.forEach(d=>{
+    const opt=document.createElement('option');
+    opt.value=d.id;
+    opt.textContent=d.name||d.id;
+    if(d.id===selectedId)opt.selected=true;
+    sel.appendChild(opt);
+  });
+}
+
+async function onDistrictChange(){
+  const distId=document.getElementById('districtField').value;
+  if(userRole!=='area_head'){
+    await loadAreas(distId);
+    populateAreaSelect('');
+  }
+  document.getElementById('zeliHalqaField').innerHTML='<option value="">Select</option>';
+}
+
+async function onAreaChange(){
+  const areaId=document.getElementById('areaField').value;
+  await loadZeliHalqas(areaId);
+  populateZHSelect('');
+}
+
+async function loadReportingHeads(areaId){
+  const sel=document.getElementById('reportingField');
+  sel.innerHTML='<option value="">None</option>';
+  if(!areaId)return;
+  try{
+    const snap=await db.collection('persons').where('areaId','==',areaId).get();
+    snap.docs.filter(d=>d.data().status==='Active').forEach(doc=>{
+      const d=doc.data();
+      if(editingPersonId&&doc.id===editingPersonId)return;
+      const opt=document.createElement('option');
+      opt.value=doc.id;
+      opt.textContent=(d.name||'')+' ('+((d.personId||''))+')';
+      sel.appendChild(opt);
+    });
+  }catch(e){console.error(e);}
+}
+
+async function getNextPersonId(){
+  try{
+    const snap=await db.collection('persons').orderBy('personId','desc').limit(1).get();
+    if(snap.empty)return 'P0001';
+    const last=snap.docs[0].data().personId||'P0000';
+    const num=parseInt(last.replace('P',''))+1;
+    return 'P'+String(num).padStart(4,'0');
+  }catch(e){
+    const snap2=await db.collection('persons').get();
+    let maxN=0;
+    snap2.forEach(doc=>{
+      const pid=doc.data().personId||'';
+      const n=parseInt(pid.replace('P',''));
+      if(n>maxN)maxN=n;
+    });
+    return 'P'+String(maxN+1).padStart(4,'0');
+  }
+}
+
+async function openAddModal(){
+  editingPersonId=null;
+  photoBase64='';
+  document.getElementById('modalTitle').textContent='Add Person';
+  document.getElementById('saveBtn').textContent='Save';
+  document.getElementById('photoPreview').innerHTML='<i class="fas fa-camera"></i>';
+  document.getElementById('photoInput').value='';
+  document.getElementById('nameField').value='';
+  document.getElementById('fatherNameField').value='';
+  document.getElementById('phoneField').value='';
+  document.getElementById('emailField').value='';
+  document.getElementById('joinDateField').value='';
+  document.getElementById('respDateField').value='';
+  document.getElementById('statusField').value='Active';
+  document.getElementById('remarksField').value='';
+  document.getElementById('personIdField').value=await getNextPersonId();
+
+  await loadDivisions();
+  await loadDistricts();
+  await loadDepartments();
+  await loadDesignations();
+
+  populateDivisionSelect(userDivision);
+  if(userRole==='area_head'){
+    populateDistrictSelect(userDistrict);
+    document.getElementById('districtField').disabled=true;
+    await loadAreas(userDistrict);
+    await loadAreas();
+    populateAreaSelect(userArea);
+    document.getElementById('areaField').disabled=true;
+    await loadZeliHalqas(userArea);
+    populateZHSelect('');
+    await loadReportingHeads(userArea);
+  }else if(userRole==='district_head'){
+    populateDistrictSelect(userDistrict);
+    document.getElementById('districtField').disabled=true;
+    await loadAreas(userDistrict);
+    populateAreaSelect('');
+    document.getElementById('zeliHalqaField').innerHTML='<option value="">Select</option>';
+    await loadReportingHeads('');
+  }else{
+    populateDistrictSelect('');
+    document.getElementById('districtField').disabled=false;
+    allAreas=[];
+    populateAreaSelect('');
+    document.getElementById('zeliHalqaField').innerHTML='<option value="">Select</option>';
+  }
+
+  populateSelect('deptField',allDepts,'name','id','');
+  populateSelect('desigField',allDesignations,'name','id','');
+  if(userRole!=='area_head'){
+    document.getElementById('reportingField').innerHTML='<option value="">None</option>';
+  }
+
+  document.getElementById('personModal').classList.add('show');
+}
+
+async function openEditModal(id){
+  const p=allPersons.find(x=>x.id===id);
+  if(!p)return;
+  editingPersonId=id;
+  photoBase64=p.photo||'';
+  document.getElementById('modalTitle').textContent='Edit Person';
+  document.getElementById('saveBtn').textContent='Update';
+  document.getElementById('personIdField').value=p.personId||'';
+  document.getElementById('nameField').value=p.name||'';
+  document.getElementById('fatherNameField').value=p.fatherName||'';
+  document.getElementById('phoneField').value=p.phone||'';
+  document.getElementById('emailField').value=p.email||'';
+  document.getElementById('joinDateField').value=p.joiningDate||'';
+  document.getElementById('respDateField').value=p.responsibilityStartDate||'';
+  document.getElementById('statusField').value=p.status||'Active';
+  document.getElementById('remarksField').value=p.remarks||'';
+
+  if(p.photo){
+    document.getElementById('photoPreview').innerHTML='<img src="'+p.photo+'">';
+  }else{
+    document.getElementById('photoPreview').innerHTML='<i class="fas fa-camera"></i>';
+  }
+  document.getElementById('photoInput').value='';
+
+  await loadDivisions();
+  await loadDistricts();
+  await loadDepartments();
+  await loadDesignations();
+
+  populateDivisionSelect(p.divisionId);
+  if(userRole==='division_head'){
+    document.getElementById('divisionField').disabled=true;
+  }
+  populateDistrictSelect(p.districtId);
+
+  if(userRole==='area_head'){
+    document.getElementById('districtField').disabled=true;
+    await loadAreas();
+    populateAreaSelect(p.areaId);
+    document.getElementById('areaField').disabled=true;
+    await loadZeliHalqas(p.areaId||userArea);
+    populateZHSelect(p.zeliHalqaId||'');
+    await loadReportingHeads(p.areaId||userArea);
+  }else if(userRole==='district_head'){
+    document.getElementById('districtField').disabled=true;
+    await loadAreas(p.districtId||userDistrict);
+    populateAreaSelect(p.areaId);
+    await loadZeliHalqas(p.areaId);
+    populateZHSelect(p.zeliHalqaId||'');
+    await loadReportingHeads(p.areaId);
+  }else{
+    document.getElementById('districtField').disabled=false;
+    if(p.districtId){
+      await loadAreas(p.districtId);
+      populateAreaSelect(p.areaId);
+      if(p.areaId){
+        await loadZeliHalqas(p.areaId);
+        populateZHSelect(p.zeliHalqaId||'');
+      }
+    }else{
+      allAreas=[];
+      populateAreaSelect('');
+      document.getElementById('zeliHalqaField').innerHTML='<option value="">Select</option>';
+    }
+  }
+
+  populateSelect('deptField',allDepts,'name','id',p.primaryDeptId);
+  populateSelect('desigField',allDesignations,'name','id',p.designationId);
+
+  document.getElementById('personModal').classList.add('show');
+
+  setTimeout(async()=>{
+    const areaVal=document.getElementById('areaField').value;
+    if(areaVal){
+      await loadReportingHeads(areaVal);
+      if(p.reportingToId){
+        document.getElementById('reportingField').value=p.reportingToId;
+      }
+    }
+  },500);
+}
+
+function closeModal(){
+  document.getElementById('personModal').classList.remove('show');
+  editingPersonId=null;
+  photoBase64='';
+}
+
+async function savePerson(){
+  const name=document.getElementById('nameField').value.trim();
+  const phone=document.getElementById('phoneField').value.trim();
+  const districtId=document.getElementById('districtField').value;
+  const areaId=document.getElementById('areaField').value;
+
+  if(!name){showToast('Name is required','error');return;}
+  if(!phone||phone.length<10){showToast('Valid 10-digit phone required','error');return;}
+  if(!districtId){showToast('District is required','error');return;}
+  if(!areaId){showToast('Area is required','error');return;}
+
+  const distDoc=allDistricts.find(d=>d.id===districtId);
+  const areaDoc=allAreas.find(d=>d.id===areaId);
+  const zhDoc=allZeliHalqas.find(d=>d.id===document.getElementById('zeliHalqaField').value);
+  const deptDoc=allDepts.find(d=>d.id===document.getElementById('deptField').value);
+  const desigDoc=allDesignations.find(d=>d.id===document.getElementById('desigField').value);
+  const reportSel=document.getElementById('reportingField');
+  const reportOpt=reportSel.options[reportSel.selectedIndex];
+  const divId=document.getElementById('divisionField').value;
+
+  const data={
+    personId:document.getElementById('personIdField').value,
+    name:name,
+    fatherName:document.getElementById('fatherNameField').value.trim(),
+    phone:phone,
+    email:document.getElementById('emailField').value.trim(),
+    photo:photoBase64,
+    divisionId:divId||'',
+    districtId:districtId,
+    districtName:distDoc?(distDoc.name||distDoc.id):'',
+    areaId:areaId,
+    areaName:areaDoc?(areaDoc.name||areaDoc.id):'',
+    zeliHalqaId:document.getElementById('zeliHalqaField').value,
+    zeliHalqaName:zhDoc?(zhDoc.name||zhDoc.id):'',
+    primaryDeptId:document.getElementById('deptField').value,
+    primaryDeptName:deptDoc?(deptDoc.name||deptDoc.id):'',
+    designationId:document.getElementById('desigField').value,
+    designationName:desigDoc?(desigDoc.name||desigDoc.id):'',
+    reportingToId:reportSel.value||'',
+    reportingToName:(reportSel.value&&reportOpt)?reportOpt.textContent:'',
+    joiningDate:document.getElementById('joinDateField').value,
+    responsibilityStartDate:document.getElementById('respDateField').value,
+    status:document.getElementById('statusField').value,
+    remarks:document.getElementById('remarksField').value.trim(),
+    createdAt:editingPersonId?(allPersons.find(p=>p.id===editingPersonId)||{}).createdAt||firebase.firestore.FieldValue.serverTimestamp():firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  const saveBtn=document.getElementById('saveBtn');
+  saveBtn.disabled=true;
+  saveBtn.textContent=editingPersonId?'Updating...':'Saving...';
+
+  try{
+    if(editingPersonId){
+      await db.collection('persons').doc(editingPersonId).update(data);
+      showToast('Person updated successfully','success');
+    }else{
+      data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('persons').add(data);
+      showToast('Person added successfully','success');
+    }
+    closeModal();
+    await loadPersons();
+  }catch(e){
+    console.error(e);
+    showToast('Error saving: '+e.message,'error');
+  }finally{
+    saveBtn.disabled=false;
+    saveBtn.textContent=editingPersonId?'Update':'Save';
+  }
+}
+
+function openStatusModal(id){
+  const p=allPersons.find(x=>x.id===id);
+  if(!p)return;
+  currentStatusPersonId=id;
+  selectedNewStatus='';
+  document.getElementById('statusPersonName').textContent=p.name+' ('+p.personId+')';
+  document.querySelectorAll('.status-options button').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('statusModal').classList.add('show');
+}
+
+function selectStatus(s,btn){
+  selectedNewStatus=s;
+  document.querySelectorAll('.status-options button').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function closeStatusModal(){
+  document.getElementById('statusModal').classList.remove('show');
+  currentStatusPersonId=null;
+  selectedNewStatus='';
+}
+
+async function confirmStatusChange(){
+  if(!selectedNewStatus||!currentStatusPersonId){showToast('Select a status','error');return;}
+  const p=allPersons.find(x=>x.id===currentStatusPersonId);
+  const oldStatus=p?p.status:'';
+  try{
+    await db.collection('persons').doc(currentStatusPersonId).update({status:selectedNewStatus});
+    await db.collection('person_history').add({
+      personId:currentStatusPersonId,
+      personName:p?p.name:'',
+      oldStatus:oldStatus,
+      newStatus:selectedNewStatus,
+      changedBy:currentUser.name||currentUser.email,
+      changedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('Status updated to '+selectedNewStatus,'success');
+    closeStatusModal();
+    await loadPersons();
+  }catch(e){
+    console.error(e);
+    showToast('Error updating status','error');
+  }
+}
+
+function openDeleteModal(id){
+  const p=allPersons.find(x=>x.id===id);
+  if(!p)return;
+  deleteTargetId=id;
+  document.getElementById('deletePersonName').textContent='Delete "'+p.name+'" ('+p.personId+')? This cannot be undone.';
+  document.getElementById('deleteModal').classList.add('show');
+}
+
+function closeDeleteModal(){
+  document.getElementById('deleteModal').classList.remove('show');
+  deleteTargetId=null;
+}
+
+async function confirmDelete(){
+  if(!deleteTargetId)return;
+  try{
+    await db.collection('persons').doc(deleteTargetId).delete();
+    showToast('Person deleted','success');
+    closeDeleteModal();
+    await loadPersons();
+  }catch(e){
+    console.error(e);
+    showToast('Error deleting','error');
+  }
+}
+
+async function init(){
+  await checkSystemAccess('persons');
+  currentUser=requireAuth(['division_head','district_head','area_head']);
+  if(!currentUser)return;
+
+  userRole=currentUser.role||'';
+  userDivision=currentUser.divisionId||currentUser.division||'';
+  userDistrict=currentUser.districtId||currentUser.district||'';
+  userArea=currentUser.areaId||currentUser.area||'';
+
+  buildSidebar(currentUser);
+  buildBottomNav(currentUser);
+  await loadPersons();
+}
+
+init();
+</script>
+</body>
+</html>

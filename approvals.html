@@ -1,0 +1,821 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Approvals | Tanzeem Structure Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#1a1a2e;min-height:100vh;max-width:500px;margin:0 auto;overflow-x:hidden}
+:root{--primary:#1a6b3c;--dark:#0d4a25;--red:#dc3545;--orange:#ff9800;--success:#28a745;--light:#f5f7fa;--dark-text:#1a1a2e;--gray:#6c757d;--border:#e9ecef;--white:#fff;--radius:14px}
+
+.header{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#1a6b3c,#0d4a25);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-radius:0 0 14px 14px;box-shadow:0 2px 12px rgba(26,107,60,.3)}
+.header h1{font-size:18px;font-weight:700;flex:1;text-align:center}
+.menu-btn,.back-btn{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px}
+.menu-btn:active,.back-btn:active{background:rgba(255,255,255,.2)}
+
+.sidebar-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;display:none;opacity:0;transition:opacity .3s}
+.sidebar-overlay.show{display:block;opacity:1}
+.sidebar{position:fixed;top:0;left:-280px;width:280px;height:100%;background:#fff;z-index:201;transition:left .3s ease;border-radius:0 14px 14px 0;box-shadow:4px 0 20px rgba(0,0,0,.15);overflow-y:auto}
+.sidebar.open{left:0}
+.sidebar-header{background:linear-gradient(135deg,#1a6b3c,#0d4a25);padding:20px 16px;color:#fff;border-radius:0 14px 0 0}
+.sidebar-header h3{font-size:16px;font-weight:700}
+.sidebar-header p{font-size:12px;opacity:.8;margin-top:4px}
+.sidebar-user{background:rgba(255,255,255,.15);border-radius:10px;padding:10px 12px;margin-top:10px;display:flex;align-items:center;gap:10px}
+.sidebar-user i{font-size:18px}
+.sidebar-user span{font-size:13px;font-weight:500}
+.sidebar-menu{padding:10px 0}
+.sidebar-menu a{display:flex;align-items:center;gap:12px;padding:13px 20px;color:#1a1a2e;text-decoration:none;font-size:14px;font-weight:500;transition:all .2s;border-left:3px solid transparent}
+.sidebar-menu a:hover,.sidebar-menu a.active{background:#f0faf3;border-left-color:#1a6b3c;color:#1a6b3c}
+.sidebar-menu a.active{font-weight:600}
+.sidebar-menu a i{width:20px;text-align:center;font-size:16px}
+.sidebar-menu .divider{height:1px;background:#e9ecef;margin:8px 16px}
+.sidebar-menu a.logout{color:#dc3545}
+
+.tabs{display:flex;background:#fff;border-radius:14px;overflow:hidden;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid #e9ecef;margin-top:16px}
+.tab{flex:1;padding:12px 6px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;border:none;background:#f5f7fa;color:#6c757d;transition:all .2s;white-space:nowrap}
+.tab.active{background:linear-gradient(135deg,#1a6b3c,#0d4a25);color:#fff}
+.tab .count{background:rgba(255,255,255,.3);padding:1px 6px;border-radius:10px;font-size:10px;margin-left:4px}
+.tab:not(.active) .count{background:#e9ecef;color:#6c757d}
+
+.content{padding:16px;padding-bottom:90px}
+.tab-content{display:none}.tab-content.active{display:block}
+
+.search-box{position:relative;margin-bottom:14px}
+.search-box input{width:100%;padding:12px 14px 12px 42px;border:1px solid #e9ecef;border-radius:14px;font-size:14px;background:#fff;outline:none;transition:border-color .2s}
+.search-box input:focus{border-color:#1a6b3c}
+.search-box i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#6c757d;font-size:15px}
+
+.filter-tabs{display:flex;gap:6px;padding:0 0 14px;overflow-x:auto}
+.filter-tabs button{padding:6px 14px;border:1px solid #e9ecef;border-radius:20px;background:#fff;font-size:12px;cursor:pointer;white-space:nowrap;font-weight:500;color:#6c757d;transition:all .2s}
+.filter-tabs button.active{background:#1a6b3c;color:#fff;border-color:#1a6b3c}
+
+.approval-card{background:#fff;border-radius:var(--radius);padding:14px;margin-bottom:12px;border:1px solid #e9ecef;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:all .2s}
+.approval-card:active{transform:scale(.99)}
+.approval-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.approval-req{font-size:13px;font-weight:700;color:var(--primary);background:#f0faf3;padding:3px 10px;border-radius:8px}
+.approval-date{font-size:11px;color:#6c757d;text-align:right}
+.approval-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.action-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.action-create{background:#d4edda;color:#155724}
+.action-update{background:#d1ecf1;color:#0c5460}
+.action-delete{background:#f8d7da;color:#721c24}
+.table-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#e8f5e9;color:#1a6b3c}
+.submitted-by{font-size:12px;color:#6c757d;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.submitted-by i{color:var(--primary)}
+
+.detail-box{background:#f9fafb;border:1px solid #e9ecef;border-radius:10px;padding:12px;margin-bottom:12px}
+.detail-box h4{font-size:13px;font-weight:700;color:var(--primary);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #e9ecef}
+.detail-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12px}
+.detail-row .dlabel{color:#6c757d;font-weight:500;min-width:90px}
+.detail-row .dvalue{color:#1a1a2e;font-weight:600;text-align:right;flex:1;margin-left:8px;word-break:break-word}
+
+.action-buttons{display:flex;gap:6px;flex-wrap:wrap}
+.action-buttons button{flex:1;min-width:0;padding:10px 6px;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;transition:all .2s}
+.btn-approve{background:#28a745;color:#fff}
+.btn-approve:active{background:#1e7e34}
+.btn-reject{background:#dc3545;color:#fff}
+.btn-reject:active{background:#c82333}
+.btn-sendback{background:#ff9800;color:#fff}
+.btn-sendback:active{background:#e68900}
+.btn-hold{background:#6c757d;color:#fff}
+.btn-hold:active{background:#545b62}
+
+.status-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600}
+.status-approved{background:#d4edda;color:#155724}
+.status-rejected{background:#f8d7da;color:#721c24}
+.status-sent_back{background:#fff3cd;color:#856404}
+.status-hold{background:#e2e3e5;color:#383d41}
+
+.processed-info{font-size:12px;color:#6c757d;margin-top:6px}
+.processed-info i{margin-right:4px;color:var(--primary)}
+.remarks-box{background:#fff3cd;border:1px solid #ffeeba;border-radius:8px;padding:8px 10px;margin-top:8px;font-size:12px;color:#856404}
+
+.timeline{padding-left:20px;border-left:3px solid var(--primary);margin:10px 0}
+.timeline-item{padding:8px 0 8px 12px;position:relative;font-size:12px;color:#6c757d}
+.timeline-item::before{content:'';position:absolute;left:-26px;top:12px;width:10px;height:10px;border-radius:50%;background:var(--primary);border:2px solid #fff}
+.timeline-item .tl-status{font-weight:700;color:var(--dark-text)}
+.timeline-item .tl-date{font-size:11px;color:#6c757d}
+
+.empty-state{text-align:center;padding:40px 20px;color:#6c757d}
+.empty-state i{font-size:48px;color:#e9ecef;margin-bottom:12px;display:block}
+.empty-state h3{font-size:16px;margin-bottom:6px;color:#6c757d}
+.empty-state p{font-size:13px}
+
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:300;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;width:100%;max-width:500px;border-radius:14px 14px 0 0;padding:20px 16px 30px;max-height:85vh;overflow-y:auto;transform:translateY(100%);transition:transform .3s ease}
+.modal-overlay.show .modal{transform:translateY(0)}
+.modal-handle{width:40px;height:4px;background:#e9ecef;border-radius:2px;margin:0 auto 16px}
+.modal-title{font-size:18px;font-weight:700;color:#1a1a2e;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:none;border:none;font-size:20px;color:#6c757d;cursor:pointer;padding:4px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:6px}
+.form-group textarea,.form-group select{width:100%;padding:12px 14px;border:1px solid #e9ecef;border-radius:10px;font-size:14px;background:#fff;outline:none;transition:border-color .2s;font-family:inherit}
+.form-group textarea:focus,.form-group select:focus{border-color:#1a6b3c}
+.form-group textarea{resize:vertical;min-height:80px}
+.btn-row{display:flex;gap:10px;margin-top:16px}
+.btn-row button{flex:1;padding:12px;border:none;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer}
+.btn-cancel{background:#e9ecef;color:#1a1a2e}
+.btn-confirm-reject{background:#dc3545;color:#fff}
+.btn-confirm-sendback{background:#ff9800;color:#fff}
+
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:#fff;display:flex;border-radius:14px 14px 0 0;box-shadow:0 -2px 12px rgba(0,0,0,.08);z-index:100;border-top:1px solid #e9ecef}
+.bottom-nav a{flex:1;padding:10px 0;text-align:center;text-decoration:none;color:#6c757d;font-size:11px;font-weight:500;transition:color .2s;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bottom-nav a i{font-size:18px}
+.bottom-nav a.active{color:#1a6b3c;font-weight:600}
+
+.loading-spinner{display:flex;justify-content:center;align-items:center;padding:40px}
+.spinner{width:32px;height:32px;border:3px solid #e9ecef;border-top-color:#1a6b3c;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.fade-in{animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:10px;color:#fff;font-size:13px;font-weight:500;z-index:5000;animation:toastIn 3s ease forwards;white-space:nowrap}
+.toast.success{background:#28a745}
+.toast.error{background:#dc3545}
+.toast.warning{background:#ff9800}
+@keyframes toastIn{0%{opacity:0;transform:translateX(-50%) translateY(10px)}10%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+  <h1><i class="fas fa-check-double" style="margin-right:6px;font-size:15px"></i> Approvals</h1>
+  <button class="back-btn" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h3>Tanzeem Structure</h3>
+    <p id="sidebarRole"></p>
+    <div class="sidebar-user">
+      <i class="fas fa-user-circle"></i>
+      <span id="sidebarUserName">Loading...</span>
+    </div>
+  </div>
+  <div class="sidebar-menu" id="sidebarMenu"></div>
+  <div style="padding:16px;font-size:10px;color:rgba(255,255,255,.4);text-align:center;border-top:1px solid rgba(255,255,255,.1);margin-top:auto">Developed by<br><b style="color:rgba(255,255,255,.6)">A.A.Q. Solutions & Outsourcing</b></div>
+</div>
+
+<div class="content">
+  <div class="tabs" id="tabsContainer">
+    <div class="tab active" data-tab="pending" onclick="switchTab('pending')">
+      <i class="fas fa-clock"></i> Pending <span class="count" id="pendingCount">0</span>
+    </div>
+    <div class="tab" data-tab="processed" onclick="switchTab('processed')">
+      <i class="fas fa-history"></i> Processed
+    </div>
+    <div class="tab" data-tab="myrequests" onclick="switchTab('myrequests')">
+      <i class="fas fa-paper-plane"></i> My Requests
+    </div>
+  </div>
+
+  <!-- PENDING TAB -->
+  <div class="tab-content active" id="tab-pending">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" id="pendingSearch" placeholder="Search approvals..." oninput="filterPending()">
+    </div>
+    <div id="pendingList"><div class="loading-spinner"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- PROCESSED TAB -->
+  <div class="tab-content" id="tab-processed">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" id="processedSearch" placeholder="Search processed..." oninput="filterProcessed()">
+    </div>
+    <div class="filter-tabs" id="processedFilters">
+      <button class="active" onclick="setProcessedFilter('all',this)">All</button>
+      <button onclick="setProcessedFilter('approved',this)">Approved</button>
+      <button onclick="setProcessedFilter('rejected',this)">Rejected</button>
+      <button onclick="setProcessedFilter('sent_back',this)">Sent Back</button>
+      <button onclick="setProcessedFilter('hold',this)">On Hold</button>
+    </div>
+    <div id="processedList"><div class="loading-spinner"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- MY REQUESTS TAB -->
+  <div class="tab-content" id="tab-myrequests">
+    <div id="myRequestsList"><div class="loading-spinner"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<!-- REJECT MODAL -->
+<div class="modal-overlay" id="rejectModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">
+      <span><i class="fas fa-times-circle" style="color:#dc3545;margin-right:6px"></i> Reject Request</span>
+      <button class="modal-close" onclick="closeRejectModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group">
+      <label>Rejection Reason <span style="color:#dc3545">*</span></label>
+      <textarea id="rejectReason" placeholder="Reason for rejection..."></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn-cancel" onclick="closeRejectModal()">Cancel</button>
+      <button class="btn-confirm-reject" onclick="confirmReject()">Reject</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEND BACK MODAL -->
+<div class="modal-overlay" id="sendBackModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">
+      <span><i class="fas fa-undo" style="color:#ff9800;margin-right:6px"></i> Send Back Request</span>
+      <button class="modal-close" onclick="closeSendBackModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group">
+      <label>Reason <span style="color:#dc3545">*</span></label>
+      <textarea id="sendBackReason" placeholder="Reason for sending back..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Send Back To</label>
+      <select id="sendBackTo">
+        <option value="previous">Previous Level</option>
+        <option value="specific">Specific Person</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn-cancel" onclick="closeSendBackModal()">Cancel</button>
+      <button class="btn-confirm-sendback" onclick="confirmSendBack()">Send Back</button>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-nav" id="bottomNav"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.firebasestorage.app",messagingSenderId:"438479516590",appId:"1:438479516590:web:fc0a9aaa4a0285f0dc0e3f",measurementId:"G-TJWXZSQXGH"};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+
+const menus={division_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Districts',icon:'fa-map',file:'districts.html'},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Departments',icon:'fa-building',file:'departments.html'},{label:'Designations',icon:'fa-id-badge',file:'designations.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Org Tree',icon:'fa-sitemap',file:'org-tree.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Dept Dashboard',icon:'fa-chart-pie',file:'dept-dashboard.html'},{label:'Access Control',icon:'fa-shield-alt',file:'access-control.html'},{label:'Maintenance',icon:'fa-wrench',file:'maintenance.html'},{label:'Announcements',icon:'fa-bullhorn',file:'announcements.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],district_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],area_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}]};const bottomNavs={division_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Announce',icon:'fa-bullhorn',file:'announcements.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],district_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],area_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}]};function buildSidebar(user){var n=document.getElementById('sidebarName');if(n)n.textContent=user.name;var p=document.getElementById('sidebarPhone');if(p)p.textContent=user.phone;var r=document.getElementById('sidebarRole');if(r)r.textContent=user.role.replace(/_/g,' ');var a=document.getElementById('avatarEl');if(a)a.textContent=user.name.charAt(0).toUpperCase();var menu=menus[user.role]||[];var cont=document.getElementById('sidebarMenu')||document.getElementById('sidebarNav');if(!cont)return;cont.innerHTML='';menu.forEach(function(m){var el=document.createElement('a');el.href='#';el.innerHTML='<i class="fas '+m.icon+'"></i> '+m.label;if(m.active)el.classList.add('active');el.onclick=function(e){e.preventDefault();closeSidebar();if(m.file==='logout'){localStorage.removeItem('ngoUser');window.location.href='index.html';return}if(m.file!=='dashboard.html')window.location.href=m.file};if(m.icon==='fa-sign-out-alt')el.classList.add('logout-btn');cont.appendChild(el)})}function buildBottomNav(user){var nav=document.getElementById('bottomNav');if(!nav)return;nav.innerHTML='';var items=bottomNavs[user.role]||[];items.forEach(function(b){var el=document.createElement('a');el.href='#';el.innerHTML='<i class="fas '+b.icon+'"></i><span>'+b.label+'</span>';if(b.active)el.classList.add('active');el.onclick=function(e){e.preventDefault();if(b.file==='sidebar'){toggleSidebar();return}if(b.file!=='dashboard.html')window.location.href=b.file};nav.appendChild(el)})}function closeSidebar(){var s=document.getElementById('sidebar');if(s)s.classList.remove('open');var o=document.getElementById('sidebarOverlay');if(o)o.classList.remove('active')}
+
+async function checkSystemAccess(moduleId){
+  try{
+    const raw=localStorage.getItem('ngoUser');
+    if(!raw)return;
+    const user=JSON.parse(raw);
+    if(user.role==='division_head')return;
+    const settingsSnap=await db.collection('settings').limit(1).get();
+    if(!settingsSnap.empty){
+      const s=settingsSnap.docs[0].data();
+      if(s.maintenanceMode){
+        document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-tools"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Under Development</h1><p style="font-size:16px;opacity:.7;line-height:1.6">'+(s.maintenanceMessage||'Software under development hai. Please wait karein.')+'</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+        throw new Error('maintenance');
+      }
+    }
+    const accessSnap=await db.collection('user_access').where('userId','==',user.id).limit(1).get();
+    if(!accessSnap.empty){
+      const a=accessSnap.docs[0].data();
+      if(a.expiresAt){
+        const exp=a.expiresAt.seconds?new Date(a.expiresAt.seconds*1000):new Date(a.expiresAt);
+        if(new Date()>exp){
+          document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-lock"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Access Expired</h1><p style="font-size:16px;opacity:.7">Aapka access khatam ho gaya hai. Admin se contact karein.</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+          throw new Error('access expired');
+        }
+      }
+      if(a.modules&&a.modules[moduleId]===false){
+        window.location.href='dashboard.html';
+        throw new Error('no access');
+      }
+    }
+  }catch(e){
+    if(e.message==='maintenance'||e.message==='access expired'){}
+  }
+}
+
+let currentUser=null;
+let userRole='';
+let pendingApprovals=[];
+let processedApprovals=[];
+let myRequests=[];
+let currentProcessedFilter='all';
+let currentActionId=null;
+
+function requireAuth(roles){
+  const raw=localStorage.getItem('ngoUser');
+  if(!raw){window.location.href='index.html';return null}
+  try{
+    const u=JSON.parse(raw);
+    if(!roles||roles.includes(u.role))return u;
+    window.location.href='dashboard.html';
+    return null;
+  }catch(e){window.location.href='index.html';return null}
+}
+
+function escHtml(s){
+  if(!s)return '';
+  const d=document.createElement('div');
+  d.textContent=String(s);
+  return d.innerHTML;
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+
+function showToast(msg,type){
+  const t=document.createElement('div');
+  t.className='toast '+(type||'success');
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelector('[data-tab="'+tab+'"]').classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(tab==='pending')filterPending();
+  if(tab==='processed')filterProcessed();
+  if(tab==='myrequests')renderMyRequests();
+}
+
+
+
+function autoRequestNumber(idx){
+  return 'REQ-'+String(idx).padStart(4,'0');
+}
+
+function getActionBadge(action){
+  const cls={create:'action-create',update:'action-update',delete:'action-delete'};
+  const label={create:'Create',update:'Update',delete:'Delete'};
+  return '<span class="action-badge '+(cls[action]||'action-create')+'">'+(label[action]||action)+'</span>';
+}
+
+function getTableBadge(table){
+  const labels={areas:'Area',districts:'District',zeli_halqas:'Zeli Halqa',departments:'Department',persons:'Person',designations:'Designation'};
+  return '<span class="table-badge">'+(labels[table]||table)+'</span>';
+}
+function getApprovalTable(a){return a.collection||a.table||'';}
+function getApprovalAction(a){
+  var t=a.type||a.action||'';
+  if(t.indexOf('create')!==-1)return'create';
+  if(t.indexOf('edit')!==-1||t.indexOf('update')!==-1)return'update';
+  if(t.indexOf('delete')!==-1)return'delete';
+  return a.docId?(a.data||a.newData?'update':'delete'):'create';
+}
+function getApprovalData(a){return a.data||a.newData||{};}
+
+function getStatusBadge(status){
+  const cls={approved:'status-approved',rejected:'status-rejected',sent_back:'status-sent_back',hold:'status-hold'};
+  const label={approved:'Approved',rejected:'Rejected',sent_back:'Sent Back',hold:'On Hold'};
+  return '<span class="status-badge '+(cls[status]||'')+'">'+(label[status]||status)+'</span>';
+}
+
+function formatDate(ts){
+  if(!ts)return '';
+  let d;
+  if(ts.seconds)d=new Date(ts.seconds*1000);
+  else if(typeof ts==='string')d=new Date(ts);
+  else if(ts instanceof Date)d=ts;
+  else return '';
+  if(isNaN(d.getTime()))return '';
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}
+
+function parseDetail(data,table){
+  if(!data)return '<p style="font-size:12px;color:#6c757d">No details available</p>';
+  let html='';
+  if(table==='areas'||table==='districts'){
+    html+=dRow('Name',data.name);
+    if(data.headName)html+=dRow('Head',data.headName);
+    if(data.headPhone)html+=dRow('Phone',data.headPhone);
+    if(data.code)html+=dRow('Code',data.code);
+    if(data.description)html+=dRow('Description',data.description);
+  }else if(table==='zeli_halqas'){
+    html+=dRow('Masjid',data.masjidName||data.name);
+    if(data.halqaHeadName)html+=dRow('Halqa Head',data.halqaHeadName);
+    if(data.halqaHeadPhone)html+=dRow('Head Phone',data.halqaHeadPhone);
+    if(data.imamName)html+=dRow('Imam',data.imamName);
+    if(data.imamPhone)html+=dRow('Imam Phone',data.imamPhone);
+    if(data.address)html+=dRow('Address',data.address);
+    if(data.description)html+=dRow('Description',data.description);
+  }else if(table==='departments'){
+    html+=dRow('Name',data.name);
+    if(data.head)html+=dRow('Head',data.head);
+    if(data.scope)html+=dRow('Scope',data.scope);
+    if(data.description)html+=dRow('Description',data.description);
+  }else if(table==='persons'){
+    html+=dRow('Name',data.name);
+    if(data.fatherName)html+=dRow('Father Name',data.fatherName);
+    if(data.phone)html+=dRow('Phone',data.phone);
+    if(data.email)html+=dRow('Email',data.email);
+    if(data.designationName)html+=dRow('Designation',data.designationName);
+    if(data.status)html+=dRow('Status',data.status);
+    if(data.areaName)html+=dRow('Area',data.areaName);
+    if(data.districtName)html+=dRow('District',data.districtName);
+    if(data.primaryDeptName)html+=dRow('Department',data.primaryDeptName);
+    if(data.remarks)html+=dRow('Remarks',data.remarks);
+  }else if(table==='designations'){
+    html+=dRow('Name',data.name);
+    if(data.description)html+=dRow('Description',data.description);
+    if(data.level)html+=dRow('Level',data.level);
+  }else{
+    for(const k in data){
+      if(data[k]&&typeof data[k]==='string')html+=dRow(k.replace(/([A-Z])/g,' $1').replace(/^./,s=>s.toUpperCase()),data[k]);
+    }
+  }
+  return html||'<p style="font-size:12px;color:#6c757d">No details</p>';
+}
+
+function dRow(label,value){
+  if(!value)return '';
+  return '<div class="detail-row"><span class="dlabel">'+escHtml(label)+'</span><span class="dvalue">'+escHtml(value)+'</span></div>';
+}
+
+function renderPendingCards(list){
+  const c=document.getElementById('pendingList');
+  if(!list||list.length===0){
+    c.innerHTML='<div class="empty-state"><i class="fas fa-check-double"></i><h3>Koi pending approval nahi</h3><p>Sab approvals process ho gaye hain.</p></div>';
+    return;
+  }
+  let html='';
+  list.forEach((a,i)=>{
+    const reqNum=autoRequestNumber(a._reqIdx||i+1);
+    const nd=parseDetail(getApprovalData(a),getApprovalTable(a));
+    html+='<div class="approval-card fade-in">';
+    html+='<div class="approval-top">';
+    html+='<span class="approval-req">'+escHtml(reqNum)+'</span>';
+    html+='<div class="approval-date">'+formatDate(a.createdAt)+'</div>';
+    html+='</div>';
+    html+='<div class="approval-badges">'+getActionBadge(getApprovalAction(a))+getTableBadge(getApprovalTable(a))+'</div>';
+    html+='<div class="submitted-by"><i class="fas fa-user"></i> Submitted by: <strong>'+escHtml(a.requestedByName||'Unknown')+'</strong></div>';
+    html+='<div class="detail-box"><h4><i class="fas fa-info-circle"></i> Request Details</h4>'+nd+'</div>';
+    html+='<div class="action-buttons">';
+    html+='<button class="btn-approve" onclick="doApprove(\''+a.id+'\')"><i class="fas fa-check"></i> Approve</button>';
+    html+='<button class="btn-reject" onclick="openRejectModal(\''+a.id+'\')"><i class="fas fa-times"></i> Reject</button>';
+    html+='<button class="btn-sendback" onclick="openSendBackModal(\''+a.id+'\')"><i class="fas fa-undo"></i> Send Back</button>';
+    html+='<button class="btn-hold" onclick="doHold(\''+a.id+'\')"><i class="fas fa-pause"></i> Hold</button>';
+    html+='</div></div>';
+  });
+  c.innerHTML=html;
+}
+
+function filterPending(){
+  const q=(document.getElementById('pendingSearch').value||'').toLowerCase();
+  let filtered=pendingApprovals;
+  if(q){
+    filtered=filtered.filter(a=>{
+      const nd=getApprovalData(a);
+      return (a.requestedByName||'').toLowerCase().includes(q)||
+        (getApprovalTable(a)||'').toLowerCase().includes(q)||
+        (getApprovalAction(a)||'').toLowerCase().includes(q)||
+        (nd.name||'').toLowerCase().includes(q)||
+        (nd.masjidName||'').toLowerCase().includes(q);
+    });
+  }
+  renderPendingCards(filtered);
+}
+
+function renderProcessedList(list){
+  const c=document.getElementById('processedList');
+  if(!list||list.length===0){
+    c.innerHTML='<div class="empty-state"><i class="fas fa-history"></i><h3>Koi processed approval nahi</h3><p>Abhi tak koi request process nahi hui.</p></div>';
+    return;
+  }
+  let html='';
+  list.forEach((a,i)=>{
+    const reqNum=autoRequestNumber(a._reqIdx||i+1);
+    let remarksHtml='';
+    if(a.remarks&&(a.status==='rejected'||a.status==='sent_back')){
+      remarksHtml='<div class="remarks-box"><i class="fas fa-comment-dots"></i> '+escHtml(a.remarks)+'</div>';
+    }
+    html+='<div class="approval-card fade-in">';
+    html+='<div class="approval-top">';
+    html+='<span class="approval-req">'+escHtml(reqNum)+'</span>';
+    html+=getStatusBadge(a.status);
+    html+='</div>';
+    html+='<div class="approval-badges">'+getActionBadge(getApprovalAction(a))+getTableBadge(getApprovalTable(a))+'</div>';
+    html+='<div class="submitted-by"><i class="fas fa-user"></i> Submitted by: <strong>'+escHtml(a.requestedByName||'Unknown')+'</strong></div>';
+    html+='<div class="processed-info"><i class="fas fa-user-check"></i> Processed by: <strong>'+escHtml(a.approvedByName||'Unknown')+'</strong> on '+formatDate(a.approvedAt)+'</div>';
+    html+=remarksHtml;
+    html+='</div>';
+  });
+  c.innerHTML=html;
+}
+
+function filterProcessed(){
+  const q=(document.getElementById('processedSearch').value||'').toLowerCase();
+  let filtered=processedApprovals;
+  if(currentProcessedFilter!=='all'){
+    filtered=filtered.filter(a=>a.status===currentProcessedFilter);
+  }
+  if(q){
+    filtered=filtered.filter(a=>{
+      const nd=getApprovalData(a);
+      return (a.requestedByName||'').toLowerCase().includes(q)||
+        (a.approvedByName||'').toLowerCase().includes(q)||
+        (getApprovalTable(a)||'').toLowerCase().includes(q)||
+        (getApprovalAction(a)||'').toLowerCase().includes(q)||
+        (nd.name||'').toLowerCase().includes(q);
+    });
+  }
+  renderProcessedList(filtered);
+}
+
+function setProcessedFilter(f,btn){
+  currentProcessedFilter=f;
+  document.querySelectorAll('#processedFilters button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  filterProcessed();
+}
+
+function renderMyRequests(){
+  const c=document.getElementById('myRequestsList');
+  if(!myRequests||myRequests.length===0){
+    c.innerHTML='<div class="empty-state"><i class="fas fa-paper-plane"></i><h3>Koi request nahi</h3><p>Aapne abhi tak koi request nahi ki.</p></div>';
+    return;
+  }
+  let html='';
+  myRequests.forEach((a,i)=>{
+    const reqNum=autoRequestNumber(a._reqIdx||i+1);
+    let timelineHtml='<div class="timeline">';
+    timelineHtml+='<div class="timeline-item"><span class="tl-status">Submitted</span><br><span class="tl-date">by '+escHtml(a.requestedByName||'You')+' - '+formatDate(a.createdAt)+'</span></div>';
+    if(a.status!=='pending'){
+      timelineHtml+='<div class="timeline-item"><span class="tl-status">'+escHtml(a.status.charAt(0).toUpperCase()+a.status.slice(1).replace('_',' '))+'</span><br><span class="tl-date">by '+escHtml(a.approvedByName||'')+' - '+formatDate(a.approvedAt)+'</span></div>';
+    }
+    timelineHtml+='</div>';
+    let remarksHtml='';
+    if(a.remarks&&(a.status==='rejected'||a.status==='sent_back')){
+      remarksHtml='<div class="remarks-box"><i class="fas fa-comment-dots"></i> '+escHtml(a.remarks)+'</div>';
+    }
+    html+='<div class="approval-card fade-in">';
+    html+='<div class="approval-top">';
+    html+='<span class="approval-req">'+escHtml(reqNum)+'</span>';
+    html+=getStatusBadge(a.status);
+    html+='</div>';
+    html+='<div class="approval-badges">'+getActionBadge(getApprovalAction(a))+getTableBadge(getApprovalTable(a))+'</div>';
+    html+='<div class="detail-box"><h4><i class="fas fa-info-circle"></i> What was requested</h4>'+parseDetail(getApprovalData(a),getApprovalTable(a))+'</div>';
+    html+=timelineHtml;
+    html+=remarksHtml;
+    html+='</div>';
+  });
+  c.innerHTML=html;
+}
+
+async function doApprove(id){
+  try{
+    const snap=await db.collection('approvals').doc(id).get();
+    if(!snap.exists){showToast('Approval not found','error');return;}
+    const a=snap.data();
+    const table=getApprovalTable(a);
+    const action=getApprovalAction(a);
+    const nd=getApprovalData(a);
+    const docId=a.docId;
+
+    if(action==='create'){
+      const saveData={...nd,createdAt:firebase.firestore.FieldValue.serverTimestamp(),status:nd.status||'active'};
+      await db.collection(table).add(saveData);
+    }else if(action==='update'){
+      if(docId){
+        await db.collection(table).doc(docId).update(nd);
+      }
+    }else if(action==='delete'){
+      if(docId){
+        await db.collection(table).doc(docId).update({status:'deleted'});
+      }
+    }
+
+    await db.collection('approvals').doc(id).update({
+      status:'approved',
+      approvedBy:currentUser.id||currentUser.uid,
+      approvedByName:currentUser.name||'Unknown',
+      approvedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    showToast('Request approved successfully!','success');
+    await loadAllApprovals();
+  }catch(e){
+    console.error('Approve error:',e);
+    showToast('Error approving: '+e.message,'error');
+  }
+}
+
+function openRejectModal(id){
+  currentActionId=id;
+  document.getElementById('rejectReason').value='';
+  document.getElementById('rejectModal').classList.add('show');
+}
+
+function closeRejectModal(){
+  document.getElementById('rejectModal').classList.remove('show');
+  currentActionId=null;
+}
+
+async function confirmReject(){
+  if(!currentActionId)return;
+  const reason=document.getElementById('rejectReason').value.trim();
+  if(!reason){showToast('Rejection reason is required','error');return;}
+  try{
+    await db.collection('approvals').doc(currentActionId).update({
+      status:'rejected',
+      approvedBy:currentUser.id||currentUser.uid,
+      approvedByName:currentUser.name||'Unknown',
+      remarks:reason,
+      approvedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('Request rejected.','success');
+    closeRejectModal();
+    await loadAllApprovals();
+  }catch(e){
+    console.error('Reject error:',e);
+    showToast('Error: '+e.message,'error');
+  }
+}
+
+function openSendBackModal(id){
+  currentActionId=id;
+  document.getElementById('sendBackReason').value='';
+  document.getElementById('sendBackTo').value='previous';
+  document.getElementById('sendBackModal').classList.add('show');
+}
+
+function closeSendBackModal(){
+  document.getElementById('sendBackModal').classList.remove('show');
+  currentActionId=null;
+}
+
+async function confirmSendBack(){
+  if(!currentActionId)return;
+  const reason=document.getElementById('sendBackReason').value.trim();
+  if(!reason){showToast('Reason is required','error');return;}
+  try{
+    await db.collection('approvals').doc(currentActionId).update({
+      status:'sent_back',
+      approvedBy:currentUser.id||currentUser.uid,
+      approvedByName:currentUser.name||'Unknown',
+      remarks:reason,
+      sendBackTo:document.getElementById('sendBackTo').value,
+      approvedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('Request sent back.','success');
+    closeSendBackModal();
+    await loadAllApprovals();
+  }catch(e){
+    console.error('Send back error:',e);
+    showToast('Error: '+e.message,'error');
+  }
+}
+
+async function doHold(id){
+  try{
+    await db.collection('approvals').doc(id).update({
+      status:'hold',
+      approvedBy:currentUser.id||currentUser.uid,
+      approvedByName:currentUser.name||'Unknown',
+      approvedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('Request put on hold.','success');
+    await loadAllApprovals();
+  }catch(e){
+    console.error('Hold error:',e);
+    showToast('Error: '+e.message,'error');
+  }
+}
+
+async function loadAllApprovals(){
+  try{
+    let pendingSnap, processedSnap, mySnap;
+    const pendingIds=[];
+    const processedIds=[];
+
+    if(userRole==='division_head'){
+      pendingSnap=await db.collection('approvals')
+        .where('levelId','==',currentUser.levelId)
+        .get();
+      const allPending=[];
+      pendingSnap.forEach(d=>{
+        const dd=d.data();
+        if(dd.status==='pending')allPending.push({id:d.id,...dd});
+      });
+      allPending.sort((a,b)=>{
+        const ta=a.createdAt&&a.createdAt.seconds?a.createdAt.seconds:0;
+        const tb=b.createdAt&&b.createdAt.seconds?b.createdAt.seconds:0;
+        return tb-ta;
+      });
+
+      const allProcessed=[];
+      pendingSnap.forEach(d=>{
+        const dd=d.data();
+        if(dd.status&&dd.status!=='pending')allProcessed.push({id:d.id,...dd});
+      });
+
+      mySnap=await db.collection('approvals')
+        .where('requestedBy','==',currentUser.id||currentUser.uid||'')
+        .get();
+    }else if(userRole==='district_head'){
+      const [ps1,ps2]=await Promise.all([
+        db.collection('approvals')
+          .where('levelId','==',currentUser.levelId)
+          .get(),
+        db.collection('approvals')
+          .where('requestedBy','==',currentUser.id||currentUser.uid||'')
+          .get()
+      ]);
+      const seenIds=new Set();
+      const mergedPending=[];
+      ps1.forEach(d=>{const dd=d.data();if(dd.status==='pending'&&!seenIds.has(d.id)){seenIds.add(d.id);mergedPending.push({id:d.id,...dd})}});
+      ps2.forEach(d=>{const dd=d.data();if(dd.status==='pending'&&!seenIds.has(d.id)){seenIds.add(d.id);mergedPending.push({id:d.id,...dd})}});
+      mergedPending.sort((a,b)=>{
+        const ta=a.createdAt&&a.createdAt.seconds?a.createdAt.seconds:0;
+        const tb=b.createdAt&&b.createdAt.seconds?b.createdAt.seconds:0;
+        return tb-ta;
+      });
+
+      const seenP=new Set();
+      const mergedProcessed=[];
+      ps1.forEach(d=>{const dd=d.data();if(dd.status&&dd.status!=='pending'&&!seenP.has(d.id)){seenP.add(d.id);mergedProcessed.push({id:d.id,...dd})}});
+      ps2.forEach(d=>{const dd=d.data();if(dd.status&&dd.status!=='pending'&&!seenP.has(d.id)){seenP.add(d.id);mergedProcessed.push({id:d.id,...dd})}});
+
+      pendingApprovals=mergedPending;
+      processedApprovals=mergedProcessed;
+      mySnap=await db.collection('approvals')
+        .where('requestedBy','==',currentUser.id||currentUser.uid||'')
+        .get();
+    }else{
+      mySnap=await db.collection('approvals')
+        .where('requestedBy','==',currentUser.id||currentUser.uid||'')
+        .get();
+      pendingApprovals=[];
+      processedApprovals=[];
+    }
+
+    if(userRole==='division_head'){
+      pendingApprovals=[];
+      pendingSnap.forEach(d=>pendingApprovals.push({id:d.id,...d.data()}));
+
+      processedApprovals=[];
+      processedSnap.forEach(d=>processedApprovals.push({id:d.id,...d.data()}));
+    }
+
+    myRequests=[];
+    if(mySnap){
+      mySnap.forEach(d=>myRequests.push({id:d.id,...d.data()}));
+    }
+
+    let reqIdx=1;
+    const allApprovals=[...pendingApprovals,...processedApprovals,...myRequests];
+    const idxMap={};
+    allApprovals.sort((a,b)=>{
+      const ta=a.createdAt&&a.createdAt.seconds?a.createdAt.seconds:0;
+      const tb=b.createdAt&&b.createdAt.seconds?b.createdAt.seconds:0;
+      return ta-tb;
+    });
+    allApprovals.forEach(a=>{
+      if(!idxMap[a.id])idxMap[a.id]=reqIdx++;
+    });
+    pendingApprovals.forEach(a=>a._reqIdx=idxMap[a.id]||0);
+    processedApprovals.forEach(a=>a._reqIdx=idxMap[a.id]||0);
+    myRequests.forEach(a=>a._reqIdx=idxMap[a.id]||0);
+
+    document.getElementById('pendingCount').textContent=pendingApprovals.length;
+
+    filterPending();
+    filterProcessed();
+    renderMyRequests();
+  }catch(e){
+    console.error('Load approvals error:',e);
+    document.getElementById('pendingList').innerHTML='<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Error Loading</h3><p>'+escHtml(e.message)+'</p></div>';
+  }
+}
+
+async function init(){
+  await checkSystemAccess('approvals');
+  currentUser=requireAuth(['division_head','district_head','area_head']);
+  if(!currentUser)return;
+  userRole=currentUser.role;
+  document.getElementById('sidebarUserName').textContent=currentUser.name||'User';
+  document.getElementById('sidebarRole').textContent=userRole.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase());
+  buildSidebar(currentUser);
+  buildBottomNav(currentUser);
+  await loadAllApprovals();
+}
+
+document.addEventListener('DOMContentLoaded',init);
+
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',function(e){
+    if(e.target===this)this.classList.remove('show');
+  });
+});
+</script>
+</body>
+</html>
