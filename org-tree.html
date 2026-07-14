@@ -1,0 +1,834 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Org Tree | Tanzeem Structure Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#1a6b3c;--dark:#0d4a25;--red:#dc3545;--orange:#ff9800;--success:#28a745;--light:#f5f7fa;--dark-text:#1a1a2e;--gray:#6c757d;--border:#e9ecef;--white:#fff;--radius:14px;--sidebar-width:260px}
+body{font-family:'Inter',sans-serif;background:var(--light);color:var(--dark-text);max-width:500px;margin:0 auto;min-height:100vh;overflow-x:hidden;position:relative}
+.app-wrapper{display:flex;min-height:100vh}
+
+.topbar{position:sticky;top:0;z-index:50;background:var(--white);padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.hamburger{width:36px;height:36px;border:none;background:none;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:10px}
+.hamburger:hover{background:var(--light)}
+.topbar h1{font-size:16px;font-weight:700;color:var(--dark-text);flex:1}
+.main-content{flex:1;padding-bottom:70px}
+.filter-section{padding:12px 16px;background:var(--white);border-bottom:1px solid var(--border)}
+.search-box{position:relative;margin-bottom:10px}
+.search-box input{width:100%;padding:10px 12px 10px 36px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:inherit;background:var(--light);outline:none;transition:border .2s}
+.search-box input:focus{border-color:var(--primary)}
+.search-box .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--gray)}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filter-row select{padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;font-family:inherit;background:var(--white);color:var(--dark-text);outline:none;flex:1;min-width:0;cursor:pointer}
+.filter-row select:focus{border-color:var(--primary)}
+.toggle-wrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--gray);white-space:nowrap}
+.toggle-switch{position:relative;width:36px;height:20px;cursor:pointer}
+.toggle-switch input{display:none}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:20px;transition:.3s}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:var(--white);top:2px;left:2px;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle-switch input:checked+.toggle-slider{background:var(--primary)}
+.toggle-switch input:checked+.toggle-slider::before{transform:translateX(16px)}
+.action-btns{display:flex;gap:6px;margin-top:8px}
+.action-btns button{padding:6px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:11px;font-family:inherit;font-weight:500;cursor:pointer;background:var(--white);color:var(--dark-text);transition:all .2s;white-space:nowrap}
+.action-btns button:hover{background:var(--light);border-color:var(--primary);color:var(--primary)}
+.tree-container{padding:12px 16px}
+.tree-stats{display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px}
+.stat-card{min-width:100px;padding:10px 14px;background:var(--white);border-radius:var(--radius);border:1px solid var(--border);text-align:center;flex-shrink:0}
+.stat-card .val{font-size:20px;font-weight:700;color:var(--primary)}
+.stat-card .lbl{font-size:10px;color:var(--gray);margin-top:2px}
+.tree-node{margin-bottom:8px}
+.tree-node-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;transition:all .2s}
+.tree-node-card:active{transform:scale(.99)}
+.tree-node-header{padding:12px 14px;cursor:pointer;display:flex;align-items:flex-start;gap:10px;user-select:none}
+.tree-node-header:hover{background:rgba(26,107,60,.02)}
+.expand-icon{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;transition:transform .3s ease;flex-shrink:0;margin-top:2px;color:var(--gray);background:var(--light)}
+.tree-node.expanded .expand-icon{transform:rotate(90deg)}
+.tree-node-header .node-icon{font-size:20px;flex-shrink:0;line-height:1}
+.node-info{flex:1;min-width:0}
+.node-info .node-title{font-size:13px;font-weight:600;color:var(--dark-text);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.node-info .node-title .badge{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:600;text-transform:uppercase}
+.badge-level{background:rgba(26,107,60,.1);color:var(--primary)}
+.badge-vacant{background:rgba(220,53,69,.1);color:var(--red)}
+.node-info .node-head{font-size:11px;color:var(--gray);margin-top:3px;display:flex;align-items:center;gap:4px}
+.node-info .node-head a{color:var(--primary);text-decoration:none}
+.node-info .node-phone{font-size:11px;color:var(--gray)}
+.node-stats{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.node-stats .ns{font-size:10px;padding:3px 8px;border-radius:8px;background:var(--light);color:var(--gray);font-weight:500;white-space:nowrap}
+.node-stats .ns .n{font-weight:700;color:var(--dark-text)}
+.vacant-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:3px 8px;border-radius:8px;background:rgba(220,53,69,.08);color:var(--red);font-weight:600;margin-top:6px}
+.tree-children{max-height:0;overflow:hidden;transition:max-height .4s ease;padding:0 14px}
+.tree-node.expanded>.tree-node-card>.tree-children{max-height:5000px}
+.tree-children-inner{padding:0 0 8px 12px;border-left:2px solid var(--border);margin-left:8px}
+.tree-children-inner .tree-node-card{border-color:transparent;background:rgba(245,247,250,.6)}
+.tree-children-inner .tree-children-inner{border-color:rgba(26,107,60,.15)}
+.level-district>.tree-node-card{border-left:3px solid var(--primary)}
+.level-area>.tree-node-card{border-left:3px solid var(--orange)}
+.level-zh>.tree-node-card{border-left:3px solid var(--gray)}
+.zh-item{padding:10px 12px;display:flex;align-items:flex-start;gap:8px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .2s}
+.zh-item:last-child{border-bottom:none}
+.zh-item:active{background:var(--light)}
+.zh-item .zh-icon{font-size:18px;margin-top:1px}
+.zh-item .zh-info{flex:1}
+.zh-item .zh-name{font-size:12px;font-weight:600;color:var(--dark-text)}
+.zh-item .zh-detail{font-size:10px;color:var(--gray);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
+.zh-item .zh-detail span{display:flex;align-items:center;gap:3px}
+.detail-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.detail-overlay.show{display:flex}
+.detail-panel{background:var(--white);border-radius:var(--radius) var(--radius) 0 0;width:100%;max-width:500px;max-height:75vh;overflow-y:auto;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.detail-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;position:sticky;top:0;background:var(--white);z-index:1}
+.detail-header h3{flex:1;font-size:15px;font-weight:700}
+.detail-close{width:32px;height:32px;border:none;background:var(--light);border-radius:10px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.detail-close:hover{background:var(--border)}
+.detail-body{padding:16px}
+.detail-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.detail-info-item{padding:10px;background:var(--light);border-radius:10px}
+.detail-info-item .di-label{font-size:10px;color:var(--gray);margin-bottom:3px}
+.detail-info-item .di-value{font-size:13px;font-weight:600;color:var(--dark-text);word-break:break-word}
+.detail-info-item.full{grid-column:1/-1}
+.detail-persons-title{font-size:13px;font-weight:700;margin-bottom:10px;color:var(--dark-text);display:flex;align-items:center;gap:6px}
+.person-card{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--light);border-radius:10px;margin-bottom:6px}
+.person-card .p-avatar{width:34px;height:34px;border-radius:50%;background:var(--primary);color:var(--white);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.person-card .p-info{flex:1}
+.person-card .p-name{font-size:12px;font-weight:600}
+.person-card .p-role{font-size:10px;color:var(--gray)}
+.person-card .p-phone{font-size:11px;color:var(--primary);font-weight:500}
+.empty-state{text-align:center;padding:30px 20px;color:var(--gray)}
+.empty-state .empty-icon{font-size:40px;margin-bottom:10px;opacity:.5}
+.empty-state p{font-size:13px}
+.loading{text-align:center;padding:40px 20px}
+.loading-spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{font-size:12px;color:var(--gray)}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--border);display:flex;z-index:50;max-width:500px;margin:0 auto}
+.bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px;text-decoration:none;color:var(--gray);font-size:9px;gap:3px;transition:color .2s}
+.bottom-nav a .bn-icon{font-size:18px}
+.bottom-nav a.active{color:var(--primary)}
+.bottom-nav a.active .bn-icon{color:var(--primary);font-weight:700}
+.more-btn{position:relative}
+.mobile-header-name{display:none}
+@media(min-width:501px){
+body{max-width:500px;box-shadow:0 0 30px rgba(0,0,0,.08)}
+
+}
+@media(max-width:500px){
+.mobile-header-name{display:block}
+.bottom-nav{display:flex}
+}
+
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200}
+.sidebar-overlay.active{display:block}
+.sidebar{position:fixed;top:0;left:-280px;width:280px;height:100%;background:var(--white);z-index:300;transition:left 0.3s ease;overflow-y:auto;border-radius:0 var(--radius) var(--radius) 0;box-shadow:2px 0 10px rgba(0,0,0,0.1)}
+.sidebar.open{left:0}
+.sidebar-header{background:var(--primary);color:var(--white);padding:20px 16px;border-radius:0 var(--radius) 0 0}
+.sidebar-header h2{font-size:16px;margin-bottom:4px}
+.sidebar-header p{font-size:12px;opacity:0.8}
+.sidebar-header .role-badge{display:inline-block;background:rgba(255,255,255,0.2);padding:2px 10px;border-radius:20px;font-size:11px;margin-top:6px;text-transform:capitalize}
+.sidebar-menu{padding:10px 0}
+.sidebar-menu a{display:flex;align-items:center;gap:12px;padding:12px 20px;color:var(--dark-text);text-decoration:none;font-size:14px;transition:background 0.2s}
+.sidebar-menu a:hover,.sidebar-menu a.active{background:var(--light);color:var(--primary);font-weight:600}
+.sidebar-menu a.active{border-right:3px solid var(--primary)}
+.sidebar-menu a i{width:22px;text-align:center;font-size:16px;flex-shrink:0}
+.sidebar-menu .logout-btn{color:var(--red);border-top:1px solid var(--border);margin-top:6px}
+</style>
+</head>
+<body>
+<div class="app-wrapper">
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2 id="sidebarName">User</h2>
+    <p id="sidebarPhone">-</p>
+    <span class="role-badge" id="sidebarRole">-</span>
+  </div>
+  <div class="sidebar-menu" id="sidebarMenu"></div>
+  <div style="padding:16px;font-size:10px;color:rgba(255,255,255,.4);text-align:center;border-top:1px solid rgba(255,255,255,.1);margin-top:auto">Developed by<br><b style="color:rgba(255,255,255,.6)">A.A.Q. Solutions & Outsourcing</b></div>
+</div>
+
+<header class="topbar">
+<button class="hamburger" onclick="openSidebar()">&#9776;</button>
+<h1 class="mobile-header-name">Organization Tree</h1>
+<h1 class="desktop-title" style="display:none">Organization Tree</h1>
+</header>
+
+<main class="main-content">
+<div class="filter-section">
+<div class="search-box">
+<span class="search-icon"><i class="fas fa-search"></i></span>
+<input type="text" id="searchInput" placeholder="Search name, mobile, or code...">
+</div>
+<div class="filter-row">
+<select id="deptFilter"><option value="">All Departments</option></select>
+<label class="toggle-wrap">
+<label class="toggle-switch">
+<input type="checkbox" id="vacantToggle">
+<span class="toggle-slider"></span>
+</label>
+Vacant Only
+</label>
+</div>
+<div class="action-btns">
+<button onclick="expandAll()">Expand All</button>
+<button onclick="collapseAll()">Collapse All</button>
+</div>
+</div>
+
+<div class="tree-container" id="treeContainer">
+<div class="loading" id="loadingIndicator">
+<div class="loading-spinner"></div>
+<p>Loading organization tree...</p>
+</div>
+<div class="tree-stats" id="treeStats" style="display:none"></div>
+<div id="treeContent"></div>
+</div>
+</main>
+
+<nav class="bottom-nav" id="bottomNav"></nav>
+</div>
+
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetailIfOverlay(event)">
+<div class="detail-panel" id="detailPanel">
+<div class="detail-header">
+<h3 id="detailTitle">Detail</h3>
+<button class="detail-close" onclick="closeDetail()">&times;</button>
+</div>
+<div class="detail-body" id="detailBody"></div>
+</div>
+</div>
+
+<script>
+const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.firebasestorage.app",messagingSenderId:"438479516590",appId:"1:438479516590:web:fc0a9aaa4a0285f0dc0e3f",measurementId:"G-TJWXZSQXGH"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
+const menus={division_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Districts',icon:'fa-map',file:'districts.html'},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Departments',icon:'fa-building',file:'departments.html'},{label:'Designations',icon:'fa-id-badge',file:'designations.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Org Tree',icon:'fa-sitemap',file:'org-tree.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Dept Dashboard',icon:'fa-chart-pie',file:'dept-dashboard.html'},{label:'Access Control',icon:'fa-shield-alt',file:'access-control.html'},{label:'Maintenance',icon:'fa-wrench',file:'maintenance.html'},{label:'Announcements',icon:'fa-bullhorn',file:'announcements.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],district_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],area_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}]};const bottomNavs={division_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Announce',icon:'fa-bullhorn',file:'announcements.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],district_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],area_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}]};
+
+
+async function checkSystemAccess(moduleId){
+  try{
+    const raw=localStorage.getItem('ngoUser');
+    if(!raw)return;
+    const user=JSON.parse(raw);
+    if(user.role==='division_head')return;
+    const settingsSnap=await db.collection('settings').limit(1).get();
+    if(!settingsSnap.empty){
+      const s=settingsSnap.docs[0].data();
+      if(s.maintenanceMode){
+        document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-tools"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Under Development</h1><p style="font-size:16px;opacity:.7;line-height:1.6">'+(s.maintenanceMessage||'Software under development hai. Please wait karein.')+'</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+        throw new Error('maintenance');
+      }
+    }
+    const accessSnap=await db.collection('user_access').where('userId','==',user.id).limit(1).get();
+    if(!accessSnap.empty){
+      const a=accessSnap.docs[0].data();
+      if(a.expiresAt){
+        const exp=a.expiresAt.seconds?new Date(a.expiresAt.seconds*1000):new Date(a.expiresAt);
+        if(new Date()>exp){
+          document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-lock"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Access Expired</h1><p style="font-size:16px;opacity:.7">Aapka access khatam ho gaya hai. Admin se contact karein.</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+          throw new Error('access expired');
+        }
+      }
+      if(a.modules&&a.modules[moduleId]===false){
+        window.location.href='dashboard.html';
+        throw new Error('no access');
+      }
+    }
+  }catch(e){
+    if(e.message==='maintenance'||e.message==='access expired'){}
+  }
+}
+
+let currentUser=null;
+let userRole='';
+let userLevelId='';
+let treeData=[];
+let departmentsCache={};
+let personsCache={};
+let allAreas={};
+let allDistricts={};
+let allZH={};
+let personsByArea={};
+let personsByZH={};
+let departmentsByLevel={};
+
+function requireAuth(allowedRoles){
+const raw=localStorage.getItem('ngoUser');
+if(!raw){window.location.href='index.html';return false}
+try{
+const u=JSON.parse(raw);
+if(!allowedRoles.includes(u.role)){window.location.href='dashboard.html';return false}
+currentUser=u;userRole=u.role;userLevelId=u.levelId||'';
+return true;
+}catch(e){window.location.href='index.html';return false}
+}
+
+async function init(){
+await checkSystemAccess('org_tree');
+if(!requireAuth(['division_head','district_head','area_head']))return;
+buildSidebar(currentUser);
+buildBottomNav(currentUser);
+setupFilters();
+loadDepartments().then(()=>loadTree());
+}
+
+
+function setupFilters(){
+document.getElementById('searchInput').addEventListener('input',filterTree);
+document.getElementById('deptFilter').addEventListener('change',filterTree);
+document.getElementById('vacantToggle').addEventListener('change',filterTree);
+}
+
+async function loadDepartments(){
+try{
+const snap=await db.collection('departments').get();
+snap.forEach(doc=>{
+const d=doc.id;
+const dept={id:doc.id,...doc.data()};
+if(!departmentsByLevel[dept.level])departmentsByLevel[dept.level]=[];
+departmentsByLevel[dept.level].push(dept);
+departmentsCache[doc.id]=dept;
+});
+populateDeptFilter();
+}catch(e){console.error('Error loading departments:',e)}
+}
+
+function populateDeptFilter(){
+const sel=document.getElementById('deptFilter');
+let html='<option value="">All Departments</option>';
+Object.keys(departmentsByLevel).forEach(level=>{
+const depts=departmentsByLevel[level];
+const label=level.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+html+=`<optgroup label="${label}">`;
+depts.forEach(dept=>{
+html+=`<option value="${dept.id}">${dept.name||dept.id}</option>`;
+});
+html+=`</optgroup>`;
+});
+});
+sel.innerHTML=html;
+}
+
+async function loadTree(){
+document.getElementById('loadingIndicator').style.display='block';
+document.getElementById('treeContent').innerHTML='';
+document.getElementById('treeStats').style.display='none';
+
+try{
+if(userRole==='division_head'){
+await loadDivisionTree();
+}else if(userRole==='district_head'){
+await loadDistrictTree();
+}else{
+await loadAreaTree();
+}
+renderTree();
+renderStats();
+}catch(e){
+console.error('Error loading tree:',e);
+document.getElementById('treeContent').innerHTML='<div class="empty-state"><div class="empty-icon">&#9888;</div><p>Error loading data. Please try again.</p></div>';
+}
+document.getElementById('loadingIndicator').style.display='none';
+}
+
+async function loadDivisionTree(){
+const divSnap=await db.collection('districts').where('divisionId','==',userLevelId).get();
+const districts=[];
+for(const doc of divSnap.docs){
+const dist={id:doc.id,...doc.data(),areas:[],type:'district'};
+allDistricts[doc.id]=dist;
+districts.push(dist);
+
+const areaSnap=await db.collection('areas').where('districtId','==',doc.id).get();
+for(const aDoc of areaSnap.docs){
+const area={id:aDoc.id,...aDoc.data(),zhs:[],persons:[],type:'area'};
+dist.areas.push(area);
+allAreas[aDoc.id]=area;
+
+const zhSnap=await db.collection('zeli_halqas').where('areaId','==',aDoc.id).get();
+for(const zhDoc of zhSnap.docs){
+const zh={id:zhDoc.id,...zhDoc.data(),type:'zh'};
+area.zhs.push(zh);
+allZH[zhDoc.id]=zh;
+
+loadPersonsForZH(zh);
+}
+
+loadPersonsForArea(area);
+}
+}
+treeData=districts;
+}
+
+async function loadDistrictTree(){
+const areaSnap=await db.collection('areas').where('districtId','==',userLevelId).get();
+const areas=[];
+for(const doc of areaSnap.docs){
+const area={id:doc.id,...doc.data(),zhs:[],persons:[],type:'area'};
+allAreas[doc.id]=area;
+areas.push(area);
+
+const zhSnap=await db.collection('zeli_halqas').where('areaId','==',doc.id).get();
+for(const zhDoc of zhSnap.docs){
+const zh={id:zhDoc.id,...zhDoc.data(),type:'zh'};
+area.zhs.push(zh);
+allZH[zhDoc.id]=zh;
+loadPersonsForZH(zh);
+}
+loadPersonsForArea(area);
+}
+treeData=areas;
+}
+
+async function loadAreaTree(){
+const zhSnap=await db.collection('zeli_halqas').where('areaId','==',userLevelId).get();
+const zhs=[];
+for(const doc of zhSnap.docs){
+const zh={id:doc.id,...doc.data(),type:'zh'};
+zhs.push(zh);
+allZH[doc.id]=zh;
+loadPersonsForZH(zh);
+}
+treeData=zhs;
+}
+
+function loadPersonsForArea(area){
+return db.collection('persons').where('areaId','==',area.id).get().then(snap=>{
+area.persons=[];
+snap.forEach(doc=>{area.persons.push({id:doc.id,...doc.data()})});
+personsByArea[area.id]=area.persons;
+}).catch(()=>{area.persons=[];personsByArea[area.id]=[]});
+}
+
+function loadPersonsForZH(zh){
+return db.collection('persons').where('zeliHalqaId','==',zh.id).get().then(snap=>{
+zh.persons=[];
+snap.forEach(doc=>{zh.persons.push({id:doc.id,...doc.data()})});
+personsByZH[zh.id]=zh.persons;
+}).catch(()=>{zh.persons=[];personsByZH[zh.id]=[]});
+}
+
+function getNodeName(node){
+return node.name||node.title||'Unnamed';
+}
+
+function getNodeHead(node){
+if(node.headId&&node.headName)return{...{name:node.headName},phone:node.headPhone||node.phone||''};
+if(node.headId){
+const person=node.persons?node.persons.find(p=>p.id===node.headId):null;
+if(person)return{...person};
+return{name:'Assigned',phone:node.headPhone||''};
+}
+return null;
+}
+
+function renderTree(){
+const container=document.getElementById('treeContent');
+const searchVal=document.getElementById('searchInput').value.toLowerCase();
+const deptVal=document.getElementById('deptFilter').value;
+const vacantOnly=document.getElementById('vacantToggle').checked;
+
+if(treeData.length===0){
+container.innerHTML='<div class="empty-state"><div class="empty-icon"><i class="fas fa-thumbtack"></i></div><p>No data found for your level.</p></div>';
+return;
+}
+
+let html='';
+treeData.forEach(node=>{
+html+=renderNode(node,searchVal,deptVal,vacantOnly,0);
+});
+container.innerHTML=html||'<div class="empty-state"><div class="empty-icon"><i class="fas fa-search"></i></div><p>No matching results.</p></div>';
+}
+
+function renderNode(node,search,dept,vacantOnly,depth){
+const name=getNodeName(node);
+const head=getNodeHead(node);
+const hasHead=head&&head.name&&head.name!=='Assigned';
+const isVacant=!hasHead;
+const nodeType=node.type||'district';
+const levelClass='level-'+nodeType;
+
+let childrenHtml='';
+let childCount={areas:0,zh:0,persons:node.persons?node.persons.length:0};
+
+if(node.areas){
+childCount.areas=node.areas.length;
+node.areas.forEach(area=>{
+childCount.zh+=area.zhs?area.zhs.length:0;
+childCount.persons+=area.persons?area.persons.length:0;
+});
+}
+if(node.zhs){
+childCount.zh=node.zhs.length;
+}
+
+const vacantCount=isVacant?1:0;
+
+const matchesSearch=!search||name.toLowerCase().includes(search)||(head&&head.name&&head.name.toLowerCase().includes(search))||(head&&head.phone&&head.phone.includes(search))||(node.code&&node.code.toLowerCase().includes(search));
+const matchesVacant=!vacantOnly||isVacant;
+
+let nodeChildrenMatch=true;
+if(node.areas){
+nodeChildrenMatch=node.areas.some(area=>{
+const aName=getNodeName(area);
+const aHead=getNodeHead(area);
+const aVacant=!(aHead&&aHead.name&&aHead.name!=='Assigned');
+const aMatchSearch=!search||aName.toLowerCase().includes(search)||(aHead&&aHead.name&&aHead.name.toLowerCase().includes(search))||(aHead&&aHead.phone&&aHead.phone.includes(search));
+const aMatchVacant=!vacantOnly||aVacant;
+if(!aMatchVacant&&vacantOnly)return false;
+return aMatchSearch;
+});
+}
+if(node.zhs){
+nodeChildrenMatch=node.zhs.some(zh=>{
+const zName=getNodeName(zh);
+const zHead=getNodeHead(zh);
+const zVacant=!(zHead&&zHead.name&&zHead.name!=='Assigned');
+const zMatchSearch=!search||zName.toLowerCase().includes(search)||(zHead&&zHead.name&&zHead.name.toLowerCase().includes(search));
+const zMatchVacant=!vacantOnly||zVacant;
+return zMatchSearch&&zMatchVacant;
+});
+}
+
+const showNode=(matchesSearch&&matchesVacant&&(nodeChildrenMatch||(!search&&!vacantOnly)))||(!search&&!vacantOnly);
+if(!showNode)return'';
+
+let levelBadge='';
+if(nodeType==='district')levelBadge='<span class="badge badge-level">District</span>';
+else if(nodeType==='area')levelBadge='<span class="badge badge-level">Area</span>';
+
+const vacantBadge=isVacant?'<div class="vacant-badge"><span><i class="fas fa-circle" style="color:red"></i></span> Vacant Position</div>':'';
+
+const headLine=head?`<div class="node-head"><span><i class="fas fa-user"></i></span> ${hasHead?head.name:'<span style="color:var(--red)">Vacant</span>'}</div>`:'<div class="node-head" style="color:var(--red)"><span><i class="fas fa-user"></i></span> Vacant</div>';
+const phoneLine=head&&head.phone?`<div class="node-phone"><span><i class="fas fa-phone"></i></span> ${head.phone}</div>`:'';
+
+let statsHtml='';
+if(nodeType==='district'){
+statsHtml=`<div class="node-stats"><span class="ns"><span class="n">${childCount.areas}</span> Areas</span><span class="ns"><span class="n">${childCount.zh}</span> ZH</span><span class="ns"><span class="n">${childCount.persons}</span> Persons</span></div>`;
+}else if(nodeType==='area'){
+statsHtml=`<div class="node-stats"><span class="ns"><span class="n">${childCount.zh}</span> ZH</span><span class="ns"><span class="n">${childCount.persons}</span> Persons</span></div>`;
+}
+
+const hasChildren=(node.areas&&node.areas.length>0)||(node.zhs&&node.zhs.length>0);
+
+let childrenContainer='';
+if(node.areas){
+childrenContainer+='<div class="tree-children"><div class="tree-children-inner">';
+node.areas.forEach(area=>{
+childrenContainer+=renderNode(area,search,dept,vacantOnly,depth+1);
+});
+childrenContainer+='</div></div>';
+}
+if(node.zhs){
+childrenContainer+='<div class="tree-children"><div class="tree-children-inner">';
+node.zhs.forEach(zh=>{
+childrenContainer+=renderZH(zh,search,dept,vacantOnly);
+});
+childrenContainer+='</div></div>';
+}
+
+const icon=nodeType==='district'?'<i class="fas fa-building"></i>':nodeType==='area'?'<i class="fas fa-map-marker-alt"></i>':'<i class="fas fa-mosque"></i>';
+
+return `
+<div class="tree-node ${levelClass}" data-id="${node.id}" data-type="${nodeType}">
+<div class="tree-node-card">
+<div class="tree-node-header" onclick="${hasChildren?`toggleNode(this)`:``};showDetail('${nodeType}','${node.id}')">
+${hasChildren?'<div class="expand-icon">&#9654;</div>':'<div style="width:20px"></div>'}
+<div class="node-icon">${icon}</div>
+<div class="node-info">
+<div class="node-title">${name} ${levelBadge}</div>
+${headLine}
+${phoneLine}
+${statsHtml}
+${vacantBadge}
+</div>
+</div>
+${childrenContainer}
+</div>
+</div>`;
+}
+
+function renderZH(zh,search,dept,vacantOnly){
+const name=getNodeName(zh);
+const head=getNodeHead(zh);
+const hasHead=head&&head.name&&head.name!=='Assigned';
+const isVacant=!hasHead;
+const persons=zh.persons||[];
+const imam=persons.find(p=>(p.designation||'').toLowerCase().includes('imam')||(p.role||'').toLowerCase().includes('imam'));
+
+const matchesSearch=!search||name.toLowerCase().includes(search)||(head&&head.name&&head.name.toLowerCase().includes(search))||(head&&head.phone&&head.phone.includes(search));
+const matchesVacant=!vacantOnly||isVacant;
+if(!matchesSearch||!matchesVacant)return'';
+
+const headLine=hasHead?`<span><i class="fas fa-user"></i> Halqa Head: ${head.name}</span>`:`<span style="color:var(--red)"><i class="fas fa-user"></i> Halqa Head: Vacant</span>`;
+const phoneLine=head&&head.phone?`<span><i class="fas fa-phone"></i> ${head.phone}</span>`:'';
+const imamLine=imam?`<span><i class="fas fa-mosque"></i> Imam: ${imam.name||'-'}</span>${imam.phone?` <span><i class="fas fa-phone"></i> ${imam.phone}</span>`:''}`:'';
+
+return `
+<div class="tree-node level-zh" data-id="${zh.id}" data-type="zh">
+<div class="zh-item" onclick="showDetail('zh','${zh.id}')">
+<div class="zh-icon"><i class="fas fa-mosque"></i></div>
+<div class="zh-info">
+<div class="zh-name">${name}</div>
+<div class="zh-detail">
+${headLine}
+${phoneLine}
+</div>
+${imamLine?'<div class="zh-detail" style="margin-top:2px">'+imamLine+'</div>':''}
+</div>
+</div>
+</div>`;
+}
+
+function toggleNode(header){
+const node=header.closest('.tree-node');
+node.classList.toggle('expanded');
+}
+
+function expandAll(){
+document.querySelectorAll('.tree-node').forEach(n=>n.classList.add('expanded'));
+}
+
+function collapseAll(){
+document.querySelectorAll('.tree-node').forEach(n=>n.classList.remove('expanded'));
+}
+
+function filterTree(){
+renderTree();
+}
+
+function renderStats(){
+const stats=document.getElementById('treeStats');
+let totalDistricts=0,totalAreas=0,totalZH=0,totalPersons=0,vacantCount=0;
+
+if(userRole==='division_head'){
+totalDistricts=treeData.length;
+treeData.forEach(d=>{
+totalAreas+=(d.areas||[]).length;
+(d.areas||[]).forEach(a=>{
+totalZH+=(a.zhs||[]).length;
+totalPersons+=(a.persons||[]).length;
+if(!d.headId||!d.headName)vacantCount++;
+if(!a.headId||!a.headName)vacantCount++;
+(a.zhs||[]).forEach(z=>{if(!z.headId||!z.headName)vacantCount++});
+});
+});
+}else if(userRole==='district_head'){
+totalAreas=treeData.length;
+treeData.forEach(a=>{
+totalZH+=(a.zhs||[]).length;
+totalPersons+=(a.persons||[]).length;
+if(!a.headId||!a.headName)vacantCount++;
+(a.zhs||[]).forEach(z=>{if(!z.headId||!z.headName)vacantCount++});
+});
+}else{
+totalZH=treeData.length;
+treeData.forEach(z=>{
+totalPersons+=(z.persons||[]).length;
+if(!z.headId||!z.headName)vacantCount++;
+});
+}
+
+let html='';
+if(totalDistricts)html+=`<div class="stat-card"><div class="val">${totalDistricts}</div><div class="lbl">Districts</div></div>`;
+if(totalAreas)html+=`<div class="stat-card"><div class="val">${totalAreas}</div><div class="lbl">Areas</div></div>`;
+html+=`<div class="stat-card"><div class="val">${totalZH}</div><div class="lbl">Zeli Halqas</div></div>`;
+html+=`<div class="stat-card"><div class="val">${totalPersons}</div><div class="lbl">Persons</div></div>`;
+if(vacantCount)html+=`<div class="stat-card" style="border-color:var(--red)"><div class="val" style="color:var(--red)">${vacantCount}</div><div class="lbl">Vacant</div></div>`;
+
+if(html){
+stats.innerHTML=html;
+stats.style.display='flex';
+}
+}
+
+function showDetail(type,id){
+let node=null;
+if(type==='district'){
+node=treeData.find(d=>d.id===id)||(allDistricts[id]||null);
+}else if(type==='area'){
+node=allAreas[id]||null;
+if(!node){
+treeData.forEach(d=>{
+(d.areas||[]).forEach(a=>{if(a.id===id)node=a});
+});
+}
+}else if(type==='zh'){
+node=allZH[id]||null;
+if(!node){
+treeData.forEach(d=>{
+(d.areas||[]).forEach(a=>{
+(a.zhs||[]).forEach(z=>{if(z.id===id)node=z});
+});
+});
+}
+}
+if(!node)return;
+
+const name=getNodeName(node);
+const head=getNodeHead(node);
+const hasHead=head&&head.name&&head.name!=='Assigned';
+const persons=node.persons||[];
+const typeLabel=type==='district'?'District':type==='area'?'Area':'Zeli Halqa';
+const icon=type==='district'?'<i class="fas fa-building"></i>':type==='area'?'<i class="fas fa-map-marker-alt"></i>':'<i class="fas fa-mosque"></i>';
+
+document.getElementById('detailTitle').innerHTML=`${icon} ${name}`;
+
+let infoHtml=`<div class="detail-info-grid">`;
+infoHtml+=`<div class="detail-info-item"><div class="di-label">Type</div><div class="di-value">${typeLabel}</div></div>`;
+if(node.code)infoHtml+=`<div class="detail-info-item"><div class="di-label">Code</div><div class="di-value">${node.code}</div></div>`;
+if(node.id)infoHtml+=`<div class="detail-info-item"><div class="di-label">ID</div><div class="di-value" style="font-size:10px;word-break:break-all">${node.id}</div></div>`;
+
+if(type==='district'){
+infoHtml+=`<div class="detail-info-item"><div class="di-label">Areas</div><div class="di-value">${(node.areas||[]).length}</div></div>`;
+let zhCount=0;let pCount=0;
+(node.areas||[]).forEach(a=>{zhCount+=(a.zhs||[]).length;pCount+=(a.persons||[]).length});
+infoHtml+=`<div class="detail-info-item"><div class="di-label">Zeli Halqas</div><div class="di-value">${zhCount}</div></div>`;
+infoHtml+=`<div class="detail-info-item"><div class="di-label">Persons</div><div class="di-value">${pCount}</div></div>`;
+}else if(type==='area'){
+infoHtml+=`<div class="detail-info-item"><div class="di-label">Zeli Halqas</div><div class="di-value">${(node.zhs||[]).length}</div></div>`;
+infoHtml+=`<div class="detail-info-item"><div class="di-label">Persons</div><div class="di-value">${persons.length}</div></div>`;
+}else{
+infoHtml+=`<div class="detail-info-item"><div class="di-label">Persons</div><div class="di-value">${persons.length}</div></div>`;
+}
+
+if(hasHead){
+infoHtml+=`<div class="detail-info-item full"><div class="di-label">Head</div><div class="di-value">${head.name}${head.phone?' <i class="fas fa-phone"></i> '+head.phone:''}</div></div>`;
+}else{
+infoHtml+=`<div class="detail-info-item full" style="background:rgba(220,53,69,.06)"><div class="di-label" style="color:var(--red)">Head</div><div class="di-value" style="color:var(--red)">Vacant Position</div></div>`;
+}
+infoHtml+=`</div>`;
+
+let personsHtml='';
+if(persons.length>0){
+personsHtml=`<div class="detail-persons-title"><i class="fas fa-users"></i> Persons (${persons.length})</div>`;
+persons.forEach(p=>{
+const pName=p.name||p.displayName||'Unknown';
+const pRole=p.designation||p.role||p.designationName||'Member';
+const pPhone=p.phone||p.mobile||'';
+personsHtml+=`<div class="person-card">
+<div class="p-avatar">${pName.charAt(0).toUpperCase()}</div>
+<div class="p-info">
+<div class="p-name">${pName}</div>
+<div class="p-role">${pRole}</div>
+${pPhone?`<div class="p-phone"><i class="fas fa-phone"></i> ${pPhone}</div>`:''}
+</div>
+</div>`;
+});
+}else{
+personsHtml='<div class="detail-persons-title"><i class="fas fa-users"></i> Persons</div><div class="empty-state" style="padding:16px"><p>No persons found.</p></div>';
+}
+
+if(type==='district'){
+let areasList='';
+(node.areas||[]).forEach(a=>{
+const aName=getNodeName(a);
+const aHead=getNodeHead(a);
+const aHasHead=aHead&&aHead.name&&aHead.name!=='Assigned';
+areasList+=`<div class="person-card" onclick="closeDetail();setTimeout(()=>showDetail('area','${a.id}'),350)" style="cursor:pointer">
+<div class="p-avatar" style="background:var(--orange)"><i class="fas fa-map-marker-alt"></i></div>
+<div class="p-info">
+<div class="p-name">${aName}${aHasHead?'':' <span style="color:var(--red);font-size:10px">Vacant</span>'}</div>
+<div class="p-role">${(a.zhs||[]).length} ZH | ${(a.persons||[]).length} Persons</div>
+</div>
+</div>`;
+});
+if(areasList){
+infoHtml+=`<div class="detail-persons-title" style="margin-top:12px"><i class="fas fa-building"></i> Areas (${(node.areas||[]).length})</div>${areasList}`;
+}
+}
+
+if(type==='area'){
+let zhList='';
+(node.zhs||[]).forEach(z=>{
+const zName=getNodeName(z);
+zhList+=`<div class="person-card" onclick="closeDetail();setTimeout(()=>showDetail('zh','${z.id}'),350)" style="cursor:pointer">
+<div class="p-avatar" style="background:var(--gray)"><i class="fas fa-mosque"></i></div>
+<div class="p-info">
+<div class="p-name">${zName}</div>
+<div class="p-role">${(z.persons||[]).length} Persons</div>
+</div>
+</div>`;
+});
+if(zhList){
+infoHtml+=`<div class="detail-persons-title" style="margin-top:12px"><i class="fas fa-mosque"></i> Zeli Halqas (${(node.zhs||[]).length})</div>${zhList}`;
+}
+}
+
+document.getElementById('detailBody').innerHTML=infoHtml+personsHtml;
+document.getElementById('detailOverlay').classList.add('show');
+}
+
+function closeDetail(){
+document.getElementById('detailOverlay').classList.remove('show');
+}
+
+function closeDetailIfOverlay(e){
+if(e.target===document.getElementById('detailOverlay'))closeDetail();
+}
+
+window.addEventListener('DOMContentLoaded',init);
+
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('active');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+}
+function buildSidebar(user){
+  const nameEl=document.getElementById('sidebarName');
+  const phoneEl=document.getElementById('sidebarPhone');
+  const roleEl=document.getElementById('sidebarRole');
+  const avatarEl=document.getElementById('avatarEl');
+  if(nameEl)nameEl.textContent=user.name;
+  if(phoneEl)phoneEl.textContent=user.phone||'-';
+  if(roleEl)roleEl.textContent=user.role.replace(/_/g,' ');
+  if(avatarEl)avatarEl.textContent=user.name.charAt(0).toUpperCase();
+  const menu=menus[user.role]||[];
+  const cont=document.getElementById('sidebarMenu');
+  if(!cont)return;
+  cont.innerHTML='';
+  menu.forEach(m=>{
+    const a=document.createElement('a');
+    a.href='#';
+    a.innerHTML='<i class="fas '+m.icon+'"></i> '+m.label;
+    if(m.active)a.classList.add('active');
+    a.onclick=function(e){
+      e.preventDefault();
+      closeSidebar();
+      if(m.file==='logout'){localStorage.removeItem('ngoUser');window.location.href='index.html';return}
+      if(m.file!=='dashboard.html')window.location.href=m.file;
+    };
+    if(m.icon==='fa-sign-out-alt')a.classList.add('logout-btn');
+    cont.appendChild(a);
+  });
+}
+function buildBottomNav(user){
+  const nav=document.getElementById('bottomNav');
+  if(!nav)return;
+  nav.innerHTML='';
+  const items=bottomNavs[user.role]||[];
+  items.forEach(b=>{
+    const a=document.createElement('a');
+    a.href='#';
+    a.innerHTML='<i class="fas '+b.icon+'"></i><span>'+b.label+'</span>';
+    if(b.active)a.classList.add('active');
+    a.onclick=function(e){
+      e.preventDefault();
+      if(b.file==='sidebar'){toggleSidebar();return}
+      if(b.file!=='dashboard.html')window.location.href=b.file;
+    };
+    nav.appendChild(a);
+  });
+}
+</script>
+</body>
+</html>

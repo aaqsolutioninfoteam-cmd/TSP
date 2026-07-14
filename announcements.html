@@ -1,0 +1,383 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Announcements | Tanzeem Structure Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#1a6b3c;--dark:#0d4a25;--red:#dc3545;--orange:#ff9800;--success:#28a745;--light:#f5f7fa;--dark-text:#1a1a2e;--gray:#6c757d;--border:#e9ecef;--white:#fff;--radius:14px}
+body{font-family:'Inter',sans-serif;background:var(--light);color:var(--dark-text);max-width:500px;margin:0 auto;min-height:100vh;overflow-x:hidden}
+.header{position:sticky;top:0;z-index:100;background:var(--primary);color:var(--white);padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.hamburger{background:none;border:none;color:var(--white);font-size:22px;cursor:pointer;padding:4px}
+.header-title{flex:1;font-size:17px;font-weight:700}
+.add-btn{background:rgba(255,255,255,.2);border:none;color:var(--white);width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+.content{padding:16px;padding-bottom:80px}
+
+/* Announcement Cards */
+.ann-card{background:var(--white);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid var(--border);border-left:4px solid var(--primary)}
+.ann-card.urgent{border-left-color:var(--red)}
+.ann-card.info{border-left-color:#007bff}
+.ann-card.warning{border-left-color:var(--orange)}
+.ann-header{display:flex;align-items:start;justify-content:space-between;margin-bottom:8px}
+.ann-title{font-size:15px;font-weight:700;flex:1}
+.ann-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;text-transform:uppercase}
+.ann-badge.urgent{background:rgba(220,53,69,.1);color:var(--red)}
+.ann-badge.info{background:rgba(0,123,255,.1);color:#007bff}
+.ann-badge.normal{background:rgba(40,167,69,.1);color:var(--success)}
+.ann-badge.warning{background:rgba(255,152,0,.1);color:var(--orange)}
+.ann-body{font-size:13px;color:var(--gray);line-height:1.6;margin-bottom:10px}
+.ann-footer{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--gray);border-top:1px solid var(--border);padding-top:8px}
+.ann-footer .ann-by{display:flex;align-items:center;gap:4px}
+.ann-actions{display:flex;gap:6px}
+.ann-actions button{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:11px;cursor:pointer;color:var(--gray);transition:all .2s}
+.ann-actions button:hover{border-color:var(--primary);color:var(--primary)}
+.ann-actions button.del{color:var(--red);border-color:rgba(220,53,69,.3)}
+.ann-actions button.del:hover{background:rgba(220,53,69,.1)}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:flex-end;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal{background:var(--white);border-radius:var(--radius) var(--radius) 0 0;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;padding:20px;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-header h2{font-size:18px;font-weight:700}
+.modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--gray);padding:4px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--dark-text);margin-bottom:6px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border .2s}
+.form-group textarea{resize:vertical;min-height:100px}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary)}
+.save-btn{width:100%;padding:14px;border:none;border-radius:var(--radius);background:var(--primary);color:var(--white);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
+.save-btn:active{transform:scale(.98)}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--gray)}
+.empty-state i{font-size:48px;color:var(--border);margin-bottom:12px;display:block}
+.empty-state p{font-size:13px}
+
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:var(--white);border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,.08)}
+.bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0;color:var(--gray);text-decoration:none;font-size:10px;font-weight:600;transition:color .2s}
+.bottom-nav a.active,.bottom-nav a:hover{color:var(--primary)}
+.bottom-nav a i{font-size:20px}
+
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--dark-text);color:var(--white);padding:12px 24px;border-radius:12px;font-size:13px;font-weight:500;z-index:500;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--red)}
+
+.loader{display:flex;justify-content:center;padding:30px}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200}
+.sidebar-overlay.active{display:block}
+.sidebar{position:fixed;top:0;left:-280px;width:280px;height:100%;background:var(--white);z-index:300;transition:left 0.3s ease;overflow-y:auto;border-radius:0 var(--radius) var(--radius) 0;box-shadow:2px 0 10px rgba(0,0,0,0.1)}
+.sidebar.open{left:0}
+.sidebar-header{background:var(--primary);color:var(--white);padding:20px 16px;border-radius:0 var(--radius) 0 0}
+.sidebar-header h2{font-size:16px;margin-bottom:4px}
+.sidebar-header p{font-size:12px;opacity:0.8}
+.sidebar-header .role-badge{display:inline-block;background:rgba(255,255,255,0.2);padding:2px 10px;border-radius:20px;font-size:11px;margin-top:6px;text-transform:capitalize}
+.sidebar-menu{padding:10px 0}
+.sidebar-menu a{display:flex;align-items:center;gap:12px;padding:12px 20px;color:var(--dark-text);text-decoration:none;font-size:14px;transition:background 0.2s}
+.sidebar-menu a:hover,.sidebar-menu a.active{background:var(--light);color:var(--primary);font-weight:600}
+.sidebar-menu a.active{border-right:3px solid var(--primary)}
+.sidebar-menu a i{width:22px;text-align:center;font-size:16px;flex-shrink:0}
+.sidebar-menu .logout-btn{color:var(--red);border-top:1px solid var(--border);margin-top:6px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+  <div class="header-title"><i class="fas fa-bullhorn" style="margin-right:8px"></i>Announcements</div>
+  <button class="add-btn" onclick="openModal()" id="addBtn" style="display:none"><i class="fas fa-plus"></i></button>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2 id="sidebarName">User</h2>
+    <p id="sidebarPhone">-</p>
+    <span class="role-badge" id="sidebarRole">-</span>
+  </div>
+  <div class="sidebar-menu" id="sidebarMenu"></div>
+  <div style="padding:16px;font-size:10px;color:rgba(255,255,255,.4);text-align:center;border-top:1px solid rgba(255,255,255,.1);margin-top:auto">Developed by<br><b style="color:rgba(255,255,255,.6)">A.A.Q. Solutions & Outsourcing</b></div>
+</div>
+
+<div class="modal-overlay" id="annModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>New Announcement</h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="form-group">
+      <label>Title</label>
+      <input type="text" id="annTitle" placeholder="Announcement title">
+    </div>
+    <div class="form-group">
+      <label>Message</label>
+      <textarea id="annMessage" placeholder="Write your announcement here..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Type</label>
+      <select id="annType">
+        <option value="info">Info</option>
+        <option value="normal">Normal</option>
+        <option value="warning">Warning</option>
+        <option value="urgent">Urgent</option>
+      </select>
+    </div>
+    <div id="annError" style="color:var(--red);font-size:12px;margin-bottom:10px"></div>
+    <button class="save-btn" id="annSaveBtn" onclick="saveAnnouncement()"><i class="fas fa-paper-plane"></i> Post Announcement</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="bottom-nav" id="bottomNav"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.firebasestorage.app",messagingSenderId:"438479516590",appId:"1:438479516590:web:fc0a9aaa4a0285f0dc0e3f",measurementId:"G-TJWXZSQXGH"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
+const menus={division_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Districts',icon:'fa-map',file:'districts.html'},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Departments',icon:'fa-building',file:'departments.html'},{label:'Designations',icon:'fa-id-badge',file:'designations.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Org Tree',icon:'fa-sitemap',file:'org-tree.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Dept Dashboard',icon:'fa-chart-pie',file:'dept-dashboard.html'},{label:'Access Control',icon:'fa-shield-alt',file:'access-control.html'},{label:'Maintenance',icon:'fa-wrench',file:'maintenance.html'},{label:'Announcements',icon:'fa-bullhorn',file:'announcements.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],district_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],area_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}]};const bottomNavs={division_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Announce',icon:'fa-bullhorn',file:'announcements.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],district_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],area_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}]};
+
+let currentUser=null;
+let userRole='';
+let allAnnouncements=[];
+
+async function checkSystemAccess(moduleId){
+  try{
+    const raw=localStorage.getItem('ngoUser');
+    if(!raw)return;
+    const user=JSON.parse(raw);
+    if(user.role==='division_head')return;
+    const settingsSnap=await db.collection('settings').limit(1).get();
+    if(!settingsSnap.empty){
+      const s=settingsSnap.docs[0].data();
+      if(s.maintenanceMode){
+        document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:48px;margin-bottom:16px"><i class="fas fa-tools"></i></div><h1 style="font-size:22px;font-weight:800;margin-bottom:12px">Under Development</h1><p style="font-size:14px;opacity:.7;line-height:1.6">'+(s.maintenanceMessage||'Software under development hai. Please wait karein.')+'</p><p style="font-size:11px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+        throw new Error('maintenance');
+      }
+    }
+    const accessSnap=await db.collection('user_access').where('userId','==',user.id).limit(1).get();
+    if(!accessSnap.empty){
+      const a=accessSnap.docs[0].data();
+      if(a.expiresAt){
+        const exp=a.expiresAt.seconds?new Date(a.expiresAt.seconds*1000):new Date(a.expiresAt);
+        if(new Date()>exp){window.location.href='dashboard.html';throw new Error('expired');}
+      }
+      if(a.modules&&a.modules[moduleId]===false){window.location.href='dashboard.html';throw new Error('no access');}
+    }
+  }catch(e){}
+}
+
+function requireAuth(roles){
+  const raw=localStorage.getItem('ngoUser');
+  if(!raw){window.location.href='index.html';return null}
+  try{
+    const u=JSON.parse(raw);
+    if(roles&&!roles.includes(u.role)){window.location.href='dashboard.html';return null}
+    return u;
+  }catch(e){window.location.href='index.html';return null}
+}
+
+
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show '+(type||'');
+  setTimeout(()=>{t.className='toast'},3000);
+}
+
+function openModal(){document.getElementById('annModal').classList.add('active')}
+function closeModal(){document.getElementById('annModal').classList.remove('active');document.getElementById('annTitle').value='';document.getElementById('annMessage').value='';document.getElementById('annError').textContent=''}
+
+
+function formatDate(ts){
+  if(!ts)return'';
+  const d=ts.seconds?new Date(ts.seconds*1000):ts instanceof Date?ts:new Date(ts);
+  if(isNaN(d))return'';
+  const now=new Date();
+  const diff=now-d;
+  if(diff<60000)return'Just now';
+  if(diff<3600000)return Math.floor(diff/60000)+'m ago';
+  if(diff<86400000)return Math.floor(diff/3600000)+'h ago';
+  if(diff<604800000)return Math.floor(diff/86400000)+'d ago';
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+async function loadAnnouncements(){
+  try{
+    const snap=await db.collection('announcements').get();
+    allAnnouncements=[];
+    snap.forEach(doc=>{
+      allAnnouncements.push({id:doc.id,...doc.data()});
+    });
+    allAnnouncements.sort((a,b)=>{
+      const ta=a.createdAt?.seconds||0;
+      const tb=b.createdAt?.seconds||0;
+      return tb-ta;
+    });
+    renderAnnouncements();
+  }catch(e){
+    console.error('Load error:',e);
+    document.getElementById('mainContent').innerHTML='<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading announcements.</p></div>';
+  }
+}
+
+function renderAnnouncements(){
+  const area=document.getElementById('mainContent');
+  if(!allAnnouncements.length){
+    area.innerHTML='<div class="empty-state"><i class="fas fa-bullhorn"></i><p>No announcements yet.</p></div>';
+    return;
+  }
+  let html='';
+  allAnnouncements.forEach(a=>{
+    const type=a.type||'info';
+    html+=`<div class="ann-card ${type}">
+      <div class="ann-header">
+        <div class="ann-title">${escHtml(a.title||'Untitled')}</div>
+        <span class="ann-badge ${type}">${type}</span>
+      </div>
+      <div class="ann-body">${escHtml(a.message||'')}</div>
+      <div class="ann-footer">
+        <div class="ann-by"><i class="fas fa-user-circle"></i> ${escHtml(a.postedByName||'Admin')} &middot; ${formatDate(a.createdAt)}</div>
+        ${userRole==='division_head'?`<div class="ann-actions">
+          <button onclick="deleteAnnouncement('${a.id}')"><i class="fas fa-trash"></i> Delete</button>
+        </div>`:''}
+      </div>
+    </div>`;
+  });
+  area.innerHTML=html;
+}
+
+function escHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML}
+
+async function saveAnnouncement(){
+  const title=document.getElementById('annTitle').value.trim();
+  const message=document.getElementById('annMessage').value.trim();
+  const type=document.getElementById('annType').value;
+  const errEl=document.getElementById('annError');
+  const btn=document.getElementById('annSaveBtn');
+
+  if(!title){errEl.textContent='Title dalein';return}
+  if(!message){errEl.textContent='Message dalein';return}
+
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Posting...';
+
+  try{
+    await db.collection('announcements').add({
+      title:title,
+      message:message,
+      type:type,
+      postedBy:currentUser.id||currentUser.uid||'admin',
+      postedByName:currentUser.name||'Admin',
+      postedByRole:userRole,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+      active:true
+    });
+    showToast('Announcement posted!','success');
+    closeModal();
+    await loadAnnouncements();
+  }catch(e){
+    console.error('Save error:',e);
+    errEl.textContent='Error: '+e.message;
+  }finally{
+    btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> Post Announcement';
+  }
+}
+
+async function deleteAnnouncement(id){
+  if(!confirm('Delete this announcement?'))return;
+  try{
+    await db.collection('announcements').doc(id).delete();
+    showToast('Deleted!','success');
+    await loadAnnouncements();
+  }catch(e){
+    showToast('Error: '+e.message,'error');
+  }
+}
+
+async function init(){
+  await checkSystemAccess('announcements');
+  currentUser=requireAuth(['division_head','district_head','area_head']);
+  if(!currentUser)return;
+
+  userRole=currentUser.role;
+  buildSidebar(currentUser);
+  buildBottomNav(currentUser);
+
+  if(userRole==='division_head'){
+    document.getElementById('addBtn').style.display='flex';
+  }
+
+  await loadAnnouncements();
+}
+
+init();
+
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('active');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+}
+function buildSidebar(user){
+  const nameEl=document.getElementById('sidebarName');
+  const phoneEl=document.getElementById('sidebarPhone');
+  const roleEl=document.getElementById('sidebarRole');
+  const avatarEl=document.getElementById('avatarEl');
+  if(nameEl)nameEl.textContent=user.name;
+  if(phoneEl)phoneEl.textContent=user.phone||'-';
+  if(roleEl)roleEl.textContent=user.role.replace(/_/g,' ');
+  if(avatarEl)avatarEl.textContent=user.name.charAt(0).toUpperCase();
+  const menu=menus[user.role]||[];
+  const cont=document.getElementById('sidebarMenu');
+  if(!cont)return;
+  cont.innerHTML='';
+  menu.forEach(m=>{
+    const a=document.createElement('a');
+    a.href='#';
+    a.innerHTML='<i class="fas '+m.icon+'"></i> '+m.label;
+    if(m.active)a.classList.add('active');
+    a.onclick=function(e){
+      e.preventDefault();
+      closeSidebar();
+      if(m.file==='logout'){localStorage.removeItem('ngoUser');window.location.href='index.html';return}
+      if(m.file!=='dashboard.html')window.location.href=m.file;
+    };
+    if(m.icon==='fa-sign-out-alt')a.classList.add('logout-btn');
+    cont.appendChild(a);
+  });
+}
+function buildBottomNav(user){
+  const nav=document.getElementById('bottomNav');
+  if(!nav)return;
+  nav.innerHTML='';
+  const items=bottomNavs[user.role]||[];
+  items.forEach(b=>{
+    const a=document.createElement('a');
+    a.href='#';
+    a.innerHTML='<i class="fas '+b.icon+'"></i><span>'+b.label+'</span>';
+    if(b.active)a.classList.add('active');
+    a.onclick=function(e){
+      e.preventDefault();
+      if(b.file==='sidebar'){toggleSidebar();return}
+      if(b.file!=='dashboard.html')window.location.href=b.file;
+    };
+    nav.appendChild(a);
+  });
+}
+</script>
+</body>
+</html>

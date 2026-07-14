@@ -1,0 +1,581 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reports | Tanzeem Structure Portal</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f7fa;color:#1a1a2e;min-height:100vh;max-width:500px;margin:0 auto;position:relative;padding-bottom:70px}
+a{text-decoration:none;color:inherit}
+
+/* Header */
+.header{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#1a6b3c,#0d4a25);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-radius:0 0 14px 14px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.header h1{font-size:18px;font-weight:600}
+.header-icons{display:flex;gap:12px}
+.header-icons span{cursor:pointer;font-size:20px}
+
+/* Sidebar Overlay */
+
+/* Filter Bar */
+.filter-bar{background:#fff;padding:12px 16px;border-radius:14px;margin:12px 16px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;gap:8px;flex-wrap:wrap}
+.filter-bar select{flex:1;min-width:0;padding:8px 10px;border:1px solid #e9ecef;border-radius:10px;font-size:13px;background:#fff;color:#1a1a2e;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c757d' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+
+/* Report Cards Grid */
+.report-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 16px}
+.report-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer;transition:transform .2s,box-shadow .2s;border:2px solid transparent}
+.report-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.report-card.active{border-color:#1a6b3c}
+.report-card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:8px}
+.report-card h3{font-size:12px;font-weight:600;color:#1a1a2e;margin-bottom:4px;line-height:1.3}
+.report-card .stat{font-size:18px;font-weight:700;color:#1a6b3c}
+.report-card .stat-label{font-size:10px;color:#6c757d}
+.report-card .view-btn{display:block;text-align:center;margin-top:8px;padding:6px;border-radius:8px;background:#f0f7f2;color:#1a6b3c;font-size:11px;font-weight:600}
+
+/* Expanded Report */
+.expanded-report{background:#fff;border-radius:14px;margin:0 16px 16px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden;display:none}
+.expanded-report.show{display:block}
+.expanded-report-header{padding:14px 16px;background:#f5f7fa;border-bottom:1px solid #e9ecef;display:flex;align-items:center;justify-content:space-between}
+.expanded-report-header h2{font-size:15px;font-weight:600;color:#1a1a2e}
+.expanded-report-actions{display:flex;gap:8px}
+.btn{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer}
+.btn-print{background:#1a6b3c;color:#fff}
+.btn-close-report{background:#e9ecef;color:#1a1a2e}
+.report-filter{padding:10px 16px;background:#fafafa;border-bottom:1px solid #e9ecef;display:flex;gap:8px}
+.report-filter select,.report-filter input{padding:6px 10px;border:1px solid #e9ecef;border-radius:8px;font-size:12px;flex:1}
+
+/* Report Content */
+.report-content{padding:16px}
+.report-table{width:100%;border-collapse:collapse;font-size:12px}
+.report-table th{background:#f5f7fa;padding:8px;text-align:left;font-weight:600;color:#6c757d;border-bottom:2px solid #e9ecef;white-space:nowrap}
+.report-table td{padding:8px;border-bottom:1px solid #e9ecef;color:#1a1a2e}
+.report-table tr:hover{background:#f9fdfb}
+.status-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.status-active{background:#d4edda;color:#28a745}
+.status-inactive{background:#f8d7da;color:#dc3545}
+.status-transferred{background:#fff3cd;color:#ff9800}
+.status-left{background:#e9ecef;color:#6c757d}
+.status-pending{background:#fff3cd;color:#ff9800}
+.status-approved{background:#d4edda;color:#28a745}
+.status-rejected{background:#f8d7da;color:#dc3545}
+.status-sentback{background:#cce5ff;color:#004085}
+.vacant{color:#dc3545;font-weight:600}
+.filled{color:#28a745;font-weight:600}
+
+/* Pie Chart Style */
+.chart-bars{display:flex;flex-direction:column;gap:6px;margin:12px 0}
+.chart-bar-row{display:flex;align-items:center;gap:8px}
+.chart-bar-label{width:80px;font-size:11px;font-weight:600;color:#1a1a2e;text-align:right}
+.chart-bar-track{flex:1;height:24px;background:#e9ecef;border-radius:12px;overflow:hidden;position:relative}
+.chart-bar-fill{height:100%;border-radius:12px;transition:width .5s;display:flex;align-items:center;padding:0 8px}
+.chart-bar-fill span{font-size:10px;font-weight:600;color:#fff;white-space:nowrap}
+.chart-bar-value{font-size:11px;font-weight:600;width:40px}
+
+/* Summary Cards */
+.summary-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px;margin-bottom:16px}
+.summary-item{text-align:center;padding:10px 6px;background:#f5f7fa;border-radius:10px}
+.summary-item .num{font-size:20px;font-weight:700}
+.summary-item .lbl{font-size:10px;color:#6c757d;margin-top:2px}
+
+/* Bottom Nav */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:#fff;border-radius:14px 14px 0 0;box-shadow:0 -2px 10px rgba(0,0,0,.08);display:flex;z-index:100;padding:6px 0 8px}
+.bottom-nav a{flex:1;text-align:center;padding:6px 0;color:#6c757d;font-size:10px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bottom-nav a.active{color:#1a6b3c;font-weight:600}
+.bottom-nav a .nav-icon{font-size:20px}
+
+/* Loading */
+.loading{text-align:center;padding:40px;color:#6c757d}
+.loading-spinner{width:32px;height:32px;border:3px solid #e9ecef;border-top-color:#1a6b3c;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Empty State */
+.empty-state{text-align:center;padding:32px 16px;color:#6c757d}
+.empty-state .icon{font-size:40px;margin-bottom:8px}
+
+/* Breakdown List */
+.breakdown-list{margin-top:12px}
+.breakdown-item{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f5f7fa;border-radius:8px;margin-bottom:4px;font-size:12px}
+.breakdown-item .name{font-weight:600;color:#1a1a2e}
+.breakdown-item .counts{display:flex;gap:8px}
+.breakdown-item .count{padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600}
+
+/* Print */
+@media print{
+body{padding:0;max-width:100%;background:#fff}
+.header,.sidebar-overlay,.sidebar,.bottom-nav,.filter-bar,.expanded-report-header,.report-filter,.view-btn,.expanded-report-actions{display:none!important}
+.report-cards{display:none!important}
+.expanded-report{margin:0;border-radius:0;box-shadow:none;display:block!important;position:static}
+.report-content{padding:0}
+.report-table th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.summary-item{border:1px solid #ddd}
+.chart-bar-fill{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.report-print-title{display:block!important;font-size:18px;font-weight:700;text-align:center;margin-bottom:12px;color:#000}
+}
+.report-print-title{display:none}
+
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200}
+.sidebar-overlay.active{display:block}
+.sidebar{position:fixed;top:0;left:-280px;width:280px;height:100%;background:var(--white);z-index:300;transition:left 0.3s ease;overflow-y:auto;border-radius:0 var(--radius) var(--radius) 0;box-shadow:2px 0 10px rgba(0,0,0,0.1)}
+.sidebar.open{left:0}
+.sidebar-header{background:var(--primary);color:var(--white);padding:20px 16px;border-radius:0 var(--radius) 0 0}
+.sidebar-header h2{font-size:16px;margin-bottom:4px}
+.sidebar-header p{font-size:12px;opacity:0.8}
+.sidebar-header .role-badge{display:inline-block;background:rgba(255,255,255,0.2);padding:2px 10px;border-radius:20px;font-size:11px;margin-top:6px;text-transform:capitalize}
+.sidebar-menu{padding:10px 0}
+.sidebar-menu a{display:flex;align-items:center;gap:12px;padding:12px 20px;color:var(--dark-text);text-decoration:none;font-size:14px;transition:background 0.2s}
+.sidebar-menu a:hover,.sidebar-menu a.active{background:var(--light);color:var(--primary);font-weight:600}
+.sidebar-menu a.active{border-right:3px solid var(--primary)}
+.sidebar-menu a i{width:22px;text-align:center;font-size:16px;flex-shrink:0}
+.sidebar-menu .logout-btn{color:var(--red);border-top:1px solid var(--border);margin-top:6px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="header-icons" onclick="toggleSidebar()" style="font-size:22px;cursor:pointer">☰</span>
+    <h1>Reports</h1>
+  </div>
+  <div class="header-icons">
+    <span title="Refresh" onclick="loadAllData()"><i class="fas fa-sync-alt"></i></span>
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2 id="sidebarName">User</h2>
+    <p id="sidebarPhone">-</p>
+    <span class="role-badge" id="sidebarRole">-</span>
+  </div>
+  <div class="sidebar-menu" id="sidebarMenu"></div>
+  <div style="padding:16px;font-size:10px;color:rgba(255,255,255,.4);text-align:center;border-top:1px solid rgba(255,255,255,.1);margin-top:auto">Developed by<br><b style="color:rgba(255,255,255,.6)">A.A.Q. Solutions & Outsourcing</b></div>
+</div>
+    <h3 style="font-size:13px;margin-bottom:8px;color:#1a1a2e">District Breakdown</h3>
+    <table class="report-table">
+      <thead><tr><th>District</th><th>Areas</th><th>ZH</th><th>Persons</th></tr></thead>
+      <tbody>
+  `;
+  districts.forEach(dist=>{
+    const areas=d.areas.filter(a=>a.districtId===dist.id).length;
+    const zhs=d.zhs.filter(z=>z.districtId===dist.id).length;
+    const persons=d.persons.filter(p=>p.districtId===dist.id).length;
+    html+=`<tr><td><strong>${dist.name||dist.id}</strong></td><td>${areas}</td><td>${zhs}</td><td>${persons}</td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  document.getElementById('reportContent').innerHTML=html;
+}
+
+/* ======================== DEPARTMENT REPORT ======================== */
+function renderDepartmentReport(){
+  const d=allData;
+  document.getElementById('expandedTitle').textContent='Department Report';
+  document.getElementById('reportPrintTitle').textContent='Department Report';
+  document.getElementById('reportFilterBar').innerHTML=`
+    <select id="deptFilter" onchange="filterDeptReport()">
+      <option value="all">All Departments</option>
+      ${d.departments.map(x=>`<option value="${x.id}">${x.name||x.id}</option>`).join('')}
+    </select>
+  `;
+  buildDeptView('all');
+}
+
+function filterDeptReport(){
+  buildDeptView(document.getElementById('deptFilter').value);
+}
+
+function buildDeptView(filter){
+  const d=allData;
+  const depts=filter==='all'?d.departments:d.departments.filter(x=>x.id===filter);
+  const totalPersons=d.persons.length;
+  let html=`
+    <span class="report-print-title">Department Report</span>
+    <div class="summary-row">
+      <div class="summary-item"><div class="num" style="color:#1a6b3c">${depts.length}</div><div class="lbl">Departments</div></div>
+      <div class="summary-item"><div class="num" style="color:#0d4a25">${totalPersons}</div><div class="lbl">Total Persons</div></div>
+    </div>
+    <table class="report-table">
+      <thead><tr><th>Department</th><th>Head</th><th>Persons</th><th>Coverage</th></tr></thead>
+      <tbody>
+  `;
+  depts.forEach(dept=>{
+    const deptPersons=d.persons.filter(p=>p.departmentId===dept.id);
+    const count=deptPersons.length;
+    const pct=totalPersons>0?((count/totalPersons)*100).toFixed(1):0;
+    html+=`<tr>
+      <td><strong>${dept.name||dept.id}</strong></td>
+      <td>${dept.headName||dept.headId||'<span class="vacant">Vacant</span>'}</td>
+      <td>${count}</td>
+      <td>${pct}%</td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  document.getElementById('reportContent').innerHTML=html;
+}
+
+/* ======================== PERSON STATUS REPORT ======================== */
+function renderPersonStatusReport(){
+  const d=allData;
+  document.getElementById('expandedTitle').textContent='Person Status Report';
+  document.getElementById('reportPrintTitle').textContent='Person Status Report';
+  document.getElementById('reportFilterBar').innerHTML=`
+    <select id="psFilter" onchange="filterPSReport()">
+      <option value="all">All Status</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+      <option value="transferred">Transferred</option>
+      <option value="left">Left</option>
+    </select>
+  `;
+  buildPSView('all');
+}
+
+function filterPSReport(){
+  buildPSView(document.getElementById('psFilter').value);
+}
+
+function buildPSView(filter){
+  const d=allData;
+  const total=d.persons.length;
+  const active=d.persons.filter(p=>(p.status||'active')==='active').length;
+  const inactive=d.persons.filter(p=>p.status==='inactive').length;
+  const transferred=d.persons.filter(p=>p.status==='transferred').length;
+  const left=d.persons.filter(p=>p.status==='left').length;
+  const colors={active:'#28a745',inactive:'#dc3545',transferred:'#ff9800',left:'#6c757d'};
+  const labels={active:'Active',inactive:'Inactive',transferred:'Transferred',left:'Left'};
+  const counts={active,inactive,transferred,left};
+
+  let html=`
+    <span class="report-print-title">Person Status Report</span>
+    <div class="summary-row">
+      <div class="summary-item"><div class="num" style="color:#28a745">${active}</div><div class="lbl">Active</div></div>
+      <div class="summary-item"><div class="num" style="color:#dc3545">${inactive}</div><div class="lbl">Inactive</div></div>
+      <div class="summary-item"><div class="num" style="color:#ff9800">${transferred}</div><div class="lbl">Transferred</div></div>
+      <div class="summary-item"><div class="num" style="color:#6c757d">${left}</div><div class="lbl">Left</div></div>
+    </div>
+    <div class="chart-bars">
+  `;
+  Object.keys(counts).forEach(k=>{
+    const pct=total>0?((counts[k]/total)*100).toFixed(0):0;
+    html+=`<div class="chart-bar-row">
+      <div class="chart-bar-label">${labels[k]}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${pct}%;background:${colors[k]}"><span>${counts[k]}</span></div></div>
+      <div class="chart-bar-value">${pct}%</div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  const persons=filter==='all'?d.persons:d.persons.filter(p=>(p.status||'active')===filter);
+  html+=`<h3 style="font-size:13px;margin:12px 0 8px">Person List (${persons.length})</h3>
+    <table class="report-table">
+      <thead><tr><th>Name</th><th>Dept</th><th>Status</th></tr></thead><tbody>`;
+  persons.forEach(p=>{
+    const st=p.status||'active';
+    const stClass='status-'+st;
+    html+=`<tr>
+      <td><strong>${p.name||p.id}</strong></td>
+      <td>${getDeptName(p.departmentId)}</td>
+      <td><span class="status-badge ${stClass}">${st.charAt(0).toUpperCase()+st.slice(1)}</span></td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  document.getElementById('reportContent').innerHTML=html;
+}
+
+/* ======================== HEAD/VACANCY REPORT ======================== */
+function renderHeadVacancyReport(){
+  document.getElementById('expandedTitle').textContent='Head/Vacancy Report';
+  document.getElementById('reportPrintTitle').textContent='Head/Vacancy Report';
+  document.getElementById('reportFilterBar').innerHTML=`
+    <select id="hvFilter" onchange="filterHVReport()">
+      <option value="all">All Positions</option>
+      <option value="district">District Heads</option>
+      <option value="area">Area Heads</option>
+      <option value="zh">ZH Heads</option>
+    </select>
+  `;
+  buildHVView('all');
+}
+
+function filterHVReport(){
+  buildHVView(document.getElementById('hvFilter').value);
+}
+
+function buildHVView(filter){
+  const d=allData;
+  const distHeadCount=d.districts.length;
+  const distFilled=d.districts.filter(x=>x.headId).length;
+  const areaHeadCount=d.areas.length;
+  const areaFilled=d.areas.filter(x=>x.headId).length;
+  const zhHeadCount=d.zhs.length;
+  const zhFilled=d.zhs.filter(x=>x.headId).length;
+  const totalVacant=(distHeadCount-distFilled)+(areaHeadCount-areaFilled)+(zhHeadCount-zhFilled);
+  const totalFilled=distFilled+areaFilled+zhFilled;
+
+  let html=`
+    <span class="report-print-title">Head/Vacancy Report</span>
+    <div class="summary-row">
+      <div class="summary-item"><div class="num" style="color:#28a745">${totalFilled}</div><div class="lbl">Filled</div></div>
+      <div class="summary-item"><div class="num" style="color:#dc3545">${totalVacant}</div><div class="lbl">Vacant</div></div>
+      <div class="summary-item"><div class="num" style="color:#1a6b3c">${totalFilled+totalVacant}</div><div class="lbl">Total Posts</div></div>
+    </div>
+    <div class="chart-bars">
+      <div class="chart-bar-row">
+        <div class="chart-bar-label">District</div>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${distHeadCount>0?((distFilled/distHeadCount)*100):0}%;background:#28a745"><span>${distFilled}/${distHeadCount}</span></div></div>
+        <div class="chart-bar-value">${distHeadCount>0?((distFilled/distHeadCount)*100).toFixed(0):0}%</div>
+      </div>
+      <div class="chart-bar-row">
+        <div class="chart-bar-label">Area</div>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${areaHeadCount>0?((areaFilled/areaHeadCount)*100):0}%;background:#1a6b3c"><span>${areaFilled}/${areaHeadCount}</span></div></div>
+        <div class="chart-bar-value">${areaHeadCount>0?((areaFilled/areaHeadCount)*100).toFixed(0):0}%</div>
+      </div>
+      <div class="chart-bar-row">
+        <div class="chart-bar-label">ZH</div>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${zhHeadCount>0?((zhFilled/zhHeadCount)*100):0}%;background:#0d4a25"><span>${zhFilled}/${zhHeadCount}</span></div></div>
+        <div class="chart-bar-value">${zhHeadCount>0?((zhFilled/zhHeadCount)*100).toFixed(0):0}%</div>
+      </div>
+    </div>
+  `;
+
+  if(filter==='all'||filter==='district'){
+    html+=`<h3 style="font-size:13px;margin:12px 0 8px">District Heads</h3>
+    <table class="report-table"><thead><tr><th>District</th><th>Head</th><th>Status</th></tr></thead><tbody>`;
+    d.districts.forEach(x=>{
+      html+=`<tr><td><strong>${x.name||x.id}</strong></td><td>${x.headName||x.headId||'-'}</td>
+        <td>${x.headId?'<span class="filled">Filled</span>':'<span class="vacant">Vacant</span>'}</td></tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+
+  if(filter==='all'||filter==='area'){
+    html+=`<h3 style="font-size:13px;margin:12px 0 8px">Area Heads</h3>
+    <table class="report-table"><thead><tr><th>Area</th><th>District</th><th>Head</th><th>Status</th></tr></thead><tbody>`;
+    d.areas.forEach(x=>{
+      const distName=getDistName(x.districtId);
+      html+=`<tr><td><strong>${x.name||x.id}</strong></td><td>${distName}</td><td>${x.headName||x.headId||'-'}</td>
+        <td>${x.headId?'<span class="filled">Filled</span>':'<span class="vacant">Vacant</span>'}</td></tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+
+  if(filter==='all'||filter==='zh'){
+    html+=`<h3 style="font-size:13px;margin:12px 0 8px">ZH Heads</h3>
+    <table class="report-table"><thead><tr><th>Zeli Halqa</th><th>Area</th><th>Head</th><th>Status</th></tr></thead><tbody>`;
+    d.zhs.forEach(x=>{
+      const areaName=getAreaName(x.areaId);
+      html+=`<tr><td><strong>${x.name||x.id}</strong></td><td>${areaName}</td><td>${x.headName||x.headId||'-'}</td>
+        <td>${x.headId?'<span class="filled">Filled</span>':'<span class="vacant">Vacant</span>'}</td></tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+
+  document.getElementById('reportContent').innerHTML=html;
+}
+
+/* ======================== APPROVAL REPORT ======================== */
+function renderApprovalReport(){
+  document.getElementById('expandedTitle').textContent='Approval Report';
+  document.getElementById('reportPrintTitle').textContent='Approval Report';
+  document.getElementById('reportFilterBar').innerHTML=`
+    <select id="apprFilter" onchange="filterApprReport()">
+      <option value="all">All Status</option>
+      <option value="pending">Pending</option>
+      <option value="approved">Approved</option>
+      <option value="rejected">Rejected</option>
+      <option value="sent_back">Sent Back</option>
+    </select>
+  `;
+  buildApprView('all');
+}
+
+function filterApprReport(){
+  buildApprView(document.getElementById('apprFilter').value);
+}
+
+function buildApprView(filter){
+  const d=allData;
+  const total=d.approvals.length;
+  const pending=d.approvals.filter(a=>a.status==='pending').length;
+  const approved=d.approvals.filter(a=>a.status==='approved').length;
+  const rejected=d.approvals.filter(a=>a.status==='rejected').length;
+  const sentBack=d.approvals.filter(a=>a.status==='sent_back').length;
+  const colors={pending:'#ff9800',approved:'#28a745',rejected:'#dc3545',sent_back:'#004085'};
+  const labels={pending:'Pending',approved:'Approved',rejected:'Rejected',sent_back:'Sent Back'};
+  const counts={pending,approved,rejected,sent_back};
+
+  let html=`
+    <span class="report-print-title">Approval Report</span>
+    <div class="summary-row">
+      <div class="summary-item"><div class="num" style="color:#ff9800">${pending}</div><div class="lbl">Pending</div></div>
+      <div class="summary-item"><div class="num" style="color:#28a745">${approved}</div><div class="lbl">Approved</div></div>
+      <div class="summary-item"><div class="num" style="color:#dc3545">${rejected}</div><div class="lbl">Rejected</div></div>
+      <div class="summary-item"><div class="num" style="color:#004085">${sentBack}</div><div class="lbl">Sent Back</div></div>
+    </div>
+    <div class="chart-bars">
+  `;
+  Object.keys(counts).forEach(k=>{
+    const pct=total>0?((counts[k]/total)*100).toFixed(0):0;
+    html+=`<div class="chart-bar-row">
+      <div class="chart-bar-label">${labels[k]}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${pct}%;background:${colors[k]}"><span>${counts[k]}</span></div></div>
+      <div class="chart-bar-value">${pct}%</div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  const approvals=filter==='all'?d.approvals:d.approvals.filter(a=>a.status===filter);
+  html+=`<h3 style="font-size:13px;margin:12px 0 8px">Recent Approvals (${approvals.length})</h3>
+    <table class="report-table"><thead><tr><th>Type</th><th>Requested By</th><th>Status</th><th>Date</th></tr></thead><tbody>`;
+  approvals.slice(0,50).forEach(a=>{
+    const st=a.status||'pending';
+    const stLabel=st.replace('_',' ').replace(/\b\w/g,l=>l.toUpperCase());
+    const stClass='status-'+(st==='sent_back'?'sentback':st);
+    const date=a.createdAt?(a.createdAt.seconds?new Date(a.createdAt.seconds*1000).toLocaleDateString():a.createdAt):'-';
+    html+=`<tr>
+      <td><strong>${a.type||a.requestType||'-'}</strong></td>
+      <td>${a.requestedBy||a.requesterName||a.userId||'-'}</td>
+      <td><span class="status-badge ${stClass}">${stLabel}</span></td>
+      <td>${date}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  document.getElementById('reportContent').innerHTML=html;
+}
+
+/* ======================== DESIGNATION REPORT ======================== */
+function renderDesignationReport(){
+  document.getElementById('expandedTitle').textContent='Designation Report';
+  document.getElementById('reportPrintTitle').textContent='Designation Report';
+  document.getElementById('reportFilterBar').innerHTML=`
+    <select id="desgFilter" onchange="filterDesgReport()">
+      <option value="all">All Designations</option>
+      ${allData.designations.map(x=>`<option value="${x.id}">${x.name||x.id}</option>`).join('')}
+    </select>
+  `;
+  buildDesgView('all');
+}
+
+function filterDesgReport(){
+  buildDesgView(document.getElementById('desgFilter').value);
+}
+
+function buildDesgView(filter){
+  const d=allData;
+  const total=d.persons.length;
+  const desigs=filter==='all'?d.designations:d.designations.filter(x=>x.id===filter);
+  const maxCount=Math.max(...desigs.map(des=>{
+    return d.persons.filter(p=>p.designationId===des.id).length;
+  }),1);
+
+  let html=`
+    <span class="report-print-title">Designation Report</span>
+    <div class="summary-row">
+      <div class="summary-item"><div class="num" style="color:#1a6b3c">${desigs.length}</div><div class="lbl">Designations</div></div>
+      <div class="summary-item"><div class="num" style="color:#0d4a25">${total}</div><div class="lbl">Total Persons</div></div>
+    </div>
+    <div class="chart-bars">
+  `;
+  const barColors=['#1a6b3c','#28a745','#0d4a25','#ff9800','#dc3545','#6c757d','#004085','#1a6b3c'];
+  desigs.forEach((des,i)=>{
+    const count=d.persons.filter(p=>p.designationId===des.id).length;
+    const pct=maxCount>0?((count/maxCount)*100):0;
+    html+=`<div class="chart-bar-row">
+      <div class="chart-bar-label" style="width:100px">${des.name||des.id}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${pct}%;background:${barColors[i%barColors.length]}"><span>${count}</span></div></div>
+      <div class="chart-bar-value">${count}</div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  html+=`<h3 style="font-size:13px;margin:12px 0 8px">Person Distribution</h3>
+    <table class="report-table"><thead><tr><th>Designation</th><th>Persons</th><th>% Share</th></tr></thead><tbody>`;
+  desigs.forEach(des=>{
+    const count=d.persons.filter(p=>p.designationId===des.id).length;
+    const pct=total>0?((count/total)*100).toFixed(1):0;
+    html+=`<tr><td><strong>${des.name||des.id}</strong></td><td>${count}</td><td>${pct}%</td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  document.getElementById('reportContent').innerHTML=html;
+}
+
+/* ======================== HELPERS ======================== */
+function getDeptName(id){
+  if(!id)return '-';
+  const d=allData.departments.find(x=>x.id===id);
+  return d?(d.name||d.id):'-';
+}
+function getDistName(id){
+  if(!id)return '-';
+  const d=allData.districts.find(x=>x.id===id);
+  return d?(d.name||d.id):'-';
+}
+function getAreaName(id){
+  if(!id)return '-';
+  const d=allData.areas.find(x=>x.id===id);
+  return d?(d.name||d.id):'-';
+}
+
+init();
+
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('active');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+}
+function buildSidebar(user){
+  const nameEl=document.getElementById('sidebarName');
+  const phoneEl=document.getElementById('sidebarPhone');
+  const roleEl=document.getElementById('sidebarRole');
+  const avatarEl=document.getElementById('avatarEl');
+  if(nameEl)nameEl.textContent=user.name;
+  if(phoneEl)phoneEl.textContent=user.phone||'-';
+  if(roleEl)roleEl.textContent=user.role.replace(/_/g,' ');
+  if(avatarEl)avatarEl.textContent=user.name.charAt(0).toUpperCase();
+  const menu=menus[user.role]||[];
+  const cont=document.getElementById('sidebarMenu');
+  if(!cont)return;
+  cont.innerHTML='';
+  menu.forEach(m=>{
+    const a=document.createElement('a');
+    a.href='#';
+    a.innerHTML='<i class="fas '+m.icon+'"></i> '+m.label;
+    if(m.active)a.classList.add('active');
+    a.onclick=function(e){
+      e.preventDefault();
+      closeSidebar();
+      if(m.file==='logout'){localStorage.removeItem('ngoUser');window.location.href='index.html';return}
+      if(m.file!=='dashboard.html')window.location.href=m.file;
+    };
+    if(m.icon==='fa-sign-out-alt')a.classList.add('logout-btn');
+    cont.appendChild(a);
+  });
+}
+function buildBottomNav(user){
+  const nav=document.getElementById('bottomNav');
+  if(!nav)return;
+  nav.innerHTML='';
+  const items=bottomNavs[user.role]||[];
+  items.forEach(b=>{
+    const a=document.createElement('a');
+    a.href='#';
+    a.innerHTML='<i class="fas '+b.icon+'"></i><span>'+b.label+'</span>';
+    if(b.active)a.classList.add('active');
+    a.onclick=function(e){
+      e.preventDefault();
+      if(b.file==='sidebar'){toggleSidebar();return}
+      if(b.file!=='dashboard.html')window.location.href=b.file;
+    };
+    nav.appendChild(a);
+  });
+}
+</script>
+</body>
+</html>

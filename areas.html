@@ -1,0 +1,746 @@
+﻿<!DOCTYPE html>
+<html lang="ur" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Areas | Tanzeem Structure Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#1a1a2e;min-height:100vh;max-width:500px;margin:0 auto;position:relative;overflow-x:hidden}
+.header{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#1a6b3c,#0d4a25);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-radius:0 0 14px 14px;box-shadow:0 2px 12px rgba(26,107,60,.3)}
+.header h1{font-size:18px;font-weight:700;flex:1;text-align:center}
+.menu-btn,.back-btn{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px}
+.menu-btn:active,.back-btn:active{background:rgba(255,255,255,.2)}
+
+.content{padding:16px;padding-bottom:90px;min-height:calc(100vh - 60px)}
+.tabs{display:flex;background:#fff;border-radius:14px;overflow:hidden;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid #e9ecef}
+.tab{flex:1;padding:12px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;border:none;background:#f5f7fa;color:#6c757d;transition:all .2s}
+.tab.active{background:linear-gradient(135deg,#1a6b3c,#0d4a25);color:#fff}
+.tab-content{display:none}.tab-content.active{display:block}
+.search-box{position:relative;margin-bottom:14px}
+.search-box input{width:100%;padding:12px 14px 12px 42px;border:1px solid #e9ecef;border-radius:14px;font-size:14px;background:#fff;outline:none;transition:border-color .2s}
+.search-box input:focus{border-color:#1a6b3c}
+.search-box i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#6c757d;font-size:15px}
+.add-btn{width:100%;padding:14px;background:linear-gradient(135deg,#1a6b3c,#0d4a25);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;box-shadow:0 4px 12px rgba(26,107,60,.3)}
+.add-btn:active{transform:scale(.98)}
+.area-card{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid #e9ecef;transition:all .2s;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.area-card:active{transform:scale(.99)}
+.area-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.area-code{background:#f0faf3;color:#1a6b3c;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.area-name{font-size:15px;font-weight:600;color:#1a1a2e;margin-bottom:4px}
+.area-district{font-size:12px;color:#6c757d;margin-bottom:6px}
+.area-district i{margin-right:4px;color:#ff9800}
+.area-head{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f5f7fa;border-radius:10px;margin-top:8px}
+.area-head i{color:#1a6b3c;font-size:14px}
+.area-head-info{flex:1}
+.area-head-name{font-size:13px;font-weight:600;color:#1a1a2e}
+.area-head-phone{font-size:11px;color:#6c757d}
+.vacant-badge{background:#fff3cd;color:#ff9800;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600}
+.zh-count{font-size:12px;color:#6c757d;display:flex;align-items:center;gap:4px}
+.zh-count i{color:#1a6b3c}
+.area-actions{display:flex;gap:6px;margin-top:10px}
+.area-actions button{flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px}
+.btn-edit{background:#e8f5e9;color:#1a6b3c}
+.btn-delete{background:#ffeef0;color:#dc3545}
+.area-stats{display:flex;gap:10px;margin-top:8px}
+.empty-state{text-align:center;padding:40px 20px;color:#6c757d}
+.empty-state i{font-size:48px;color:#e9ecef;margin-bottom:12px}
+.empty-state p{font-size:14px}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:300;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;width:100%;max-width:500px;border-radius:14px 14px 0 0;padding:20px 16px 30px;max-height:85vh;overflow-y:auto;transform:translateY(100%);transition:transform .3s ease}
+.modal-overlay.show .modal{transform:translateY(0)}
+.modal-handle{width:40px;height:4px;background:#e9ecef;border-radius:2px;margin:0 auto 16px}
+.modal-title{font-size:18px;font-weight:700;color:#1a1a2e;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:none;border:none;font-size:20px;color:#6c757d;cursor:pointer;padding:4px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:6px}
+.form-group input,.form-group select{width:100%;padding:12px 14px;border:1px solid #e9ecef;border-radius:10px;font-size:14px;background:#fff;outline:none;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus{border-color:#1a6b3c}
+.form-group small{display:block;margin-top:4px;font-size:11px;color:#6c757d}
+.form-submit{width:100%;padding:14px;background:linear-gradient(135deg,#1a6b3c,#0d4a25);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px}
+.form-submit:active{transform:scale(.98)}
+.form-submit:disabled{opacity:.6;cursor:not-allowed}
+.credentials-box{background:#f0faf3;border:1px solid #1a6b3c;border-radius:14px;padding:16px;margin-top:12px}
+.credentials-box h4{font-size:14px;font-weight:700;color:#1a6b3c;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.credentials-box .cred-item{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e9ecef;font-size:13px}
+.credentials-box .cred-item:last-child{border-bottom:none}
+.credentials-box .cred-label{color:#6c757d}
+.credentials-box .cred-value{font-weight:600;color:#1a1a2e;font-family:monospace}
+.alert-container{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:400;width:calc(100% - 32px);max-width:468px}
+.alert{padding:12px 16px;border-radius:10px;margin-bottom:8px;font-size:13px;font-weight:500;display:none;align-items:center;gap:8px;animation:slideDown .3s ease}
+.alert.show{display:flex}
+.alert-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+.alert-danger{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+.alert-warning{background:#fff3cd;color:#856404;border:1px solid #ffeeba}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.loading-spinner{display:flex;justify-content:center;align-items:center;padding:40px}
+.spinner{width:32px;height:32px;border:3px solid #e9ecef;border-top-color:#1a6b3c;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:#fff;display:flex;border-radius:14px 14px 0 0;box-shadow:0 -2px 12px rgba(0,0,0,.08);z-index:100;border-top:1px solid #e9ecef}
+.bottom-nav a{flex:1;padding:10px 0;text-align:center;text-decoration:none;color:#6c757d;font-size:11px;font-weight:500;transition:color .2s;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bottom-nav a i{font-size:18px}
+.bottom-nav a.active{color:#1a6b3c}
+.approval-card{background:#fff3cd;border:1px solid #ffeeba;border-radius:14px;padding:14px;margin-bottom:10px}
+.approval-card .status-badge{background:#ff9800;color:#fff;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600}
+.approval-actions{display:flex;gap:6px;margin-top:10px}
+.approval-actions button{flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-approve{background:#28a745;color:#fff}
+.btn-reject{background:#dc3545;color:#fff}
+.fade-in{animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200}
+.sidebar-overlay.active{display:block}
+.sidebar{position:fixed;top:0;left:-280px;width:280px;height:100%;background:var(--white);z-index:300;transition:left 0.3s ease;overflow-y:auto;border-radius:0 var(--radius) var(--radius) 0;box-shadow:2px 0 10px rgba(0,0,0,0.1)}
+.sidebar.open{left:0}
+.sidebar-header{background:var(--primary);color:var(--white);padding:20px 16px;border-radius:0 var(--radius) 0 0}
+.sidebar-header h2{font-size:16px;margin-bottom:4px}
+.sidebar-header p{font-size:12px;opacity:0.8}
+.sidebar-header .role-badge{display:inline-block;background:rgba(255,255,255,0.2);padding:2px 10px;border-radius:20px;font-size:11px;margin-top:6px;text-transform:capitalize}
+.sidebar-menu{padding:10px 0}
+.sidebar-menu a{display:flex;align-items:center;gap:12px;padding:12px 20px;color:var(--dark-text);text-decoration:none;font-size:14px;transition:background 0.2s}
+.sidebar-menu a:hover,.sidebar-menu a.active{background:var(--light);color:var(--primary);font-weight:600}
+.sidebar-menu a.active{border-right:3px solid var(--primary)}
+.sidebar-menu a i{width:22px;text-align:center;font-size:16px;flex-shrink:0}
+.sidebar-menu .logout-btn{color:var(--red);border-top:1px solid var(--border);margin-top:6px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+  <h1 id="pageTitle">Areas Management</h1>
+  <button class="back-btn" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2 id="sidebarName">User</h2>
+    <p id="sidebarPhone">-</p>
+    <span class="role-badge" id="sidebarRole">-</span>
+  </div>
+  <div class="sidebar-menu" id="sidebarMenu"></div>
+  <div style="padding:16px;font-size:10px;color:rgba(255,255,255,.4);text-align:center;border-top:1px solid rgba(255,255,255,.1);margin-top:auto">Developed by<br><b style="color:rgba(255,255,255,.6)">A.A.Q. Solutions & Outsourcing</b></div>
+</div>
+  </div>
+
+  <div class="tab-content" id="tab-createhead">
+    <button class="add-btn" onclick="openHeadModal()"><i class="fas fa-user-plus"></i> Naya Area Head</button>
+    <div id="headsList"><div class="loading-spinner"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="areaModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">
+      <span id="areaModalTitle">Naya Area</span>
+      <button class="modal-close" onclick="closeAreaModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="areaForm" onsubmit="saveArea(event)">
+      <input type="hidden" id="areaId">
+      <div class="form-group" id="districtGroup">
+        <label>District</label>
+        <select id="areaDistrict" required></select>
+      </div>
+      <div class="form-group">
+        <label>Area Name</label>
+        <input type="text" id="areaName" required placeholder="Area ka naam likhein">
+        <small id="codePreview"></small>
+      </div>
+      <button type="submit" class="form-submit" id="areaSubmitBtn">Area Save Karein</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="headModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">
+      <span>Naya Area Head</span>
+      <button class="modal-close" onclick="closeHeadModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="headForm" onsubmit="createHead(event)">
+      <div class="form-group">
+        <label>Area Select Karein</label>
+        <select id="headArea" required></select>
+      </div>
+      <div class="form-group">
+        <label>Head Name</label>
+        <input type="text" id="headName" required placeholder="Naam likhein">
+      </div>
+      <div class="form-group">
+        <label>Mobile Number</label>
+        <input type="tel" id="headPhone" required placeholder="10 digit mobile number" maxlength="10" pattern="[0-9]{10}">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="text" id="headPassword" value="123456" placeholder="Min 6 characters">
+        <small>Default: 123456</small>
+      </div>
+      <button type="submit" class="form-submit" id="headSubmitBtn">Head Create Karein</button>
+    </form>
+    <div id="headCredentials"></div>
+  </div>
+</div>
+
+<div class="bottom-nav" id="bottomNav"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.firebasestorage.app",messagingSenderId:"438479516590",appId:"1:438479516590:web:fc0a9aaa4a0285f0dc0e3f",measurementId:"G-TJWXZSQXGH"};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+
+const menus={division_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Districts',icon:'fa-map',file:'districts.html'},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Departments',icon:'fa-building',file:'departments.html'},{label:'Designations',icon:'fa-id-badge',file:'designations.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Org Tree',icon:'fa-sitemap',file:'org-tree.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Dept Dashboard',icon:'fa-chart-pie',file:'dept-dashboard.html'},{label:'Access Control',icon:'fa-shield-alt',file:'access-control.html'},{label:'Maintenance',icon:'fa-wrench',file:'maintenance.html'},{label:'Announcements',icon:'fa-bullhorn',file:'announcements.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],district_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'Reports',icon:'fa-chart-bar',file:'reports.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}],area_head:[{label:'Dashboard',icon:'fa-tachometer-alt',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'Persons',icon:'fa-users',file:'persons.html'},{label:'Logout',icon:'fa-sign-out-alt',file:'logout'}]};const bottomNavs={division_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Announce',icon:'fa-bullhorn',file:'announcements.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],district_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Areas',icon:'fa-map-marker-alt',file:'areas.html'},{label:'Approvals',icon:'fa-check-double',file:'approvals.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}],area_head:[{label:'Home',icon:'fa-home',file:'dashboard.html',active:true},{label:'Zeli Halqas',icon:'fa-layer-group',file:'zeli-halqas.html'},{label:'More',icon:'fa-ellipsis-h',file:'sidebar'}]};
+
+async function checkSystemAccess(moduleId){
+  try{
+    const raw=localStorage.getItem('ngoUser');
+    if(!raw)return;
+    const user=JSON.parse(raw);
+    if(user.role==='division_head')return;
+    const settingsSnap=await db.collection('settings').limit(1).get();
+    if(!settingsSnap.empty){
+      const s=settingsSnap.docs[0].data();
+      if(s.maintenanceMode){
+        document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-tools"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Under Development</h1><p style="font-size:16px;opacity:.7;line-height:1.6">'+(s.maintenanceMessage||'Software under development hai. Please wait karein.')+'</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+        throw new Error('maintenance');
+      }
+    }
+    const accessSnap=await db.collection('user_access').where('userId','==',user.id).limit(1).get();
+    if(!accessSnap.empty){
+      const a=accessSnap.docs[0].data();
+      if(a.expiresAt){
+        const exp=a.expiresAt.seconds?new Date(a.expiresAt.seconds*1000):new Date(a.expiresAt);
+        if(new Date()>exp){
+          document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;font-family:Inter,sans-serif;text-align:center;padding:20px"><div><div style="font-size:64px;margin-bottom:16px"><i class="fas fa-lock"></i></div><h1 style="font-size:24px;font-weight:800;margin-bottom:12px">Access Expired</h1><p style="font-size:16px;opacity:.7">Aapka access khatam ho gaya hai. Admin se contact karein.</p><p style="font-size:12px;opacity:.4;margin-top:24px">A.A.Q. Solutions & Outsourcing</p></div></div>';
+          throw new Error('access expired');
+        }
+      }
+      if(a.modules&&a.modules[moduleId]===false){
+        window.location.href='dashboard.html';
+        throw new Error('no access');
+      }
+    }
+  }catch(e){
+    if(e.message==='maintenance'||e.message==='access expired'){}
+  }
+}
+
+let currentUser=null;
+let userRole='';
+let areas=[];
+let districts=[];
+let allUsers=[];
+let currentEditId=null;
+
+function requireAuth(roles){
+  const raw=localStorage.getItem('ngoUser');
+  if(!raw){window.location.href='index.html';return null}
+  try{
+    const user=JSON.parse(raw);
+    if(!roles||roles.includes(user.role))return user;
+    window.location.href='dashboard.html';
+    return null;
+  }catch(e){window.location.href='index.html';return null}
+}
+
+function showAlert(msg,type='success'){
+  const c=document.getElementById('alertContainer');
+  const a=document.createElement('div');
+  a.className='alert alert-'+type;
+  const icon=type==='success'?'fa-check-circle':type==='danger'?'fa-exclamation-circle':'fa-exclamation-triangle';
+  a.innerHTML='<i class="fas '+icon+'"></i> '+msg;
+  c.appendChild(a);
+  a.classList.add('show');
+  setTimeout(()=>{a.classList.remove('show');setTimeout(()=>a.remove(),300)},3500);
+}
+
+
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelector('[data-tab="'+tab+'"]').classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(tab==='createhead')loadAreaHeads();
+}
+
+
+async function loadDistricts(){
+  try{
+    let q;
+    if(userRole==='division_head'){
+      q=await db.collection('districts').where('divisionId','==',currentUser.levelId).get();
+    }else{
+      q=await db.collection('districts').where('status','==','active').get();
+    }
+    districts=[];
+    q.forEach(doc=>{if(userRole==='division_head'){if(doc.data().status==='active')districts.push({id:doc.id,...doc.data()})}else{districts.push({id:doc.id,...doc.data()})}});
+  }catch(e){
+    console.error('Districts load error:',e);
+  }
+}
+
+async function loadAreas(){
+  try{
+    let q;
+    if(userRole==='division_head'){
+      q=await db.collection('areas').where('divisionId','==',currentUser.levelId).get();
+    }else{
+      q=await db.collection('areas').where('districtId','==',currentUser.levelId).get();
+    }
+    areas=[];
+    q.forEach(doc=>{if(doc.data().status==='active')areas.push({id:doc.id,...doc.data()})});
+    areas.sort((a,b)=>(a.code||'').localeCompare(b.code||''));
+    renderAreas();
+  }catch(e){
+    console.error('Areas load error:',e);
+    document.getElementById('areasList').innerHTML='<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading areas</p></div>';
+  }
+}
+
+function getDistrictName(id){
+  const d=districts.find(x=>x.id===id);
+  return d?d.name:'Unknown';
+}
+
+async function getZhCount(areaId){
+  try{
+    const q=await db.collection('zeli_halqas').where('areaId','==',areaId).get();
+    return q.docs.filter(d=>d.data().status==='active').length;
+  }catch(e){return 0}
+}
+
+function renderAreas(filter=''){
+  const container=document.getElementById('areasList');
+  let filtered=areas;
+  if(filter){
+    const f=filter.toLowerCase();
+    filtered=areas.filter(a=>(a.name||'').toLowerCase().includes(f)||(a.code||'').toLowerCase().includes(f)||(a.headName||'').toLowerCase().includes(f));
+  }
+  if(filtered.length===0){
+    container.innerHTML='<div class="empty-state"><i class="fas fa-map-marker-alt"></i><p>Koi area nahi mila</p></div>';
+    return;
+  }
+  let html='';
+  filtered.forEach(a=>{
+    const hasHead=a.headName&&a.headName.trim()!=='';
+    html+='<div class="area-card fade-in">';
+    html+='<div class="area-card-header">';
+    html+='<div><div class="area-name">'+escHtml(a.name)+'</div>';
+    html+='<div class="area-district"><i class="fas fa-map"></i> '+escHtml(getDistrictName(a.districtId))+'</div></div>';
+    html+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">';
+    html+='<span class="area-code">'+escHtml(a.code||'N/A')+'</span>';
+    html+='<span class="zh-count" id="zh-'+a.id+'"><i class="fas fa-layer-group"></i> ...</span>';
+    html+='</div></div>';
+    if(hasHead){
+      html+='<div class="area-head"><i class="fas fa-user-tie"></i>';
+      html+='<div class="area-head-info"><div class="area-head-name">'+escHtml(a.headName)+'</div>';
+      html+='<div class="area-head-phone"><i class="fas fa-phone"></i> '+escHtml(a.headPhone||'N/A')+'</div></div></div>';
+    }else{
+      html+='<div class="area-head" style="background:#fff3cd"><i class="fas fa-user-slash" style="color:#ff9800"></i>';
+      html+='<div class="area-head-info"><div class="area-head-name" style="color:#ff9800">VACANT</div>';
+      html+='<div class="area-head-phone">Head assign nahi hai</div></div>';
+      html+='<span class="vacant-badge">Vacant</span></div>';
+    }
+    html+='<div class="area-actions">';
+    html+='<button class="btn-edit" onclick="editArea(\''+a.id+'\')"><i class="fas fa-edit"></i> Edit</button>';
+    html+='<button class="btn-delete" onclick="deleteArea(\''+a.id+'\')"><i class="fas fa-trash"></i> Delete</button>';
+    html+='</div></div>';
+  });
+  container.innerHTML=html;
+  filtered.forEach(a=>loadZhCountForCard(a.id));
+}
+
+async function loadZhCountForCard(areaId){
+  const count=await getZhCount(areaId);
+  const el=document.getElementById('zh-'+areaId);
+  if(el)el.innerHTML='<i class="fas fa-layer-group"></i> '+count+' ZH';
+}
+
+function filterAreas(){
+  renderAreas(document.getElementById('searchInput').value);
+}
+
+function openAddModal(){
+  currentEditId=null;
+  document.getElementById('areaModalTitle').textContent='Naya Area';
+  document.getElementById('areaSubmitBtn').textContent='Area Save Karein';
+  document.getElementById('areaForm').reset();
+  document.getElementById('areaId').value='';
+  document.getElementById('codePreview').textContent='';
+  populateDistrictSelect();
+  document.getElementById('areaModal').classList.add('show');
+}
+
+function populateDistrictSelect(){
+  const sel=document.getElementById('areaDistrict');
+  const grp=document.getElementById('districtGroup');
+  if(userRole==='division_head'){
+    grp.style.display='block';
+    sel.innerHTML='<option value="">-- District Select --</option>';
+    districts.forEach(d=>{
+      sel.innerHTML+='<option value="'+d.id+'">'+escHtml(d.name)+'</option>';
+    });
+  }else{
+    grp.style.display='none';
+    sel.innerHTML='<option value="'+currentUser.levelId+'">'+escHtml(currentUser.levelName||'My District')+'</option>';
+  }
+}
+
+async function getNextAreaCode(){
+  let maxNum=0;
+  areas.forEach(a=>{
+    const m=(a.code||'').match(/^A(\d+)$/);
+    if(m){const n=parseInt(m[1]);if(n>maxNum)maxNum=n}
+  });
+  return 'A'+String(maxNum+1).padStart(3,'0');
+}
+
+async function previewCode(){
+  const code=await getNextAreaCode();
+  document.getElementById('codePreview').textContent='Auto Code: '+code;
+}
+document.getElementById('areaName').addEventListener('input',previewCode);
+
+function closeAreaModal(){
+  document.getElementById('areaModal').classList.remove('show');
+}
+
+function editArea(id){
+  const a=areas.find(x=>x.id===id);
+  if(!a)return;
+  currentEditId=id;
+  document.getElementById('areaModalTitle').textContent='Area Edit Karein';
+  document.getElementById('areaSubmitBtn').textContent='Update Karein';
+  document.getElementById('areaId').value=id;
+  populateDistrictSelect();
+  if(userRole==='division_head'){
+    document.getElementById('areaDistrict').value=a.districtId||'';
+  }
+  document.getElementById('areaName').value=a.name||'';
+  document.getElementById('areaModal').classList.add('show');
+}
+
+async function saveArea(e){
+  e.preventDefault();
+  const btn=document.getElementById('areaSubmitBtn');
+  btn.disabled=true;
+  btn.textContent='Saving...';
+  try{
+    const name=document.getElementById('areaName').value.trim();
+    const districtId=userRole==='division_head'?document.getElementById('areaDistrict').value:currentUser.levelId;
+    if(!districtId){showAlert('District select karein','danger');return}
+    if(!name){showAlert('Area name likhein','danger');return}
+    let divisionId='';
+    if(userRole==='division_head'){
+      divisionId=currentUser.levelId;
+    }else{
+      const dist=districts.find(d=>d.id===districtId);
+      divisionId=dist?dist.divisionId:(currentUser.divisionId||'');
+    }
+    if(currentEditId){
+      if(userRole==='district_head'){
+        const area=areas.find(a=>a.id===currentEditId);
+        const data={name:name,districtId:districtId,divisionId:divisionId};
+        await db.collection('approvals').add({
+          type:'area_edit',
+          collection:'areas',
+          docId:currentEditId,
+          previousData:{name:area.name,districtId:area.districtId},
+          newData:data,
+          requestedBy:currentUser.id,
+          requestedByName:currentUser.name,
+          status:'pending',
+          createdAt:firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showAlert('Edit request approval ke liye bhej di gayi hai','warning');
+      }else{
+        await db.collection('areas').doc(currentEditId).update({name:name,districtId:districtId,divisionId:divisionId});
+        showAlert('Area update ho gaya');
+      }
+    }else{
+      const code=await getNextAreaCode();
+      const areaData={name:name,code:code,districtId:districtId,divisionId:divisionId,headId:'',headName:'',headPhone:'',status:'active',createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+      if(userRole==='district_head'){
+        await db.collection('approvals').add({
+          type:'area_create',
+          collection:'areas',
+          data:areaData,
+          requestedBy:currentUser.id,
+          requestedByName:currentUser.name,
+          status:'pending',
+          createdAt:firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showAlert('Naya area approval ke liye bhej diya gaya hai','warning');
+      }else{
+        await db.collection('areas').add(areaData);
+        showAlert('Naya area ban gaya!');
+      }
+    }
+    closeAreaModal();
+    await loadAreas();
+  }catch(e){
+    console.error(e);
+    showAlert('Error: '+e.message,'danger');
+  }finally{
+    btn.disabled=false;
+    btn.textContent=currentEditId?'Update Karein':'Area Save Karein';
+  }
+}
+
+async function deleteArea(id){
+  const a=areas.find(x=>x.id===id);
+  if(!a)return;
+  if(!confirm('Kya aap "'+a.name+'" area delete karna chahte hain?'))return;
+  try{
+    if(userRole==='district_head'){
+      await db.collection('approvals').add({
+        type:'area_delete',
+        collection:'areas',
+        docId:id,
+        previousData:{name:a.name,code:a.code},
+        requestedBy:currentUser.id,
+        requestedByName:currentUser.name,
+        status:'pending',
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+      showAlert('Delete request approval ke liye bhej di gayi hai','warning');
+    }else{
+      await db.collection('areas').doc(id).update({status:'deleted'});
+      showAlert('Area delete ho gaya');
+    }
+    await loadAreas();
+  }catch(e){
+    showAlert('Error: '+e.message,'danger');
+  }
+}
+
+async function loadAreaHeads(){
+  try{
+    let q;
+    if(userRole==='division_head'){
+      q=await db.collection('users').where('divisionId','==',currentUser.levelId).get();
+    }else{
+      q=await db.collection('users').where('districtId','==',currentUser.levelId).get();
+    }
+    allUsers=[];
+    q.forEach(doc=>{if(doc.data().role==='area_head')allUsers.push({id:doc.id,...doc.data()})});
+    renderHeads();
+  }catch(e){
+    console.error('Heads load error:',e);
+  }
+}
+
+function renderHeads(){
+  const container=document.getElementById('headsList');
+  if(allUsers.length===0){
+    container.innerHTML='<div class="empty-state"><i class="fas fa-user-slash"></i><p>Koi Area Head nahi mila</p></div>';
+    return;
+  }
+  let html='';
+  allUsers.forEach(u=>{
+    html+='<div class="area-card fade-in">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:flex-start">';
+    html+='<div><div class="area-name"><i class="fas fa-user-tie" style="color:#1a6b3c;margin-right:6px"></i>'+escHtml(u.name)+'</div>';
+    html+='<div class="area-district"><i class="fas fa-phone"></i> '+escHtml(u.phone||u.email)+'</div>';
+    if(u.areaName){
+      html+='<div class="area-district"><i class="fas fa-map-marker-alt"></i> '+escHtml(u.areaName)+'</div>';
+    }
+    html+='</div>';
+    html+='<span class="area-code">AREA HEAD</span></div></div>';
+  });
+  container.innerHTML=html;
+}
+
+async function populateHeadAreaSelect(){
+  const sel=document.getElementById('headArea');
+  sel.innerHTML='<option value="">-- Area Select --</option>';
+  const myAreas=areas.filter(a=>!a.headId||a.headId==='');
+  if(myAreas.length===0){
+    myAreas.push(...areas);
+  }
+  myAreas.forEach(a=>{
+    const badge=a.headId?' (Assigned)':'';
+    sel.innerHTML+='<option value="'+a.id+'" data-name="'+escHtml(a.name)+'">'+escHtml(a.name)+' ['+escHtml(a.code||'')+']'+badge+'</option>';
+  });
+}
+
+function openHeadModal(){
+  document.getElementById('headForm').reset();
+  document.getElementById('headPassword').value='123456';
+  document.getElementById('headCredentials').innerHTML='';
+  populateHeadAreaSelect();
+  document.getElementById('headModal').classList.add('show');
+}
+
+function closeHeadModal(){
+  document.getElementById('headModal').classList.remove('show');
+}
+
+async function createHead(e){
+  e.preventDefault();
+  const btn=document.getElementById('headSubmitBtn');
+  btn.disabled=true;
+  btn.textContent='Creating...';
+  try{
+    const areaId=document.getElementById('headArea').value;
+    const areaName=document.getElementById('headArea').selectedOptions[0]?.getAttribute('data-name')||'';
+    const name=document.getElementById('headName').value.trim();
+    const phone=document.getElementById('headPhone').value.trim();
+    const password=document.getElementById('headPassword').value;
+    if(!areaId||!name||!phone){showAlert('Saari zaroori maloomat bharein','danger');return}
+    if(phone.length!==10||!/^\d+$/.test(phone)){showAlert('Mobile number 10 digit ka hona chahiye','danger');return}
+    if(password.length<6){showAlert('Password kam se kam 6 characters ka hona chahiye','danger');return}
+    const email=phone+'@ngo-app.local';
+    const area=areas.find(a=>a.id===areaId);
+    const districtId=area?area.districtId:currentUser.levelId;
+    const divisionId=area?(area.divisionId||''):(currentUser.divisionId||'');
+    let userCred;
+    try{
+      userCred=await auth.createUserWithEmailAndPassword(email,password);
+    }catch(authErr){
+      if(authErr.code==='auth/email-already-in-use'){
+        showAlert('Yeh phone number pehle se registered hai','danger');
+        return;
+      }
+      throw authErr;
+    }
+    const uid=userCred.user.uid;
+    await db.collection('users').doc(uid).set({
+      name:name,
+      phone:phone,
+      email:email,
+      role:'area_head',
+      levelId:areaId,
+      levelType:'area',
+      areaName:areaName,
+      districtId:districtId,
+      divisionId:divisionId,
+      createdBy:currentUser.id||currentUser.uid||'system',
+      createdByName:currentUser.name||'',
+      status:'active',
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('areas').doc(areaId).update({
+      headId:uid,
+      headName:name,
+      headPhone:phone
+    });
+    let credHtml='<div class="credentials-box">';
+    credHtml+='<h4><i class="fas fa-key"></i> Login Credentials</h4>';
+    credHtml+='<div class="cred-item"><span class="cred-label">Email:</span><span class="cred-value">'+escHtml(email)+'</span></div>';
+    credHtml+='<div class="cred-item"><span class="cred-label">Phone:</span><span class="cred-value">'+escHtml(phone)+'</span></div>';
+    credHtml+='<div class="cred-item"><span class="cred-label">Password:</span><span class="cred-value">'+escHtml(password)+'</span></div>';
+    credHtml+='<div class="cred-item"><span class="cred-label">Role:</span><span class="cred-value">Area Head</span></div>';
+    credHtml+='</div>';
+    document.getElementById('headCredentials').innerHTML=credHtml;
+    showAlert('Area Head ban gaya!');
+    await loadAreas();
+    await loadAreaHeads();
+    document.getElementById('headForm').reset();
+    document.getElementById('headPassword').value='123456';
+  }catch(e){
+    console.error(e);
+    showAlert('Error: '+e.message,'danger');
+  }finally{
+    btn.disabled=false;
+    btn.textContent='Head Create Karein';
+  }
+}
+
+function escHtml(s){
+  if(!s)return '';
+  const d=document.createElement('div');
+  d.textContent=String(s);
+  return d.innerHTML;
+}
+
+async function init(){
+  await checkSystemAccess('areas');
+  currentUser=requireAuth(['division_head','district_head']);
+  if(!currentUser)return;
+  userRole=currentUser.role;
+  buildSidebar(currentUser);
+  buildBottomNav(currentUser);
+  await loadDistricts();
+  await loadAreas();
+  if(userRole==='district_head'){
+    document.getElementById('tabsContainer').innerHTML+='<div class="tab" data-tab="createhead" onclick="switchTab(\'createhead\')"><i class="fas fa-user-plus"></i> Create Head</div>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded',init);
+
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',function(e){
+    if(e.target===this)this.classList.remove('show');
+  });
+});
+
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('active');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+}
+function buildSidebar(user){
+  const nameEl=document.getElementById('sidebarName');
+  const phoneEl=document.getElementById('sidebarPhone');
+  const roleEl=document.getElementById('sidebarRole');
+  const avatarEl=document.getElementById('avatarEl');
+  if(nameEl)nameEl.textContent=user.name;
+  if(phoneEl)phoneEl.textContent=user.phone||'-';
+  if(roleEl)roleEl.textContent=user.role.replace(/_/g,' ');
+  if(avatarEl)avatarEl.textContent=user.name.charAt(0).toUpperCase();
+  const menu=menus[user.role]||[];
+  const cont=document.getElementById('sidebarMenu');
+  if(!cont)return;
+  cont.innerHTML='';
+  menu.forEach(m=>{
+    const a=document.createElement('a');
+    a.href='#';
+    a.innerHTML='<i class="fas '+m.icon+'"></i> '+m.label;
+    if(m.active)a.classList.add('active');
+    a.onclick=function(e){
+      e.preventDefault();
+      closeSidebar();
+      if(m.file==='logout'){localStorage.removeItem('ngoUser');window.location.href='index.html';return}
+      if(m.file!=='dashboard.html')window.location.href=m.file;
+    };
+    if(m.icon==='fa-sign-out-alt')a.classList.add('logout-btn');
+    cont.appendChild(a);
+  });
+}
+function buildBottomNav(user){
+  const nav=document.getElementById('bottomNav');
+  if(!nav)return;
+  nav.innerHTML='';
+  const items=bottomNavs[user.role]||[];
+  items.forEach(b=>{
+    const a=document.createElement('a');
+    a.href='#';
+    a.innerHTML='<i class="fas '+b.icon+'"></i><span>'+b.label+'</span>';
+    if(b.active)a.classList.add('active');
+    a.onclick=function(e){
+      e.preventDefault();
+      if(b.file==='sidebar'){toggleSidebar();return}
+      if(b.file!=='dashboard.html')window.location.href=b.file;
+    };
+    nav.appendChild(a);
+  });
+}
+</script>
+</body>
+</html>
