@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Dashboard - Tanzeem Structure Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
+<style>
+:root{--primary:#1a6b3c;--primary-dark:#0d4a25;--primary-light:#e8f5e9;--danger:#dc3545;--warning:#ff9800;--success:#28a745;--bg:#f0f2f5;--card:#fff;--text:#333;--text-light:#666;--border:#e0e0e0;--shadow:0 2px 12px rgba(0,0,0,0.08);--radius:14px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;max-width:500px;margin:0 auto}
+.app-header{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+.menu-btn{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:8px}
+.app-header h1{font-size:18px;font-weight:700;flex:1}
+.app-content{padding:20px 16px;padding-bottom:100px}
+.sidebar-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200}
+.sidebar{display:none;position:fixed;top:0;left:0;width:280px;height:100%;background:#fff;z-index:300;box-shadow:4px 0 20px rgba(0,0,0,0.15);overflow-y:auto;border-radius:0 14px 14px 0}
+.sidebar.open{display:block}
+.sidebar-header{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:20px;border-radius:0 14px 0 0}
+.sidebar-header h2{font-size:16px;font-weight:700;margin-bottom:4px}
+.sidebar-header p{font-size:12px;opacity:0.8}
+.sidebar-header .role-badge{background:rgba(255,255,255,0.2);padding:3px 10px;border-radius:10px;font-size:11px;display:inline-block;margin-top:6px}
+.sidebar-menu{padding:10px 0}
+.sidebar-menu a{display:flex;align-items:center;gap:12px;padding:12px 20px;color:var(--text);text-decoration:none;font-size:14px;font-weight:500;transition:all 0.2s}
+.sidebar-menu a:hover,.sidebar-menu a.active{background:var(--primary-light);color:var(--primary)}
+.sidebar-menu a i{width:20px;text-align:center;font-size:16px}
+.sidebar-footer{padding:15px 20px;border-top:1px solid var(--border);margin-top:10px}
+.sidebar-footer p{font-size:10px;color:var(--text-light);text-align:center}
+.logout-btn{display:flex;align-items:center;gap:10px;padding:12px 20px;color:var(--danger);text-decoration:none;font-size:14px;font-weight:600;border-top:1px solid var(--border);margin-top:10px}
+.logout-btn i{width:20px;text-align:center}
+.stat-cards{display:grid;gap:12px;margin-bottom:20px}
+.stat-card{background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;cursor:pointer;transition:all 0.2s}
+.stat-card:active{transform:scale(0.98)}
+.stat-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;flex-shrink:0}
+.stat-icon.green{background:linear-gradient(135deg,var(--primary),var(--primary-dark))}
+.stat-icon.blue{background:linear-gradient(135deg,#1976d2,#0d47a1)}
+.stat-icon.purple{background:linear-gradient(135deg,#7b1fa2,#4a148c)}
+.stat-info h3{font-size:28px;font-weight:800;color:var(--text)}
+.stat-info p{font-size:13px;color:var(--text-light);font-weight:500}
+.section-title{font-size:16px;font-weight:700;color:var(--text);margin:24px 0 12px;display:flex;align-items:center;gap:8px}
+.quick-links{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quick-link{background:#fff;border-radius:var(--radius);padding:16px;text-align:center;box-shadow:var(--shadow);text-decoration:none;color:var(--text);transition:all 0.2s}
+.quick-link:active{transform:scale(0.97)}
+.quick-link i{font-size:24px;color:var(--primary);margin-bottom:8px;display:block}
+.quick-link span{font-size:12px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="sidebar" id="sidebar">
+<div class="sidebar-header">
+<h2 id="sidebarName">User</h2>
+<p id="sidebarPhone"></p>
+<span class="role-badge" id="sidebarRole"></span>
+</div>
+<div class="sidebar-menu" id="sidebarMenu"></div>
+<a href="index.html" class="logout-btn" onclick="localStorage.removeItem('currentUser')"><i class="fas fa-sign-out-alt"></i> Logout</a>
+<div class="sidebar-footer"><p><i class="fas fa-code"></i> A.A.Q. Solutions & Outsourcing</p></div>
+</div>
+<header class="app-header">
+<button class="menu-btn" onclick="openSidebar()"><i class="fas fa-bars"></i></button>
+<h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+</header>
+<div class="app-content">
+<div class="stat-cards">
+<div class="stat-card" onclick="location.href='districts.html'">
+<div class="stat-icon green"><i class="fas fa-map-marker-alt"></i></div>
+<div class="stat-info"><h3 id="totalDistricts">0</h3><p>Total Districts</p></div>
+</div>
+<div class="stat-card" onclick="location.href='areas.html'">
+<div class="stat-icon blue"><i class="fas fa-map"></i></div>
+<div class="stat-info"><h3 id="totalAreas">0</h3><p>Total Areas</p></div>
+</div>
+<div class="stat-card" onclick="location.href='zeli-halqas.html'">
+<div class="stat-icon purple"><i class="fas fa-layer-group"></i></div>
+<div class="stat-info"><h3 id="totalZH">0</h3><p>Total Zeli Halqas</p></div>
+</div>
+</div>
+<div class="section-title"><i class="fas fa-link"></i> Quick Links</div>
+<div class="quick-links">
+<a href="districts.html" class="quick-link"><i class="fas fa-map-marker-alt"></i><span>Districts</span></a>
+<a href="areas.html" class="quick-link"><i class="fas fa-map"></i><span>Areas</span></a>
+<a href="zeli-halqas.html" class="quick-link"><i class="fas fa-layer-group"></i><span>Zeli Halqas</span></a>
+</div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.appspot.com",messagingSenderId:"489310613218",appId:"1:489310613218:web:e44e61cf16d4b8c106729d"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+let currentUser=null;
+
+function requireAuth(){
+const u=JSON.parse(localStorage.getItem("currentUser")||"null");
+if(!u||!u.phone){window.location.href="index.html";return null;}
+currentUser=u;
+return u;
+}
+
+function openSidebar(){
+const user=currentUser;
+if(!user)return;
+const nameEl=document.getElementById("sidebarName");
+const phoneEl=document.getElementById("sidebarPhone");
+const roleEl=document.getElementById("sidebarRole");
+if(nameEl)nameEl.textContent=user.name||"User";
+if(phoneEl)phoneEl.textContent=user.phone||"";
+if(roleEl)roleEl.textContent=user.role==="division_head"?"Division Head":user.role||"";
+const menu=document.getElementById("sidebarMenu");
+if(menu){
+menu.innerHTML=`
+<a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="districts.html"><i class="fas fa-map-marker-alt"></i> Districts</a>
+<a href="areas.html"><i class="fas fa-map"></i> Areas</a>
+<a href="zeli-halqas.html"><i class="fas fa-layer-group"></i> Zeli Halqas</a>
+`;
+}
+document.getElementById("sidebar").classList.add("open");
+document.getElementById("sidebarOverlay").style.display="block";
+}
+
+function closeSidebar(){
+document.getElementById("sidebar").classList.remove("open");
+document.getElementById("sidebarOverlay").style.display="none";
+}
+
+async function loadCounts(){
+try{
+const d=await db.collection("districts").get();
+document.getElementById("totalDistricts").textContent=d.size;
+const a=await db.collection("areas").get();
+document.getElementById("totalAreas").textContent=a.size;
+const z=await db.collection("zeli_halqas").get();
+document.getElementById("totalZH").textContent=z.size;
+}catch(e){console.error(e);}
+}
+
+window.onload=function(){
+if(!requireAuth())return;
+loadCounts();
+};
+</script>
+</body>
+</html>

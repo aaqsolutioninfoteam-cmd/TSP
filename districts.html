@@ -1,0 +1,253 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Districts - Tanzeem Structure Portal</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
+<style>
+:root{--primary:#1a6b3c;--primary-dark:#0d4a25;--primary-light:#e8f5e9;--danger:#dc3545;--warning:#ff9800;--success:#28a745;--bg:#f0f2f5;--card:#fff;--text:#333;--text-light:#666;--border:#e0e0e0;--shadow:0 2px 12px rgba(0,0,0,0.08);--radius:14px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;max-width:500px;margin:0 auto}
+.app-header{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+.menu-btn{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:8px}
+.app-header h1{font-size:18px;font-weight:700;flex:1}
+.app-content{padding:20px 16px;padding-bottom:100px}
+.sidebar-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200}
+.sidebar{display:none;position:fixed;top:0;left:0;width:280px;height:100%;background:#fff;z-index:300;box-shadow:4px 0 20px rgba(0,0,0,0.15);overflow-y:auto;border-radius:0 14px 14px 0}
+.sidebar.open{display:block}
+.sidebar-header{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:20px;border-radius:0 14px 0 0}
+.sidebar-header h2{font-size:16px;font-weight:700;margin-bottom:4px}
+.sidebar-header p{font-size:12px;opacity:0.8}
+.sidebar-header .role-badge{background:rgba(255,255,255,0.2);padding:3px 10px;border-radius:10px;font-size:11px;display:inline-block;margin-top:6px}
+.sidebar-menu{padding:10px 0}
+.sidebar-menu a{display:flex;align-items:center;gap:12px;padding:12px 20px;color:var(--text);text-decoration:none;font-size:14px;font-weight:500;transition:all 0.2s}
+.sidebar-menu a:hover,.sidebar-menu a.active{background:var(--primary-light);color:var(--primary)}
+.sidebar-menu a i{width:20px;text-align:center;font-size:16px}
+.sidebar-footer{padding:15px 20px;border-top:1px solid var(--border);margin-top:10px}
+.sidebar-footer p{font-size:10px;color:var(--text-light);text-align:center}
+.logout-btn{display:flex;align-items:center;gap:10px;padding:12px 20px;color:var(--danger);text-decoration:none;font-size:14px;font-weight:600;border-top:1px solid var(--border);margin-top:10px}
+.logout-btn i{width:20px;text-align:center}
+.btn{padding:10px 20px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.btn:active{transform:scale(0.97)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-sm{padding:6px 12px;font-size:12px}
+.card{background:#fff;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:12px}
+.form-group{margin-bottom:14px}
+.form-group label{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:block}
+.form-group input,.form-group select{width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;background:#f8f9fa}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--primary);background:#fff}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:400;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:var(--radius) var(--radius) 0 0;padding:24px 20px;width:100%;max-width:500px;max-height:80vh;overflow-y:auto;animation:slideUp 0.3s}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal h2{font-size:18px;font-weight:700;margin-bottom:16px;color:var(--primary-dark)}
+.modal-actions{display:flex;gap:10px;margin-top:16px}
+.modal-actions .btn{flex:1}
+.item-card{background:#fff;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:10px;display:flex;align-items:center;gap:12px}
+.item-card .item-icon{width:44px;height:44px;background:var(--primary-light);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:18px;flex-shrink:0}
+.item-card .item-info{flex:1}
+.item-card .item-info h4{font-size:14px;font-weight:700;color:var(--text)}
+.item-card .item-info p{font-size:12px;color:var(--text-light)}
+.item-card .item-actions{display:flex;gap:6px}
+.item-card .item-actions button{width:34px;height:34px;border:none;border-radius:8px;cursor:pointer;font-size:14px}
+.btn-edit{background:#e3f2fd;color:#1976d2}
+.btn-delete{background:#ffebee;color:var(--danger)}
+.empty{text-align:center;padding:40px;color:var(--text-light)}
+.empty i{font-size:48px;color:var(--border);margin-bottom:12px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--primary-dark);color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:500;z-index:9999;display:none;box-shadow:0 4px 15px rgba(0,0,0,0.2)}
+.toast.error{background:var(--danger)}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="sidebar" id="sidebar">
+<div class="sidebar-header">
+<h2 id="sidebarName">User</h2>
+<p id="sidebarPhone"></p>
+<span class="role-badge" id="sidebarRole"></span>
+</div>
+<div class="sidebar-menu" id="sidebarMenu"></div>
+<a href="index.html" class="logout-btn" onclick="localStorage.removeItem('currentUser')"><i class="fas fa-sign-out-alt"></i> Logout</a>
+<div class="sidebar-footer"><p><i class="fas fa-code"></i> A.A.Q. Solutions & Outsourcing</p></div>
+</div>
+<header class="app-header">
+<button class="menu-btn" onclick="openSidebar()"><i class="fas fa-bars"></i></button>
+<h1><i class="fas fa-map-marker-alt"></i> Districts</h1>
+<button class="btn btn-primary btn-sm" onclick="openModal()"><i class="fas fa-plus"></i></button>
+</header>
+<div class="app-content">
+<div id="searchBox" style="margin-bottom:14px">
+<input type="text" id="searchInput" placeholder="Search districts..." oninput="filterList()" style="width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;background:#fff">
+</div>
+<div id="listContainer"></div>
+</div>
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+<div class="modal" onclick="event.stopPropagation()">
+<h2 id="modalTitle"><i class="fas fa-map-marker-alt"></i> Add District</h2>
+<input type="hidden" id="editId">
+<div class="form-group">
+<label>District Name *</label>
+<input type="text" id="nameInput" placeholder="Enter district name">
+</div>
+<div class="form-group">
+<label>District Code</label>
+<input type="text" id="codeInput" placeholder="Auto-generated" readonly>
+</div>
+<div class="modal-actions">
+<button class="btn" style="background:var(--border);color:var(--text)" onclick="closeModal()">Cancel</button>
+<button class="btn btn-primary" onclick="saveItem()"><i class="fas fa-save"></i> Save</button>
+</div>
+</div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.appspot.com",messagingSenderId:"489310613218",appId:"1:489310613218:web:e44e61cf16d4b8c106729d"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+let currentUser=null;
+let allItems=[];
+
+function requireAuth(){
+const u=JSON.parse(localStorage.getItem("currentUser")||"null");
+if(!u||!u.phone){window.location.href="index.html";return null;}
+currentUser=u;
+return u;
+}
+
+function openSidebar(){
+const user=currentUser;
+if(!user)return;
+const nameEl=document.getElementById("sidebarName");
+const phoneEl=document.getElementById("sidebarPhone");
+const roleEl=document.getElementById("sidebarRole");
+if(nameEl)nameEl.textContent=user.name||"User";
+if(phoneEl)phoneEl.textContent=user.phone||"";
+if(roleEl)roleEl.textContent=user.role==="division_head"?"Division Head":user.role||"";
+const menu=document.getElementById("sidebarMenu");
+if(menu){
+menu.innerHTML=`
+<a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="districts.html" class="active"><i class="fas fa-map-marker-alt"></i> Districts</a>
+<a href="areas.html"><i class="fas fa-map"></i> Areas</a>
+<a href="zeli-halqas.html"><i class="fas fa-layer-group"></i> Zeli Halqas</a>
+`;
+}
+document.getElementById("sidebar").classList.add("open");
+document.getElementById("sidebarOverlay").style.display="block";
+}
+
+function closeSidebar(){
+document.getElementById("sidebar").classList.remove("open");
+document.getElementById("sidebarOverlay").style.display="none";
+}
+
+function closeModal(e){
+if(e&&e.target!==document.getElementById("modalOverlay"))return;
+document.getElementById("modalOverlay").classList.remove("open");
+document.getElementById("editId").value="";
+document.getElementById("nameInput").value="";
+document.getElementById("codeInput").value="";
+}
+
+function openModal(id){
+document.getElementById("modalTitle").innerHTML=id?"<i class='fas fa-edit'></i> Edit District":"<i class='fas fa-map-marker-alt'></i> Add District";
+if(id){
+const item=allItems.find(i=>i.id===id);
+if(item){
+document.getElementById("editId").value=id;
+document.getElementById("nameInput").value=item.name||"";
+document.getElementById("codeInput").value=item.code||"";
+}
+}else{
+document.getElementById("codeInput").value="D"+String(allItems.length+1).padStart(3,"0");
+}
+document.getElementById("modalOverlay").classList.add("open");
+}
+
+async function generateCode(){
+const q=await db.collection("districts").get();
+const num=q.size+1;
+return "D"+String(num).padStart(3,"0");
+}
+
+async function saveItem(){
+const id=document.getElementById("editId").value;
+const name=document.getElementById("nameInput").value.trim();
+if(!name){showToast("Name required",true);return;}
+try{
+if(id){
+await db.collection("districts").doc(id).update({name,updatedAt:new Date().toISOString()});
+showToast("Updated!");
+}else{
+const code=document.getElementById("codeInput").value||await generateCode();
+await db.collection("districts").add({name,code,createdBy:currentUser.id||currentUser.uid||"system",createdAt:new Date().toISOString()});
+showToast("Added!");
+}
+closeModal();
+loadList();
+}catch(e){showToast("Error: "+e.message,true);}
+}
+
+async function deleteItem(id){
+if(!confirm("Delete this district?"))return;
+try{
+await db.collection("districts").doc(id).delete();
+showToast("Deleted!");
+loadList();
+}catch(e){showToast("Error: "+e.message,true);}
+}
+
+async function loadList(){
+try{
+const snap=await db.collection("districts").orderBy("name").get();
+allItems=[];
+snap.forEach(doc=>{allItems.push({id:doc.id,...doc.data()});});
+renderList(allItems);
+}catch(e){console.error(e);}
+}
+
+function filterList(){
+const q=document.getElementById("searchInput").value.toLowerCase();
+const filtered=allItems.filter(i=>(i.name||"").toLowerCase().includes(q)||(i.code||"").toLowerCase().includes(q));
+renderList(filtered);
+}
+
+function renderList(items){
+const c=document.getElementById("listContainer");
+if(!items.length){c.innerHTML='<div class="empty"><i class="fas fa-map-marker-alt"></i><p>No districts found</p></div>';return;}
+c.innerHTML=items.map(i=>`
+<div class="item-card">
+<div class="item-icon"><i class="fas fa-map-marker-alt"></i></div>
+<div class="item-info">
+<h4>${i.name}</h4>
+<p>${i.code||"-"}</p>
+</div>
+<div class="item-actions">
+<button class="btn-edit" onclick="openModal('${i.id}')"><i class="fas fa-pen"></i></button>
+<button class="btn-delete" onclick="deleteItem('${i.id}')"><i class="fas fa-trash"></i></button>
+</div>
+</div>
+`).join("");
+}
+
+function showToast(msg,err){
+const t=document.getElementById("toast");
+t.textContent=msg;
+t.className=err?"toast error":"toast";
+t.style.display="block";
+setTimeout(()=>{t.style.display="none"},3000);
+}
+
+window.onload=function(){
+if(!requireAuth())return;
+loadList();
+};
+</script>
+</body>
+</html>
